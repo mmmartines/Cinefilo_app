@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView,
 import { useRouter } from 'expo-router';
 import { database } from '../../services/database';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function Profile() {
   const router = useRouter();
@@ -15,6 +16,18 @@ export default function Profile() {
   const [notifications, setNotifications] = useState(true);
   
   const [loading, setLoading] = useState(false);
+
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      const formatted = selectedDate.toLocaleDateString('pt-BR');
+      setBirthdate(formatted);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -50,7 +63,6 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await database.logout();
-    router.replace('/login');
   };
 
   if (!user) return null;
@@ -90,13 +102,25 @@ export default function Profile() {
         <Text style={styles.label}>Data de Nascimento</Text>
         <View style={styles.inputContainer}>
           <Ionicons name="calendar" color="#999" size={20} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            value={birthdate}
-            onChangeText={setBirthdate}
-            keyboardType="number-pad"
-          />
+          <TouchableOpacity 
+            style={{ flex: 1, justifyContent: 'center' }} 
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={{ color: birthdate ? '#fff' : '#666', fontSize: 16 }}>
+              {birthdate || "Data de Nascimento"}
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={onChangeDate}
+            maximumDate={new Date()}
+          />
+        )}
 
         <Text style={styles.label}>Senha</Text>
         <View style={styles.inputContainer}>

@@ -3,7 +3,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const USERS_KEY = '@cinefilo_users';
 const CURRENT_USER_KEY = '@cinefilo_current_user';
 
+type AuthListener = (user: any) => void;
+const authListeners: AuthListener[] = [];
+
 export const database = {
+  subscribeAuth(listener: AuthListener) {
+    authListeners.push(listener);
+    return () => {
+      const index = authListeners.indexOf(listener);
+      if (index > -1) {
+        authListeners.splice(index, 1);
+      }
+    };
+  },
+
+  notifyAuthListeners(user: any) {
+    authListeners.forEach(listener => listener(user));
+  },
+
   // Retorna todos os usuários cadastrados
   async getUsers() {
     try {
@@ -98,6 +115,7 @@ export const database = {
   async setCurrentUser(user: any) {
     try {
       await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      this.notifyAuthListeners(user);
     } catch (e) {
       console.error('Erro ao salvar sessão', e);
     }
@@ -117,6 +135,7 @@ export const database = {
   async logout() {
     try {
       await AsyncStorage.removeItem(CURRENT_USER_KEY);
+      this.notifyAuthListeners(null);
     } catch (e) {
       console.error('Erro ao deslogar', e);
     }

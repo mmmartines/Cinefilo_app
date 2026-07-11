@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView,
 import { useRouter } from 'expo-router';
 import { database } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
 
 export default function Register() {
   const router = useRouter();
@@ -12,6 +14,19 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [notifications, setNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDate(selectedDate);
+      // Format as DD/MM/YYYY
+      const formatted = selectedDate.toLocaleDateString('pt-BR');
+      setBirthdate(formatted);
+    }
+  };
 
   const handleRegister = async () => {
     if (!name || !birthdate || !email || !password) {
@@ -58,15 +73,25 @@ export default function Register() {
 
         <View style={styles.inputContainer}>
           <Ionicons name="calendar" color="#999" size={20} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Data de Nascimento (DD/MM/AAAA)"
-            placeholderTextColor="#666"
-            keyboardType="number-pad"
-            value={birthdate}
-            onChangeText={setBirthdate}
-          />
+          <TouchableOpacity 
+            style={{ flex: 1, justifyContent: 'center' }} 
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={{ color: birthdate ? '#fff' : '#666', fontSize: 16 }}>
+              {birthdate || "Data de Nascimento"}
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={onChangeDate}
+            maximumDate={new Date()}
+          />
+        )}
 
         <View style={styles.inputContainer}>
           <Ionicons name="mail" color="#999" size={20} style={styles.icon} />

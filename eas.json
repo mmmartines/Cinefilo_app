@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 3.8.1"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_TMDB_API_KEY": "1af66eb72dccfee4c761b4bea764163b"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_TMDB_API_KEY": "1af66eb72dccfee4c761b4bea764163b"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

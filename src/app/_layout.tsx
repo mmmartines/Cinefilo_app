@@ -6,6 +6,9 @@ import { Slot, useRouter, useSegments } from 'expo-router';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { database } from '../services/database';
+import { NetworkAlert } from '../components/NetworkAlert';
+import * as NavigationBar from 'expo-navigation-bar';
+import { Platform } from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,12 +19,31 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
+    if (Platform.OS === 'android') {
+      try {
+        if (NavigationBar && NavigationBar.setVisibilityAsync) {
+          NavigationBar.setVisibilityAsync("hidden").catch(() => {});
+        }
+        if (NavigationBar && NavigationBar.setBehaviorAsync) {
+          NavigationBar.setBehaviorAsync("overlay-swipe").catch(() => {});
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
     const checkUser = async () => {
       const user = await database.getCurrentUser();
       setIsAuthenticated(!!user);
       SplashScreen.hideAsync(); // Hide splash after checking auth
     };
     checkUser();
+
+    const unsubscribe = database.subscribeAuth((user: any) => {
+      setIsAuthenticated(!!user);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -45,6 +67,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Slot />
+      <NetworkAlert />
     </ThemeProvider>
   );
 }
