@@ -1,19 +1,27 @@
 # Cinefilo 🍿
 
-Cinefilo é uma rede social focada em amantes de cinema, desenvolvida em React Native (com Expo). O objetivo do aplicativo é permitir que os usuários avaliem os filmes que assistiram, compartilhem essas avaliações com os amigos e participem de um ranking competitivo baseado no tempo total de filmes assistidos.
+Cinefilo é o seu diário de filmes pessoal definitivo, desenvolvido em React Native e Expo. Descubra, avalie, crie listas personalizadas e mergulhe em estatísticas incríveis sobre seu hábito de consumir cinema!
 
 ## Recursos Principais
 
-- **Avaliação de Filmes:** Descubra e dê nota aos filmes que você assistiu usando a API do TMDB.
-- **Rede Social:** Adicione amigos e veja o que eles estão assistindo e avaliando.
-- **Ranking de Tempo:** Entre em uma competição saudável com seus amigos! O aplicativo soma o tempo de duração de todos os filmes que você marcou como assistido e cria um ranking de quem passou mais tempo assistindo filmes.
+- **Catálogo Dinâmico:** Explore filmes populares usando a API do TMDB, filtrando por ano ou pesquisando nomes específicos.
+- **Avaliação Emocional:** Dê notas aos filmes, escreva resenhas e selecione tags de emoção (Feliz, Empolgado, Tenso, Triste, etc.) que formam o seu perfil de espectador.
+- **Minhas Listas (Customizadas):** Crie e gerencie listas ilimitadas de filmes (Ex: "Filmes para Chorar", "Maratona de Sexta").
+- **Quero Ver:** Salve filmes rapidamente em uma lista de Watchlist para não esquecer o que deseja assistir no futuro.
+- **Estatísticas e Gamificação:** O aplicativo rastreia seu tempo de tela, calcula sua "classificação" (de Espectador Casual a Mestre do Cinema), mostra seus gêneros favoritos e gera um radar de emoções.
+- **Integração com YouTube (Trailers):** Assista aos trailers oficiais dos filmes através de um player nativo embutido no próprio app.
+- **Onde Assistir (Streaming):** Descubra instantaneamente se o filme está disponível na Netflix, Prime Video, Max, etc., no Brasil.
+- **Compartilhamento (Exportar Perfil):** Exporte uma imagem (snapshot) incrível com suas estatísticas principais e ranking para postar nas redes sociais.
 
 ## Tecnologias Utilizadas
 
-- **React Native / Expo:** Framework principal para desenvolvimento mobile (iOS e Android).
-- **Expo Router:** Para navegação entre telas de forma baseada em arquivos.
-- **Axios:** Para requisições HTTP e consumo da API de filmes.
-- **TMDB API (The Movie Database):** Base de dados para busca de filmes, imagens, duração e sinopses.
+- **React Native / Expo SDK 57:** Framework principal.
+- **Expo Router:** Navegação entre abas e pilhas (file-based routing).
+- **Axios:** Integração direta com a TMDB API.
+- **AsyncStorage:** Persistência de dados offline no dispositivo.
+- **React Native SVG / Charts:** Geração de gráficos, como o radar emocional e pizza de gêneros.
+- **React Native YouTube Iframe:** Reprodução nativa de trailers.
+- **Expo Sharing / View Shot:** Captura de tela do aplicativo e integração com janela de compartilhamento nativa.
 
 ## Como Executar o Projeto
 
@@ -26,16 +34,13 @@ Cinefilo é uma rede social focada em amantes de cinema, desenvolvida em React N
    npm install
    ```
 3. Configure as variáveis de ambiente:
-   - Crie um arquivo `.env` na raiz do projeto.
-   - Adicione sua chave de API do TMDB: `EXPO_PUBLIC_TMDB_API_KEY=sua_chave_aqui` (nota: atualmente a chave pode estar configurada em `src/services/api.ts`).
-
+   - Crie um arquivo `.env` na raiz do projeto (este arquivo é ignorado no repositório por padrão para manter a segurança).
+   - Adicione sua chave de API do TMDB V3: `EXPO_PUBLIC_TMDB_API_KEY=sua_chave_aqui`
 4. Inicie o projeto:
    ```bash
-   npm run start
+   npx expo start -c
    ```
-5. Use o aplicativo **Expo Go** no seu celular para escanear o QR Code, ou inicie um emulador local (Android/iOS).
+5. Use o aplicativo **Expo Go** no seu celular para escanear o QR Code, inicie um emulador local (Android/iOS), ou visualize pelo navegador pressionando a tecla `w`.
 
-## Estrutura Atual
-- `src/app`: Telas da aplicação (utilizando o roteamento do Expo Router).
-- `src/components`: Componentes reutilizáveis, como o `MovieCard`.
-- `src/services`: Configuração de serviços externos, como a API do TMDB.
+---
+*Cinéfilo App - Todos os Direitos Reservados.*
