@@ -455,5 +455,125 @@ export const database = {
       console.error('Erro ao compartilhar lista', e);
       throw e;
     }
+  },
+  
+  // -------------------------
+  // Bate-Papo de Filmes (Realtime Supabase)
+  // -------------------------
+  async createChatGroup(movieId: number, movieTitle: string, moviePoster: string, friends: {id: string, name: string}[], userName: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+      const userId = session.user.id;
+
+      // 1. Cria a sala
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .insert([{ movie_id: movieId, movie_title: movieTitle, movie_poster: moviePoster, created_by: userId }])
+        .select()
+        .single();
+        
+      if (chatError) throw chatError;
+
+      // 2. Prepara membros (Criador + Amigos)
+      const members = [
+        { chat_id: chatData.id, user_id: userId, user_name: userName },
+        ...friends.map(f => ({ chat_id: chatData.id, user_id: f.id, user_name: f.name }))
+      ];
+
+      const { error: membersError } = await supabase
+        .from('chat_members')
+        .insert(members);
+        
+      if (membersError) throw membersError;
+      
+      return chatData;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  },
+
+  async getChats() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      
+      // Pega todos os chats onde o usuário é membro
+      const { data, error } = await supabase
+        .from('chat_members')
+        .select(`
+          chat_id,
+          chats (
+            id,
+            movie_id,
+            movie_title,
+            movie_poster,
+            created_at
+          )
+        `)
+        .eq('user_id', session.user.id)
+        .order('joined_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      return data.map(d => d.chats);
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  },
+  
+  async getMessages(chatId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  },
+  
+  async sendMessage(chatId: string, content: string, userName: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+      
+      const { error } = await supabase
+        .from('messages')
+        .insert([{
+          chat_id: chatId,
+          user_id: session.user.id,
+          user_name: userName,
+          content: content
+        }]);
+        
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  },
+
+  subscribeToMessages(chatId: string, callback: (message: any) => void) {
+    const channel = supabase
+      .channel(`chat_${chatId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+        (payload) => callback(payload.new)
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }
 };

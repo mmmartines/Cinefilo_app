@@ -33,8 +33,17 @@ export default function TabLayout() {
         name="my-movies"
         options={{
           title: 'Meus Filmes',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="star" size={28} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="star" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chats"
+        options={{
+          title: 'Chats',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles" size={size} color={color} />
           ),
         }}
       />
