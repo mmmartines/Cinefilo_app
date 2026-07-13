@@ -398,7 +398,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const response = await fetch(`${API_URL}/api/list_movies`, {
+      const response = await fetch(`${API_URL}/api/lists?action=movies`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -430,7 +430,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const response = await fetch(`${API_URL}/api/list_movies`, {
+      const response = await fetch(`${API_URL}/api/lists?action=movies`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
