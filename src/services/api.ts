@@ -46,10 +46,18 @@ export const fetchFilteredMovies = async (page: number = 1, query: string = '', 
       }
       return results;
 
+    } else if (genreId === -1) {
+      // Filmes em cartaz
+      endpoint = '/movie/now_playing';
+      if (year) params.primary_release_year = year;
+      
+      const response = await api.get(endpoint, { params });
+      return response.data.results;
+
     } else if (genreId || year) {
       // Usar a rota de descoberta
       endpoint = '/discover/movie';
-      if (genreId) params.with_genres = genreId;
+      if (genreId && genreId !== -1) params.with_genres = genreId;
       if (year) params.primary_release_year = year;
 
       const response = await api.get(endpoint, { params });

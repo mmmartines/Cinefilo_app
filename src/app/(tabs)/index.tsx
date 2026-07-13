@@ -164,6 +164,12 @@ export default function Index() {
           >
             <Text style={[styles.genreText, genreId === null && styles.genreTextActive]}>Todos</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.genrePill, genreId === -1 && styles.genrePillActive]}
+            onPress={() => setGenreId(-1)}
+          >
+            <Text style={[styles.genreText, genreId === -1 && styles.genreTextActive]}>🔥 Em Cartaz</Text>
+          </TouchableOpacity>
           {genres.map((g) => (
             <TouchableOpacity 
               key={g.id}

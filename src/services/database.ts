@@ -173,6 +173,8 @@ export const database = {
       const currentUser = await this.getCurrentUser();
       const total_minutes = currentUser?.totalWatchedMinutes || 0;
 
+      const custom_lists = await this.getCustomLists(userId);
+
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/sync`, {
         method: 'POST',
@@ -180,7 +182,7 @@ export const database = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ total_movies, total_minutes })
+        body: JSON.stringify({ total_movies, total_minutes, watched_movies: watched, custom_lists })
       });
       
       if (!response.ok) {
@@ -193,6 +195,45 @@ export const database = {
           this.syncStatsToCloud(userId, retries - 1);
         }, 5000); // Retenta em 5 segundos
       }
+    }
+  },
+
+  async syncCloudToLocal(userId: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (response.ok) {
+        const { data } = await response.json();
+        
+        // Substitui os dados locais com os dados da nuvem
+        if (data.watched_movies) {
+          await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(data.watched_movies));
+        }
+        if (data.custom_lists) {
+          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(data.custom_lists));
+        }
+
+        // Atualiza minutos totais
+        const currentUser = await this.getCurrentUser();
+        if (currentUser && currentUser.id === userId) {
+          const cloudMinutes = data.stats?.total_minutes || 0;
+          await this.updateUser({ 
+            email: currentUser.email, 
+            totalWatchedMinutes: cloudMinutes 
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao sincronizar nuvem para o local', e);
     }
   },
 

@@ -129,7 +129,11 @@ export default function Friends() {
     const rankColor = isTop3 ? rankColors[item.rank - 1] : '#666';
 
     return (
-      <View style={[styles.friendCard, item.isMe && styles.myCard]}>
+      <TouchableOpacity 
+        style={[styles.friendCard, item.isMe && styles.myCard]}
+        disabled={item.isMe}
+        onPress={() => router.push(`/friend/${item.id}`)}
+      >
         <View style={styles.rankContainer}>
           <Text style={[styles.rankText, { color: rankColor }]}>#{item.rank}</Text>
         </View>
@@ -148,7 +152,7 @@ export default function Friends() {
             <Ionicons name="trash-outline" size={20} color="#E50914" />
           </TouchableOpacity>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 

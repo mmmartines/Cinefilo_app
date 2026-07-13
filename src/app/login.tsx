@@ -72,6 +72,10 @@ export default function Login() {
              name: data.user.user_metadata?.name || '',
              tag: tag
           });
+          
+          // Sincroniza filmes e listas da nuvem para o aparelho
+          await database.syncCloudToLocal(data.user.id);
+          
         } catch (err) {
           console.error('Erro de rede ao sincronizar:', err);
           await database.setCurrentUser({
@@ -155,6 +159,10 @@ export default function Login() {
                  name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
                  tag: tag
                });
+               
+               // Sincroniza filmes e listas da nuvem para o aparelho
+               await database.syncCloudToLocal(sessionData.user?.id || '');
+               
              } catch (err) {
                await database.setCurrentUser({
                  id: sessionData.user?.id,
