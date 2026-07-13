@@ -72,7 +72,7 @@ export default function Profile() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
         await fetch(`${apiUrl}/api/users`, {
           method: 'DELETE',
           headers: {

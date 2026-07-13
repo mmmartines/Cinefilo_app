@@ -71,7 +71,7 @@ export default function Register() {
       
       if (data.session) {
          // Sincroniza com o servidor na Vercel para criar o perfil e a tag no Astra DB
-         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
          const response = await fetch(`${apiUrl}/api/users`, {
            method: 'GET',
            headers: {
@@ -144,7 +144,7 @@ export default function Register() {
              
              if (sessionError) throw sessionError;
              
-             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
              const response = await fetch(`${apiUrl}/api/users`, {
                method: 'GET',
                headers: {

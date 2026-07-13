@@ -18,7 +18,7 @@ export default function Friends() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/friends`, {
         method: 'GET',
         headers: {
@@ -54,7 +54,7 @@ export default function Friends() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/friends`, {
         method: 'POST',
         headers: {
@@ -94,7 +94,7 @@ export default function Friends() {
               const { data: { session } } = await supabase.auth.getSession();
               if (!session) return;
         
-              const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+              const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
               const response = await fetch(`${apiUrl}/api/friends`, {
                 method: 'DELETE',
                 headers: {

@@ -167,7 +167,7 @@ export const database = {
       const currentUser = await this.getCurrentUser();
       const total_minutes = currentUser?.totalWatchedMinutes || 0;
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/sync`, {
         method: 'POST',
         headers: {
