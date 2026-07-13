@@ -4,10 +4,12 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAlert } from '../contexts/AlertContext';
 
 export default function CinemasScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { showAlert } = useAlert();
   
   const [cinemas, setCinemas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ export default function CinemasScreen() {
       const data = await response.json();
       setCinemas(data.elements || []);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível buscar os cinemas.');
+      showAlert('Erro', 'Não foi possível buscar os cinemas.');
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -58,7 +60,7 @@ export default function CinemasScreen() {
       const data = await response.json();
       setCinemas(data.elements || []);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível buscar os cinemas.');
+      showAlert('Erro', 'Não foi possível buscar os cinemas.');
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -71,7 +73,7 @@ export default function CinemasScreen() {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Permita o acesso à localização para usar essa função.');
+        showAlert('Permissão negada', 'Permita o acesso à localização para usar essa função.');
         setLoading(false);
         setLocationStatus('');
         return;
@@ -80,7 +82,7 @@ export default function CinemasScreen() {
       let location = await Location.getCurrentPositionAsync({});
       await fetchCinemasByLocation(location.coords.latitude, location.coords.longitude);
     } catch (e) {
-      Alert.alert('Erro', 'Erro ao obter GPS.');
+      showAlert('Erro', 'Erro ao obter GPS.');
       setLoading(false);
       setLocationStatus('');
     }
@@ -89,19 +91,19 @@ export default function CinemasScreen() {
   const openMaps = (lat: number, lon: number, name: string) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert('Erro', 'Não foi possível abrir o mapa.');
+      showAlert('Erro', 'Não foi possível abrir o mapa.');
     });
   };
 
   const openWebsite = (website: string) => {
     Linking.openURL(website).catch(() => {
-      Alert.alert('Erro', 'Não foi possível abrir o site.');
+      showAlert('Erro', 'Não foi possível abrir o site.');
     });
   };
 
   const callPhone = (phone: string) => {
     Linking.openURL(`tel:${phone}`).catch(() => {
-      Alert.alert('Erro', 'Não foi possível abrir o discador.');
+      showAlert('Erro', 'Não foi possível abrir o discador.');
     });
   };
 

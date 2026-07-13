@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../../services/database';
 import { Loading } from '../../components/Loading';
+import { useAlert } from '../../contexts/AlertContext';
 
 export default function ListDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [list, setList] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -46,7 +48,7 @@ export default function ListDetails() {
   }, [id]);
 
   const handleDeleteList = () => {
-    Alert.alert('Excluir Lista', `Tem certeza que deseja excluir a lista "${list?.name}"?`, [
+    showAlert('Excluir Lista', `Tem certeza que deseja excluir a lista "${list?.name}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: async () => {
           if (user) {
@@ -58,7 +60,7 @@ export default function ListDetails() {
   };
 
   const handleRemoveMovie = (movieId: number, movieTitle: string) => {
-    Alert.alert('Remover Filme', `Remover "${movieTitle}" desta lista?`, [
+    showAlert('Remover Filme', `Remover "${movieTitle}" desta lista?`, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Remover', style: 'destructive', onPress: async () => {
           if (user) {
@@ -71,19 +73,19 @@ export default function ListDetails() {
 
   const handleShareList = async () => {
     if (friendTag.trim().length !== 10) {
-      Alert.alert('Erro', 'A Tag deve ter 10 caracteres.');
+      showAlert('Erro', 'A Tag deve ter 10 caracteres.');
       return;
     }
     
     setIsSharing(true);
     try {
       await database.shareCustomList(user.id, String(id), friendTag.trim());
-      Alert.alert('Sucesso!', 'Lista compartilhada com sucesso.');
+      showAlert('Sucesso!', 'Lista compartilhada com sucesso.');
       setShareModalVisible(false);
       setFriendTag('');
       loadList();
     } catch (e: any) {
-      Alert.alert('Erro', e.message);
+      showAlert('Erro', e.message);
     } finally {
       setIsSharing(false);
     }

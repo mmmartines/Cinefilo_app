@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 3.8.1"
+    "version": ">= 7.0.0"
   },
   "build": {
     "development": {
@@ -8,25 +8,9 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_TMDB_API_KEY": "1af66eb72dccfee4c761b4bea764163b",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://mmoxgpykmudzlyfzobpi.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tb3hncHlrbXVkemx5ZnpvYnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODg5MDAsImV4cCI6MjA5OTQ2NDkwMH0.00iThPlZQNxrbtEDAuatpQ7UfXH7SUnpcIN94k8ynPA",
-        "EXPO_PUBLIC_API_URL": "https://cinefilo-server.vercel.app"
-      }
+      "distribution": "internal"
     },
-    "production": {
-      "env": {
-        "EXPO_PUBLIC_TMDB_API_KEY": "1af66eb72dccfee4c761b4bea764163b",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://mmoxgpykmudzlyfzobpi.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tb3hncHlrbXVkemx5ZnpvYnBpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODg5MDAsImV4cCI6MjA5OTQ2NDkwMH0.00iThPlZQNxrbtEDAuatpQ7UfXH7SUnpcIN94k8ynPA",
-        "EXPO_PUBLIC_API_URL": "https://cinefilo-server.vercel.app"
-      }
-    }
+    "production": {}
   },
   "submit": {
     "production": {}

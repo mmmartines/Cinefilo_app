@@ -6,6 +6,9 @@ import { supabase } from '../../../services/supabase';
 import { MovieCard } from '../../../components/MovieCard';
 import { Loading } from '../../../components/Loading';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { AnimatedButton } from '../../../components/AnimatedButton';
+import { database } from '../../../services/database';
 
 type TabType = 'resumo' | 'filmes';
 
@@ -17,6 +20,7 @@ export default function FriendProfile() {
   const [friend, setFriend] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('resumo');
+  const [affinity, setAffinity] = useState<number>(0);
 
   useEffect(() => {
     const fetchFriendDetails = async () => {
@@ -34,7 +38,32 @@ export default function FriendProfile() {
         
         if (response.ok) {
           const result = await response.json();
-          setFriend(result.data);
+          const friendData = result.data;
+          setFriend(friendData);
+
+          // Calculate affinity
+          try {
+            const myWatched = await database.getWatchedMovies(session.user.id);
+            const myWatchedIds = new Set(myWatched.map((m: any) => m.movieId));
+            
+            const friendWatched = friendData.watched_movies || [];
+            
+            if (myWatchedIds.size > 0 && friendWatched.length > 0) {
+              const commonCount = friendWatched.filter((m: any) => myWatchedIds.has(m.movieId)).length;
+              // A simple formula: common movies relative to the smallest list, capped at 100%
+              const minSize = Math.min(myWatchedIds.size, friendWatched.length);
+              const baseAffinity = Math.round((commonCount / minSize) * 100);
+              
+              // Apply a small boost if they have a lot of common movies
+              const boost = Math.min(15, commonCount); // up to 15% boost for sheer volume of common movies
+              
+              setAffinity(Math.min(100, baseAffinity + boost));
+            } else {
+              setAffinity(0);
+            }
+          } catch (e) {
+            console.error('Erro calculando afinidade', e);
+          }
         }
       } catch (e) {
         console.error('Erro ao buscar amigo', e);
@@ -109,6 +138,26 @@ export default function FriendProfile() {
 
       {activeTab === 'resumo' ? (
         <View style={styles.resumoContainer}>
+          <View style={styles.affinityCard}>
+            <View style={styles.affinityHeader}>
+              <Ionicons name="flame" size={24} color={affinity > 50 ? "#FF5722" : "#666"} />
+              <Text style={styles.affinityTitle}>Afinidade Cinematográfica</Text>
+            </View>
+            <View style={styles.affinityBarContainer}>
+              <View style={[styles.affinityBarFill, { width: `${affinity}%`, backgroundColor: affinity > 50 ? '#FF5722' : '#666' }]} />
+            </View>
+            <Text style={styles.affinityValue}>{affinity}% de compatibilidade</Text>
+          </View>
+
+          <View style={styles.avatarSection}>
+            {friend.avatar_url ? (
+              <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={48} color="#666" />
+              </View>
+            )}
+          </View>
           <View style={styles.statCard}>
             <Ionicons name="film-outline" size={40} color="#E50914" />
             <Text style={styles.statValue}>{friend.stats?.total_movies || 0}</Text>
@@ -123,6 +172,13 @@ export default function FriendProfile() {
             <Text style={styles.statLabel}>Tag do Amigo:</Text>
             <Text style={styles.tagText}>{friend.tag}</Text>
           </View>
+          <AnimatedButton 
+            style={styles.matchButton} 
+            onPress={() => router.push({ pathname: '/match/[friendId]', params: { friendId: friend.id, friendName: friend.name } })}
+          >
+            <Ionicons name="flame" size={24} color="#fff" />
+            <Text style={styles.matchButtonText}>Match de Filmes</Text>
+          </AnimatedButton>
         </View>
       ) : (
         <FlatList
@@ -230,6 +286,60 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 16,
   },
+  affinityCard: {
+    backgroundColor: '#1E1E1E',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  affinityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  affinityTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  affinityBarContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#333',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  affinityBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  affinityValue: {
+    color: '#aaa',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatarImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   statCard: {
     backgroundColor: '#1E1E1E',
     padding: 24,
@@ -277,5 +387,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     fontSize: 16,
+  },
+  matchButton: {
+    backgroundColor: '#E50914',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 16,
+    gap: 8,
+    marginTop: 8,
+  },
+  matchButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   }
 });

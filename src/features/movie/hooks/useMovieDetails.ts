@@ -1,0 +1,232 @@
+import { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { getMovieDetails } from '../../../services/api';
+import { database } from '../../../services/database';
+import { useAlert } from '../../../contexts/AlertContext';
+import { useQuery } from '@tanstack/react-query';
+
+const EMOTIONS = [
+  { label: '🤩 Espetacular', type: 'good', color: '#4CAF50' },
+  { label: '🤯 Explodiu a cabeça', type: 'good', color: '#9C27B0' },
+  { label: '😂 Muito Engraçado', type: 'good', color: '#FFEB3B' },
+  { label: '😍 Apaixonante', type: 'good', color: '#E91E63' },
+  { label: '😭 Chorei muito', type: 'good', color: '#2196F3' },
+  { label: '👏 Brilhante', type: 'good', color: '#00BCD4' },
+  { label: '✨ Lindo visual', type: 'good', color: '#009688' },
+  { label: '🤔 Inteligente', type: 'good', color: '#3F51B5' },
+  { label: '🥰 Inspirador', type: 'good', color: '#8BC34A' },
+  { label: '😌 Relaxante', type: 'good', color: '#8BC34A' },
+  { label: '🤷 Confuso', type: 'neutral', color: '#9E9E9E' },
+  { label: '😐 Mediano', type: 'neutral', color: '#795548' },
+  { label: '🥱 Entediante', type: 'neutral', color: '#607D8B' },
+  { label: '😬 Tenso', type: 'bad', color: '#FF9800' },
+  { label: '😨 Assustador', type: 'bad', color: '#673AB7' },
+  { label: '😞 Decepcionante', type: 'bad', color: '#F44336' },
+  { label: '😡 Revoltante', type: 'bad', color: '#D32F2F' },
+  { label: '🤦 Previsível', type: 'bad', color: '#795548' },
+  { label: '🤮 Péssimo', type: 'bad', color: '#000000' },
+];
+
+export function useMovieDetails(movieId: string | undefined) {
+  const router = useRouter();
+  const { showAlert } = useAlert();
+  
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isMovieWatched, setIsMovieWatched] = useState(false);
+  const [isMovieInWatchlist, setIsMovieInWatchlist] = useState(false);
+  
+  // Rating Modal states
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const [movieRating, setMovieRating] = useState(0);
+  const [movieReview, setMovieReview] = useState('');
+  const [hasMovieSpoiler, setHasMovieSpoiler] = useState(false);
+  const [selectedMovieEmotions, setSelectedMovieEmotions] = useState<string[]>([]);
+  const [userCustomLists, setUserCustomLists] = useState<any[]>([]);
+  const [selectedCustomLists, setSelectedCustomLists] = useState<string[]>([]);
+  
+  // Chat Modal
+  const [isChatModalVisible, setIsChatModalVisible] = useState(false);
+  const [friendTagsInput, setFriendTagsInput] = useState('');
+  const [isCreatingChatGroup, setIsCreatingChatGroup] = useState(false);
+  
+  // Trailer Modal
+  const [isTrailerVisible, setIsTrailerVisible] = useState(false);
+  const [trailerVideoKey, setTrailerVideoKey] = useState<string | null>(null);
+
+  const { data: movieData, isLoading } = useQuery({
+    queryKey: ['movie', movieId],
+    queryFn: () => getMovieDetails(Number(movieId)),
+    enabled: !!movieId,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+  });
+
+  useEffect(() => {
+    if (movieData && movieData.videos && movieData.videos.results) {
+      const trailer = movieData.videos.results.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
+      if (trailer) {
+        setTrailerVideoKey(trailer.key);
+      }
+    }
+  }, [movieData]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = await database.getCurrentUser();
+      setCurrentUser(user);
+      
+      if (user && movieId) {
+        const watchedList = await database.getWatchedMovies(user.id);
+        const watched = watchedList.find((w: any) => w.movieId === Number(movieId));
+        if (watched) {
+          if (watched.status === 'watchlist') {
+            setIsMovieInWatchlist(true);
+          } else {
+            setIsMovieWatched(true);
+            setMovieRating(watched.rating);
+            setMovieReview(watched.review || '');
+            setSelectedMovieEmotions(watched.emotions || []);
+          }
+        }
+        const lists = await database.getCustomLists(user.id);
+        setUserCustomLists(lists);
+        
+        const inLists = lists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(movieId))).map((l: any) => l._id);
+        setSelectedCustomLists(inLists);
+      }
+    };
+    fetchUserData();
+  }, [movieId]);
+
+  const handleSaveMovieRating = async () => {
+    if (movieRating === 0) {
+      showAlert('Aviso', 'Por favor, dê uma nota de 1 a 5 estrelas.');
+      return;
+    }
+    
+    if (selectedMovieEmotions.length < 3) {
+      showAlert('Aviso', 'Por favor, selecione pelo menos 3 emoções que o filme lhe causou.');
+      return;
+    }
+    
+    try {
+      await database.saveWatchedMovie(currentUser.id, movieData, movieRating, movieReview, movieData.runtime, selectedMovieEmotions, 'watched', hasMovieSpoiler);
+      
+      for (const listId of selectedCustomLists) {
+         await database.addMovieToCustomList(currentUser.id, listId, movieData);
+      }
+
+      setIsMovieWatched(true);
+      setIsMovieInWatchlist(false);
+      setIsRatingModalVisible(false);
+      showAlert('Sucesso', 'Filme salvo na sua lista!');
+    } catch (error) {
+      showAlert('Erro', 'Não foi possível salvar o filme.');
+    }
+  };
+
+  const handleAddMovieToWatchlist = async () => {
+    try {
+      await database.saveWatchedMovie(currentUser.id, movieData, 0, '', movieData.runtime, [], 'watchlist');
+      setIsMovieInWatchlist(true);
+      showAlert('Sucesso', 'Adicionado à sua Watchlist!');
+    } catch (error) {
+      showAlert('Erro', 'Não foi possível salvar.');
+    }
+  };
+
+  const handleRemoveMovieData = async () => {
+    try {
+      await database.removeWatchedMovie(currentUser.id, movieData.id);
+      setIsMovieWatched(false);
+      setIsMovieInWatchlist(false);
+      setMovieRating(0);
+      setMovieReview('');
+      setHasMovieSpoiler(false);
+      setSelectedMovieEmotions([]);
+      setIsRatingModalVisible(false);
+      showAlert('Sucesso', 'Filme removido da sua lista.');
+    } catch (error) {
+      showAlert('Erro', 'Não foi possível remover o filme.');
+    }
+  };
+
+  const handleCreateMovieChatGroup = async () => {
+    if (!friendTagsInput.trim()) {
+      showAlert('Aviso', 'Digite ao menos uma Tag de amigo.');
+      return;
+    }
+    
+    setIsCreatingChatGroup(true);
+    try {
+      const tagsArray = friendTagsInput.split(',').map(t => t.trim().toUpperCase());
+      const { data: friendsData } = await database.supabase
+        .from('profiles')
+        .select('id, name')
+        .in('tag', tagsArray);
+        
+      const friendsList = (friendsData && friendsData.length > 0) 
+        ? friendsData 
+        : [{ id: 'dummy-id', name: 'Amigo Convidado' }];
+      
+      const newChat = await database.createChatGroup(
+        movieData.id, 
+        movieData.title, 
+        movieData.poster_path, 
+        friendsList,
+        currentUser.name || 'Eu'
+      );
+      
+      setIsChatModalVisible(false);
+      showAlert('Sucesso', 'Clube do Filme criado!');
+      router.push(`/chat/${newChat.id}`);
+    } catch (e: any) {
+      showAlert('Erro', 'Não foi possível criar o chat.');
+    } finally {
+      setIsCreatingChatGroup(false);
+    }
+  };
+
+  const getMovieCertification = () => {
+    if (!movieData?.release_dates?.results) return 'N/A';
+    const brRelease = movieData.release_dates.results.find((r: any) => r.iso_3166_1 === 'BR');
+    if (brRelease && brRelease.release_dates.length > 0) {
+      const cert = brRelease.release_dates[0].certification;
+      return cert || 'L';
+    }
+    return 'L';
+  };
+
+  return {
+    movieData,
+    isLoading,
+    isMovieWatched,
+    isMovieInWatchlist,
+    isRatingModalVisible,
+    setIsRatingModalVisible,
+    movieRating,
+    setMovieRating,
+    movieReview,
+    setMovieReview,
+    hasMovieSpoiler,
+    setHasMovieSpoiler,
+    selectedMovieEmotions,
+    setSelectedMovieEmotions,
+    userCustomLists,
+    selectedCustomLists,
+    setSelectedCustomLists,
+    isChatModalVisible,
+    setIsChatModalVisible,
+    friendTagsInput,
+    setFriendTagsInput,
+    isCreatingChatGroup,
+    isTrailerVisible,
+    setIsTrailerVisible,
+    trailerVideoKey,
+    EMOTIONS,
+    handleSaveMovieRating,
+    handleAddMovieToWatchlist,
+    handleRemoveMovieData,
+    handleCreateMovieChatGroup,
+    getMovieCertification,
+  };
+}

@@ -170,19 +170,31 @@ export const database = {
       const watchedOnly = watched.filter((m: any) => m.status === 'watched');
       const total_movies = watchedOnly.length;
       
-      const currentUser = await this.getCurrentUser();
-      const total_minutes = currentUser?.totalWatchedMinutes || 0;
+      const watchedList = await this.getWatchedMovies(userId);
+      const statsJson = await AsyncStorage.getItem(STATS_KEY);
+      const stats = statsJson ? JSON.parse(statsJson) : { total_movies: 0, total_minutes: 0 };
 
-      const custom_lists = await this.getCustomLists(userId);
+      const avatarUrl = await AsyncStorage.getItem(AVATAR_KEY);
+      const pushToken = await AsyncStorage.getItem('expo_push_token');
+      const notifsStr = await AsyncStorage.getItem('notifications_enabled');
+      
+      const payload: any = {
+        total_movies: stats.total_movies,
+        total_minutes: stats.total_minutes,
+        watched_movies: watchedList
+      };
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/sync`, {
+      if (avatarUrl) payload.avatar_url = avatarUrl;
+      if (pushToken) payload.expo_push_token = pushToken;
+      if (notifsStr !== null) payload.notifications_enabled = notifsStr === 'true';
+
+      const response = await fetch(`${API_URL}/api/sync`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ total_movies, total_minutes, watched_movies: watched, custom_lists })
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
@@ -203,8 +215,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/me`, {
+      const response = await fetch(`${API_URL}/api/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`
@@ -212,29 +223,32 @@ export const database = {
       });
       
       if (response.ok) {
-        const { data } = await response.json();
+        const { data: cloudProfile } = await response.json();
         
-        // Substitui os dados locais com os dados da nuvem
-        if (data.watched_movies) {
-          await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(data.watched_movies));
+        if (cloudProfile.watched_movies) {
+          await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(cloudProfile.watched_movies));
         }
 
-        // Atualiza minutos totais
-        const currentUser = await this.getCurrentUser();
-        if (currentUser && currentUser.id === userId) {
-          const cloudMinutes = data.stats?.total_minutes || 0;
-          await this.updateUser({ 
-            email: currentUser.email, 
-            totalWatchedMinutes: cloudMinutes 
-          });
-        }
+        // Sync initial fields se existirem
+        if (cloudProfile.avatar_url) await AsyncStorage.setItem(AVATAR_KEY, cloudProfile.avatar_url);
+        if (cloudProfile.notifications_enabled !== undefined) await AsyncStorage.setItem('notifications_enabled', String(cloudProfile.notifications_enabled));
+
+        return {
+          id: cloudProfile.id,
+          name: cloudProfile.name,
+          tag: cloudProfile.tag,
+          avatar_url: cloudProfile.avatar_url,
+          notifications_enabled: cloudProfile.notifications_enabled,
+          stats: cloudProfile.stats,
+          watched_movies: cloudProfile.watched_movies
+        };
       }
     } catch (e) {
       console.error('Erro ao sincronizar nuvem para o local', e);
     }
   },
 
-  async saveWatchedMovie(userId: string, movie: any, rating: number, review: string, runtime: number, emotions: string[] = [], status: 'watched' | 'watchlist' = 'watched') {
+  async saveWatchedMovie(userId: string, movie: any, rating: number, review: string, runtime: number, emotions: string[] = [], status: 'watched' | 'watchlist' = 'watched', hasSpoiler: boolean = false) {
     try {
       const watched = await this.getWatchedMovies(userId);
       
@@ -255,15 +269,13 @@ export const database = {
       const existingIndex = watched.findIndex((m: any) => m.movieId === movie.id);
       
       if (existingIndex >= 0) {
-        // Atualiza mantendo dados antigos que não vieram
         watched[existingIndex] = { ...watched[existingIndex], ...movieData };
       } else {
         watched.push(movieData);
         
-        // Atualiza o total de minutos do usuário (apenas se for novo)
         const currentUser = await this.getCurrentUser();
         if (currentUser && currentUser.id === userId && status === 'watched') {
-          const currentTotal = currentUser.totalWatchedMinutes || 0;
+          const currentTotal = currentUser.stats?.total_minutes || 0;
           await this.updateUser({ 
             email: currentUser.email, 
             totalWatchedMinutes: currentTotal + (runtime || 0) 
@@ -273,9 +285,27 @@ export const database = {
 
       await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(watched));
       
-      // Sincroniza estatísticas na nuvem em background
       if (status === 'watched') {
         this.syncStatsToCloud(userId);
+
+        // Dispara o feed (fire and forget)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          fetch(`${API_URL}/api/feed`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              movie: movieData,
+              action: rating > 0 || review ? 'rated' : 'watched',
+              rating,
+              review,
+              has_spoiler: hasSpoiler
+            })
+          }).catch(console.error);
+        }
       }
       
       return movieData;
@@ -295,10 +325,9 @@ export const database = {
       const newWatched = watched.filter((w: any) => w.movieId !== movieId);
       await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(newWatched));
 
-      // Subtrai do total de minutos do usuário
       const currentUser = await this.getCurrentUser();
       if (currentUser && currentUser.id === userId && movieToRemove.status === 'watched') {
-        const currentTotal = currentUser.totalWatchedMinutes || 0;
+        const currentTotal = currentUser.stats?.total_minutes || 0;
         const newTotal = Math.max(0, currentTotal - (movieToRemove.runtime || 0));
         await this.updateUser({ 
           email: currentUser.email, 
@@ -315,26 +344,19 @@ export const database = {
     }
   },
 
-  // -------------------------
-  // Custom Lists (Agora Multiplayer e Salvas na Nuvem)
-  // -------------------------
   async getCustomLists(userId: string) {
     try {
-      // 1. Tenta pegar o cache offline rápido
       const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
       let localLists = listsJson ? JSON.parse(listsJson) : [];
 
-      // 2. Tenta pegar a versão atualizada da nuvem
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-        const response = await fetch(`${apiUrl}/api/lists`, {
+        const response = await fetch(`${API_URL}/api/lists`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         if (response.ok) {
           const result = await response.json();
           localLists = result.data || [];
-          // Atualiza o cache
           await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
         }
       }
@@ -342,7 +364,6 @@ export const database = {
       return localLists;
     } catch (e) {
       console.error('Erro ao buscar listas customizadas', e);
-      // Fallback para cache se estiver offline
       const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
       return listsJson ? JSON.parse(listsJson) : [];
     }
@@ -353,8 +374,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/lists`, {
+      const response = await fetch(`${API_URL}/api/lists`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -365,7 +385,6 @@ export const database = {
 
       if (!response.ok) throw new Error('Falha ao criar lista na nuvem');
       
-      // Força a atualização do cache
       await this.getCustomLists(userId);
       return true;
     } catch (e) {
@@ -379,8 +398,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/list_movies`, {
+      const response = await fetch(`${API_URL}/api/list_movies`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -399,7 +417,7 @@ export const database = {
 
       if (!response.ok) throw new Error('Falha ao adicionar filme');
       
-      await this.getCustomLists(userId); // refresh cache
+      await this.getCustomLists(userId);
       return true;
     } catch (e) {
       console.error('Erro ao adicionar em lista', e);
@@ -412,8 +430,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/list_movies`, {
+      const response = await fetch(`${API_URL}/api/list_movies`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -424,7 +441,7 @@ export const database = {
 
       if (!response.ok) throw new Error('Falha ao remover filme');
       
-      await this.getCustomLists(userId); // refresh cache
+      await this.getCustomLists(userId);
       return true;
     } catch (e) {
       console.error('Erro ao remover filme da lista', e);
@@ -437,8 +454,7 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/list_share`, {
+      const response = await fetch(`${API_URL}/api/list_share`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -456,17 +472,31 @@ export const database = {
       throw e;
     }
   },
+
+  async updateAvatar(url: string) {
+    await AsyncStorage.setItem(AVATAR_KEY, url);
+    const user = await this.getCurrentUser();
+    if (user) await this.syncStatsToCloud(user.id);
+  },
+
+  async updateNotificationPreferences(enabled: boolean) {
+    await AsyncStorage.setItem('notifications_enabled', String(enabled));
+    const user = await this.getCurrentUser();
+    if (user) await this.syncStatsToCloud(user.id);
+  },
   
-  // -------------------------
-  // Bate-Papo de Filmes (Realtime Supabase)
-  // -------------------------
+  async savePushToken(token: string) {
+    await AsyncStorage.setItem('expo_push_token', token);
+    const user = await this.getCurrentUser();
+    if (user) await this.syncStatsToCloud(user.id);
+  },
+  
   async createChatGroup(movieId: number, movieTitle: string, moviePoster: string, friends: {id: string, name: string}[], userName: string) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
       const userId = session.user.id;
 
-      // 1. Cria a sala
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .insert([{ movie_id: movieId, movie_title: movieTitle, movie_poster: moviePoster, created_by: userId }])
@@ -475,7 +505,6 @@ export const database = {
         
       if (chatError) throw chatError;
 
-      // 2. Prepara membros (Criador + Amigos)
       const members = [
         { chat_id: chatData.id, user_id: userId, user_name: userName },
         ...friends.map(f => ({ chat_id: chatData.id, user_id: f.id, user_name: f.name }))
@@ -499,7 +528,6 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return [];
       
-      // Pega todos os chats onde o usuário é membro
       const { data, error } = await supabase
         .from('chat_members')
         .select(`
@@ -540,7 +568,7 @@ export const database = {
     }
   },
   
-  async sendMessage(chatId: string, content: string, userName: string) {
+  async sendMessage(chatId: string, content: string, userName: string, userAvatar?: string | null) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
@@ -551,10 +579,26 @@ export const database = {
           chat_id: chatId,
           user_id: session.user.id,
           user_name: userName,
+          user_avatar: userAvatar || null,
           content: content
         }]);
         
       if (error) throw error;
+
+      // Dispara notificações push via Vercel (fire-and-forget)
+      fetch(`${API_URL}/api/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          content: content,
+          sender_name: userName
+        })
+      }).catch(console.error);
+
       return true;
     } catch (e) {
       console.error(e);
@@ -575,5 +619,49 @@ export const database = {
     return () => {
       supabase.removeChannel(channel);
     };
+  },
+
+  // --- MATCH DE FILMES ---
+  async saveMovieMatch(friendId: string, movieId: number, action: 'liked' | 'passed') {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+      
+      const { data, error } = await supabase
+        .from('movie_matches')
+        .insert([{
+          user_id: session.user.id,
+          friend_id: friendId,
+          movie_id: movieId,
+          action: action
+        }])
+        .select()
+        .single();
+        
+      if (error && error.code !== '23505') { // Ignora se já existe (unique constraint)
+        throw error;
+      }
+      
+      // Se foi liked, verifica se deu match
+      if (action === 'liked') {
+        const { data: friendMatch } = await supabase
+          .from('movie_matches')
+          .select('id')
+          .eq('user_id', friendId)
+          .eq('friend_id', session.user.id)
+          .eq('movie_id', movieId)
+          .eq('action', 'liked')
+          .single();
+          
+        if (friendMatch) {
+          return { isMatch: true };
+        }
+      }
+      
+      return { isMatch: false };
+    } catch (e) {
+      console.error('Erro ao salvar match', e);
+      return { isMatch: false };
+    }
   }
 };

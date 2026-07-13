@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.messages (
   chat_id uuid REFERENCES public.chats(id) ON DELETE CASCADE,
   user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   user_name text NOT NULL,
+  user_avatar text,
   content text NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );

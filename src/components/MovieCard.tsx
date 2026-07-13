@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,14 +19,31 @@ interface Props {
 
 export function MovieCard({ movie, status }: Props) {
   const router = useRouter();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 300 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
 
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      activeOpacity={0.8}
+    <Pressable
+      style={{ flex: 1 }}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onPress={() => router.push(`/movie/${movie.id}`)}
     >
-      <View style={styles.posterContainer}>
+      <Animated.View style={[styles.card, animatedStyle]}>
+        <View style={styles.posterContainer}>
         <Image
           source={{ uri: `https://image.tmdb.org/t/p/w200${movie.poster_path}` }}
           style={styles.poster}
@@ -48,7 +66,8 @@ export function MovieCard({ movie, status }: Props) {
           <Text style={styles.watchedText}>Quero Ver</Text>
         </View>
       )}
-    </TouchableOpacity>
+      </Animated.View>
+    </Pressable>
   );
 }
 

@@ -88,3 +88,16 @@ export const getMovieDetails = async (movieId: number) => {
     return null;
   }
 };
+
+export const getUpcomingMovies = async (page: number = 1) => {
+  try {
+    const response = await api.get('/movie/upcoming', {
+      params: { language: 'pt-BR', page, region: 'BR' }
+    });
+    return response.data.results;
+  } catch (error) {
+    console.error('Erro ao buscar lançamentos:', error);
+    return [];
+  }
+};
+
