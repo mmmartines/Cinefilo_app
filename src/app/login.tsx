@@ -48,25 +48,38 @@ export default function Login() {
       
       // Sincroniza com o servidor na Vercel para criar o perfil e a tag no Astra DB
       if (data.session) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
-        const response = await fetch(`${apiUrl}/api/users`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${data.session.access_token}`,
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+        try {
+          const response = await fetch(`${apiUrl}/api/users`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${data.session.access_token}`,
+            }
+          });
+          
+          let tag = '';
+          if (!response.ok) {
+             console.error('Falha ao sincronizar com o backend:', await response.text());
+          } else {
+             const apiData = await response.json();
+             tag = apiData.data?.tag || '';
           }
-        });
-        
-        if (!response.ok) {
-           console.error('Falha ao sincronizar com o backend:', await response.text());
-        } else {
-           const apiData = await response.json();
-           // Salva os dados localmente para compatibilidade do App
-           await database.setCurrentUser({
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.user_metadata?.name || '',
-              tag: apiData.data?.tag
-           });
+          
+          // Salva os dados localmente para compatibilidade do App (Sempre salva, mesmo se a API falhar)
+          await database.setCurrentUser({
+             id: data.user.id,
+             email: data.user.email,
+             name: data.user.user_metadata?.name || '',
+             tag: tag
+          });
+        } catch (err) {
+          console.error('Erro de rede ao sincronizar:', err);
+          await database.setCurrentUser({
+             id: data.user.id,
+             email: data.user.email,
+             name: data.user.user_metadata?.name || '',
+             tag: ''
+          });
         }
       }
 
@@ -121,21 +134,33 @@ export default function Login() {
              if (sessionError) throw sessionError;
              
              // Sincroniza com a API da Vercel para garantir que a Tag foi criada
-             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
-             const response = await fetch(`${apiUrl}/api/users`, {
-               method: 'GET',
-               headers: {
-                 'Authorization': `Bearer ${sessionData.session?.access_token}`,
+             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+             try {
+               const response = await fetch(`${apiUrl}/api/users`, {
+                 method: 'GET',
+                 headers: {
+                   'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                 }
+               });
+               
+               let tag = '';
+               if (response.ok) {
+                 const apiData = await response.json();
+                 tag = apiData.data?.tag || '';
                }
-             });
-             
-             if (response.ok) {
-               const apiData = await response.json();
+               
                await database.setCurrentUser({
                  id: sessionData.user?.id,
                  email: sessionData.user?.email,
                  name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                 tag: apiData.data?.tag
+                 tag: tag
+               });
+             } catch (err) {
+               await database.setCurrentUser({
+                 id: sessionData.user?.id,
+                 email: sessionData.user?.email,
+                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                 tag: ''
                });
              }
              

@@ -49,20 +49,31 @@ export default function RootLayout() {
         // Se logou via web OAuth, a sessão já existe no supabase mas não no AsyncStorage
         const localUser = await database.getCurrentUser();
         if (!localUser || localUser.id !== session.user.id) {
-          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
-          const response = await fetch(`${apiUrl}/api/users`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+          try {
+            const response = await fetch(`${apiUrl}/api/users`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+              }
+            });
+            let tag = '';
+            if (response.ok) {
+              const apiData = await response.json();
+              tag = apiData.data?.tag || '';
             }
-          });
-          if (response.ok) {
-            const apiData = await response.json();
             await database.setCurrentUser({
               id: session.user.id,
               email: session.user.email,
               name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || '',
-              tag: apiData.data?.tag
+              tag: tag
+            });
+          } catch (err) {
+            await database.setCurrentUser({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || '',
+              tag: ''
             });
           }
         }
