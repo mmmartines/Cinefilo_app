@@ -170,6 +170,12 @@ export default function Index() {
           >
             <Text style={[styles.genreText, genreId === -1 && styles.genreTextActive]}>🔥 Em Cartaz</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.genrePill}
+            onPress={() => router.push('/cinemas')}
+          >
+            <Text style={styles.genreText}>📍 Cinemas Próximos</Text>
+          </TouchableOpacity>
           {genres.map((g) => (
             <TouchableOpacity 
               key={g.id}
