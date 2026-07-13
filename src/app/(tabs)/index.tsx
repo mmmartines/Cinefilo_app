@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchFilteredMovies, getGenres } from '../../services/api';
 import { database } from '../../services/database';
 import { MovieCard } from '../../components/MovieCard';
@@ -9,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function Index() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // Função para preencher a última linha com itens vazios (simulando 4 colunas)
   const formatData = (dataList: any[], numColumns: number) => {
@@ -74,12 +76,18 @@ export default function Index() {
     setLoading(false);
   };
 
-  // Toda vez que os filtros mudarem, reinicia a lista
+  // Debounce para query e year
   useEffect(() => {
-    loadData(true);
-  }, [genreId, year]); // 'query' será disparada num botão ou onSubmitEditing para não flodar a API
+    const delayDebounceFn = setTimeout(() => {
+      loadData(true);
+    }, 500);
 
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, year, genreId]);
+
+  // Removemos o handleSearch manual, pois o debounce cuidará disso
   const handleSearch = () => {
+    // Pode continuar existindo para caso o usuário aperte enter rápido
     loadData(true);
   };
 
@@ -112,10 +120,15 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.headerTitle}>Cinéfilo 🍿</Text>
-        </View>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+        <View style={{ width: 40 }} />
+        <Text style={styles.headerTitle}>Cinéfilo 🍿</Text>
+        <TouchableOpacity 
+          style={styles.profileIcon} 
+          onPress={() => router.push('/profile')}
+        >
+          <Ionicons name="person" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.filterContainer}>
@@ -192,22 +205,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 48,
     paddingBottom: 16,
     backgroundColor: '#1E1E1E',
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#E50914',
+    textAlign: 'center',
   },
-  logoutButton: {
+  profileIcon: {
     padding: 8,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   center: {
     flex: 1,

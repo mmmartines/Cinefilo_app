@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../../services/database';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -61,6 +62,8 @@ export default function Lists() {
                 <Image 
                   source={{ uri: `https://image.tmdb.org/t/p/w185${movie.poster_path}` }} 
                   style={styles.movieThumb}
+                  contentFit="cover"
+                  transition={200}
                 />
               </TouchableOpacity>
             )}
@@ -75,7 +78,14 @@ export default function Lists() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <View style={{ width: 40 }} />
         <Text style={styles.headerTitle}>Minhas Listas</Text>
+        <TouchableOpacity 
+          style={styles.profileIcon} 
+          onPress={() => router.push('/profile')}
+        >
+          <Ionicons name="person" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.createSection}>
@@ -128,15 +138,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 16,
+    backgroundColor: '#1E1E1E',
+  },
+  profileIcon: {
+    padding: 8,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#E50914',
+    textAlign: 'center',
   },
   createSection: {
     padding: 16,

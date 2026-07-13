@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './supabase';
 
 const USERS_KEY = '@cinefilo_users';
 const CURRENT_USER_KEY = '@cinefilo_current_user';
@@ -134,6 +135,7 @@ export const database = {
   // Desloga
   async logout() {
     try {
+      await supabase.auth.signOut();
       await AsyncStorage.removeItem(CURRENT_USER_KEY);
       this.notifyAuthListeners(null);
     } catch (e) {
@@ -150,6 +152,41 @@ export const database = {
     } catch (e) {
       console.error('Erro ao ler filmes assistidos', e);
       return [];
+    }
+  },
+
+  async syncStatsToCloud(userId: string, retries = 3) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const watched = await this.getWatchedMovies(userId);
+      const watchedOnly = watched.filter((m: any) => m.status === 'watched');
+      const total_movies = watchedOnly.length;
+      
+      const currentUser = await this.getCurrentUser();
+      const total_minutes = currentUser?.totalWatchedMinutes || 0;
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ total_movies, total_minutes })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro API: ${response.status}`);
+      }
+    } catch (e) {
+      console.error(`Erro ao sincronizar stats (Restam ${retries} tentativas):`, e);
+      if (retries > 0) {
+        setTimeout(() => {
+          this.syncStatsToCloud(userId, retries - 1);
+        }, 5000); // Retenta em 5 segundos
+      }
     }
   },
 
@@ -191,6 +228,12 @@ export const database = {
       }
 
       await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(watched));
+      
+      // Sincroniza estatísticas na nuvem em background
+      if (status === 'watched') {
+        this.syncStatsToCloud(userId);
+      }
+      
       return movieData;
     } catch (e) {
       console.error('Erro ao salvar filme assistido', e);
@@ -210,13 +253,17 @@ export const database = {
 
       // Subtrai do total de minutos do usuário
       const currentUser = await this.getCurrentUser();
-      if (currentUser && currentUser.id === userId) {
+      if (currentUser && currentUser.id === userId && movieToRemove.status === 'watched') {
         const currentTotal = currentUser.totalWatchedMinutes || 0;
         const newTotal = Math.max(0, currentTotal - (movieToRemove.runtime || 0));
         await this.updateUser({ 
           email: currentUser.email, 
           totalWatchedMinutes: newTotal 
         });
+      }
+      
+      if (movieToRemove.status === 'watched') {
+        this.syncStatsToCloud(userId);
       }
     } catch (e) {
       console.error('Erro ao remover filme assistido', e);

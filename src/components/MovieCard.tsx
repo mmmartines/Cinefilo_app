@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -28,6 +29,8 @@ export function MovieCard({ movie, status }: Props) {
         <Image
           source={{ uri: `https://image.tmdb.org/t/p/w200${movie.poster_path}` }}
           style={styles.poster}
+          contentFit="cover"
+          transition={200}
         />
         {status && <View style={styles.overlay} />}
       </View>

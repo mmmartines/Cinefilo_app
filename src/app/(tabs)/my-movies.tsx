@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../../services/database';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MovieCard } from '../../components/MovieCard';
 
 export default function MyMovies() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [watchedMovies, setWatchedMovies] = useState<any[]>([]);
   const [filter, setFilter] = useState<'watched' | 'watchlist'>('watched');
   const [user, setUser] = useState<any>(null);
@@ -46,8 +47,15 @@ export default function MyMovies() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+        <View style={{ width: 40 }} />
         <Text style={styles.headerTitle}>Meus Filmes</Text>
+        <TouchableOpacity 
+          style={styles.profileIcon} 
+          onPress={() => router.push('/profile')}
+        >
+          <Ionicons name="person" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
       
       <View style={styles.filterRow}>
@@ -117,10 +125,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#1E1E1E',
+  },
+  profileIcon: {
+    padding: 8,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filterRow: {
     flexDirection: 'row',
@@ -146,9 +165,10 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#E50914',
+    textAlign: 'center',
   },
   center: {
     flex: 1,

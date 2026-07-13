@@ -3,6 +3,14 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView 
 import { useRouter } from 'expo-router';
 import { database } from '../services/database';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { supabase } from '../services/supabase';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
+
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 export default function Login() {
   const router = useRouter();
@@ -15,9 +23,53 @@ export default function Login() {
       Alert.alert('Erro', 'Preencha todos os campos.');
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Erro', 'Por favor, insira um e-mail válido.');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await database.login(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+      
+      // Sincroniza com o servidor na Vercel para criar o perfil e a tag no Astra DB
+      if (data.session) {
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+        const response = await fetch(`${apiUrl}/api/users`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${data.session.access_token}`,
+          }
+        });
+        
+        if (!response.ok) {
+           console.error('Falha ao sincronizar com o backend:', await response.text());
+        } else {
+           const apiData = await response.json();
+           // Salva os dados localmente para compatibilidade do App
+           await database.setCurrentUser({
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.name || '',
+              tag: apiData.data?.tag
+           });
+        }
+      }
+
       router.replace('/');
     } catch (e: any) {
       Alert.alert('Erro', e.message || 'Erro ao logar.');
@@ -26,12 +78,73 @@ export default function Login() {
     }
   };
 
-  const handleSocialLogin = async (provider: string) => {
+  const handleSocialLogin = async (provider: 'google') => {
     try {
-      await database.socialLoginMock(provider);
-      router.replace('/');
+      const redirectTo = Linking.createURL('/');
+      
+      if (Platform.OS === 'web') {
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo,
+          },
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        
+        if (res.type === 'success') {
+          const { url } = res;
+          // Supabase envia os tokens na URL (hash fragment)
+          const hashMatch = url.match(/#access_token=([^&]+).*&refresh_token=([^&]+)/);
+          
+          if (hashMatch) {
+             const access_token = hashMatch[1];
+             const refresh_token = hashMatch[2];
+             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+             });
+             
+             if (sessionError) throw sessionError;
+             
+             // Sincroniza com a API da Vercel para garantir que a Tag foi criada
+             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+             const response = await fetch(`${apiUrl}/api/users`, {
+               method: 'GET',
+               headers: {
+                 'Authorization': `Bearer ${sessionData.session?.access_token}`,
+               }
+             });
+             
+             if (response.ok) {
+               const apiData = await response.json();
+               await database.setCurrentUser({
+                 id: sessionData.user?.id,
+                 email: sessionData.user?.email,
+                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                 tag: apiData.data?.tag
+               });
+             }
+             
+             router.replace('/');
+          }
+        }
+      }
     } catch (e: any) {
-      Alert.alert('Erro', 'Falha no login social.');
+      Alert.alert('Erro', e.message || 'Falha no login social.');
     }
   };
 
@@ -92,19 +205,9 @@ export default function Login() {
       </View>
 
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#fff' }]} onPress={() => handleSocialLogin('Google')}>
+        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#fff' }]} onPress={() => handleSocialLogin('google')}>
           <FontAwesome5 name="google" color="#DB4437" size={20} />
-          <Text style={[styles.socialButtonText, { color: '#000' }]}>Google</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#1877F2' }]} onPress={() => handleSocialLogin('Facebook')}>
-          <FontAwesome5 name="facebook-f" color="#fff" size={20} />
-          <Text style={styles.socialButtonText}>Facebook</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#000', borderColor: '#333', borderWidth: 1 }]} onPress={() => handleSocialLogin('X')}>
-          <FontAwesome5 name="twitter" color="#fff" size={20} />
-          <Text style={styles.socialButtonText}>X</Text>
+          <Text style={[styles.socialButtonText, { color: '#000' }]}>Continuar com Google</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

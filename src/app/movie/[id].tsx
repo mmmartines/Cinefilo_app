@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getMovieDetails } from '../../services/api';
@@ -190,6 +191,8 @@ export default function MovieDetails() {
         <Image
           source={{ uri: `https://image.tmdb.org/t/p/w500${movie.backdrop_path || movie.poster_path}` }}
           style={styles.backdrop}
+          contentFit="cover"
+          transition={300}
         />
         
         <View style={styles.headerInfo}>
@@ -246,6 +249,8 @@ export default function MovieDetails() {
                     key={provider.provider_id}
                     source={{ uri: `https://image.tmdb.org/t/p/w92${provider.logo_path}` }}
                     style={styles.providerLogo}
+                    contentFit="cover"
+                    transition={200}
                   />
                 ))}
               </View>
@@ -286,6 +291,8 @@ export default function MovieDetails() {
                     <Image
                       source={{ uri: `https://image.tmdb.org/t/p/w185${actor.profile_path}` }}
                       style={styles.actorImage}
+                      contentFit="cover"
+                      transition={200}
                     />
                     <Text style={styles.actorName} numberOfLines={1}>{actor.name}</Text>
                     <Text style={styles.actorRole} numberOfLines={1}>{actor.character}</Text>
@@ -309,6 +316,8 @@ export default function MovieDetails() {
                     <Image
                       source={{ uri: `https://image.tmdb.org/t/p/w342${rec.poster_path}` }}
                       style={styles.recImage}
+                      contentFit="cover"
+                      transition={200}
                     />
                   </TouchableOpacity>
                 ))}
@@ -754,5 +763,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  trailerModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? 60 : 40,
+  },
+  trailerModalContent: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  closeTrailerButton: {
+    alignSelf: 'flex-end',
+    marginRight: 16,
+    marginBottom: 16,
+    padding: 8,
   }
 });

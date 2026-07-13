@@ -5,17 +5,24 @@ import { database } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Platform } from 'react-native';
+import { supabase } from '../services/supabase';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import { FontAwesome5 } from '@expo/vector-icons';
+
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 export default function Register() {
   const router = useRouter();
   const [name, setName] = useState('');
-  const [birthdate, setBirthdate] = useState('');
+  const [birthdate, setBirthdate] = useState('31/01/1996');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [notifications, setNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(new Date(1996, 0, 31)); // Janeiro é mês 0 no JS
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const onChangeDate = (event: any, selectedDate?: Date) => {
@@ -34,21 +41,133 @@ export default function Register() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Erro', 'Por favor, insira um e-mail válido.');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await database.registerUser({
-        name,
-        birthdate,
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        notifications
+        options: {
+          data: {
+            name: name,
+            birthdate: birthdate,
+          }
+        }
       });
-      // Register makes auto-login
-      router.replace('/');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data.session) {
+         // Sincroniza com o servidor na Vercel para criar o perfil e a tag no Astra DB
+         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+         const response = await fetch(`${apiUrl}/api/users`, {
+           method: 'GET',
+           headers: {
+             'Authorization': `Bearer ${data.session.access_token}`,
+           }
+         });
+         
+         if (!response.ok) {
+            console.error('Falha ao sincronizar com o backend:', await response.text());
+         } else {
+            const apiData = await response.json();
+            // Salva a sessão localmente para retrocompatibilidade do layout do app
+            await database.setCurrentUser({ 
+              id: data.user?.id, 
+              email, 
+              name,
+              tag: apiData.data?.tag
+            });
+         }
+         router.replace('/');
+      } else {
+         Alert.alert('Sucesso', 'Verifique seu e-mail para confirmar a conta!');
+         router.replace('/login');
+      }
     } catch (e: any) {
       Alert.alert('Erro', e.message || 'Erro ao realizar o cadastro.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google') => {
+    try {
+      const redirectTo = Linking.createURL('/');
+      
+      if (Platform.OS === 'web') {
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo,
+          },
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        
+        if (res.type === 'success') {
+          const { url } = res;
+          const hashMatch = url.match(/#access_token=([^&]+).*&refresh_token=([^&]+)/);
+          
+          if (hashMatch) {
+             const access_token = hashMatch[1];
+             const refresh_token = hashMatch[2];
+             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                access_token,
+                refresh_token,
+             });
+             
+             if (sessionError) throw sessionError;
+             
+             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+             const response = await fetch(`${apiUrl}/api/users`, {
+               method: 'GET',
+               headers: {
+                 'Authorization': `Bearer ${sessionData.session?.access_token}`,
+               }
+             });
+             
+             if (response.ok) {
+               const apiData = await response.json();
+               await database.setCurrentUser({
+                 id: sessionData.user?.id,
+                 email: sessionData.user?.email,
+                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                 tag: apiData.data?.tag
+               });
+             }
+             
+             router.replace('/');
+          }
+        }
+      }
+    } catch (e: any) {
+      Alert.alert('Erro', e.message || 'Falha no login social.');
     }
   };
 
@@ -118,16 +237,6 @@ export default function Register() {
           />
         </View>
 
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchLabel}>Receber notificações do app</Text>
-          <Switch
-            value={notifications}
-            onValueChange={setNotifications}
-            trackColor={{ false: '#767577', true: '#E50914' }}
-            thumbColor={notifications ? '#fff' : '#f4f3f4'}
-          />
-        </View>
-
         <TouchableOpacity 
           style={styles.registerButton} 
           onPress={handleRegister}
@@ -142,6 +251,17 @@ export default function Register() {
           <Text style={styles.backText}>
             Já tem uma conta? <Text style={styles.backLink}>Faça Login</Text>
           </Text>
+        </TouchableOpacity>
+
+        <View style={styles.dividerContainer}>
+          <View style={styles.divider} />
+          <Text style={styles.dividerText}>ou cadastre-se com</Text>
+          <View style={styles.divider} />
+        </View>
+
+        <TouchableOpacity style={styles.socialButton} onPress={() => handleSocialLogin('google')}>
+          <FontAwesome5 name="google" color="#DB4437" size={20} />
+          <Text style={styles.socialButtonText}>Continuar com Google</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -189,18 +309,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
-  switchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 8,
-    paddingHorizontal: 4,
-  },
-  switchLabel: {
-    color: '#fff',
-    fontSize: 16,
-  },
   registerButton: {
     backgroundColor: '#E50914',
     height: 56,
@@ -222,5 +330,33 @@ const styles = StyleSheet.create({
   backLink: {
     color: '#E50914',
     fontWeight: 'bold',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 32,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#333',
+  },
+  dividerText: {
+    color: '#666',
+    paddingHorizontal: 16,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  socialButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 12,
   },
 });

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Loading } from '../../components/Loading';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../../services/database';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Polygon, Line, Text as SvgText, Circle } from 'react-native-svg';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -42,6 +42,8 @@ const EMOTION_PHRASES: Record<string, string> = {
 };
 
 export default function Stats() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [totalMovies, setTotalMovies] = useState(0);
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -58,7 +60,8 @@ export default function Stats() {
     const currentUser = await database.getCurrentUser();
     if (!currentUser) return;
 
-    const list = await database.getWatchedMovies(currentUser.id);
+    const fullList = await database.getWatchedMovies(currentUser.id);
+    const list = fullList.filter((m: any) => m.status === 'watched' || !m.status);
     
     setTotalMovies(list.length);
     
@@ -208,10 +211,13 @@ export default function Stats() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Estatísticas</Text>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-          <Ionicons name="share-social" size={24} color="#E50914" />
+          <Ionicons name="share-social" size={20} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Estatísticas</Text>
+        <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/profile')}>
+          <Ionicons name="person" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -297,7 +303,7 @@ export default function Stats() {
         
         {topEmotions.length === 6 && topEmotions[0].name !== '' ? (
           <View style={styles.radarContainer}>
-            <Svg height="250" width="250" viewBox="0 0 200 200">
+            <Svg height="250" width="100%" viewBox="-40 -20 280 240">
               {/* Círculos de Fundo */}
               <Circle cx="100" cy="100" r="80" stroke="#333" strokeWidth="1" fill="none" />
               <Circle cx="100" cy="100" r="53" stroke="#333" strokeWidth="1" fill="none" />
@@ -380,23 +386,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   header: {
-    padding: 24,
-    paddingTop: 48,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    position: 'relative',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    backgroundColor: '#1E1E1E',
   },
   headerTitle: {
-    color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
+    color: '#E50914',
+    textAlign: 'center',
   },
   shareButton: {
-    position: 'absolute',
-    right: 24,
-    top: 48,
     padding: 8,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileIcon: {
+    padding: 8,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   gamificationCard: {
     alignItems: 'center',

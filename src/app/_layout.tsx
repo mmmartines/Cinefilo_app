@@ -2,10 +2,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 import { useEffect, useState } from 'react';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { database } from '../services/database';
+import { supabase } from '../services/supabase';
 import { NetworkAlert } from '../components/NetworkAlert';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Platform } from 'react-native';
@@ -43,7 +44,37 @@ export default function RootLayout() {
       setIsAuthenticated(!!user);
     });
 
-    return unsubscribe;
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        // Se logou via web OAuth, a sessão já existe no supabase mas não no AsyncStorage
+        const localUser = await database.getCurrentUser();
+        if (!localUser || localUser.id !== session.user.id) {
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+          const response = await fetch(`${apiUrl}/api/users`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            }
+          });
+          if (response.ok) {
+            const apiData = await response.json();
+            await database.setCurrentUser({
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || '',
+              tag: apiData.data?.tag
+            });
+          }
+        }
+      } else {
+        await database.logout();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -66,7 +97,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Slot />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ presentation: 'modal', headerShown: false }} />
+      </Stack>
       <NetworkAlert />
     </ThemeProvider>
   );
