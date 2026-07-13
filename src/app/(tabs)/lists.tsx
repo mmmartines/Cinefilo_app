@@ -44,10 +44,13 @@ export default function Lists() {
       <TouchableOpacity 
         style={styles.listCard}
         activeOpacity={0.8}
-        onPress={() => router.push(`/list/${item.id}`)}
+        onPress={() => router.push(`/list/${item._id}`)}
       >
         <View style={styles.listHeader}>
-          <Text style={styles.listTitle}>{item.name}</Text>
+          <View>
+            <Text style={styles.listTitle}>{item.name}</Text>
+            {item.owner_name && <Text style={styles.listOwner}>de {item.owner_name}</Text>}
+          </View>
           <Text style={styles.listCount}>{item.movies.length} filmes</Text>
         </View>
         
@@ -117,14 +120,28 @@ export default function Lists() {
       </View>
 
       <FlatList
-        data={lists}
-        keyExtractor={(item) => item.id.toString()}
+        data={lists.filter(l => l.owner_id === user?.id)}
+        keyExtractor={(item) => item._id.toString()}
         renderItem={renderList}
         contentContainerStyle={styles.listsContainer}
+        ListHeaderComponent={<Text style={styles.sectionTitle}>Minhas Listas</Text>}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Ionicons name="list" size={64} color="#333" />
-            <Text style={styles.emptyText}>Você ainda não possui listas personalizadas.</Text>
+            <Text style={styles.emptyText}>Você ainda não possui listas.</Text>
+          </View>
+        }
+        ListFooterComponent={
+          <View style={{ marginTop: 24 }}>
+            <Text style={styles.sectionTitle}>Compartilhadas Comigo</Text>
+            {lists.filter(l => l.owner_id !== user?.id).length === 0 ? (
+              <Text style={[styles.emptyText, { marginLeft: 16 }]}>Nenhuma lista compartilhada com você.</Text>
+            ) : (
+              lists.filter(l => l.owner_id !== user?.id).map((item) => (
+                <View key={item._id} style={{ marginHorizontal: 16, marginBottom: 16 }}>
+                  {renderList({ item })}
+                </View>
+              ))
+            )}
           </View>
         }
       />
@@ -226,9 +243,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  listOwner: {
+    color: '#999',
+    fontSize: 12,
+    marginTop: 2,
+  },
   listCount: {
     color: '#999',
     fontSize: 14,
+  },
+  sectionTitle: {
+    color: '#E50914',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   movieThumb: {
     width: 60,

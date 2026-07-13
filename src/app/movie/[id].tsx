@@ -76,7 +76,7 @@ export default function MovieDetails() {
         setCustomLists(userLists);
         
         // Verificar em quais listas já está
-        const inLists = userLists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(id))).map((l: any) => l.id);
+        const inLists = userLists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(id))).map((l: any) => l._id);
         setSelectedLists(inLists);
       }
       
@@ -382,19 +382,19 @@ export default function MovieDetails() {
                 <Text style={styles.modalSubtitle}>Adicionar às Listas</Text>
                 <View style={styles.emotionsContainer}>
                   {customLists.map((list) => {
-                    const isSelected = selectedLists.includes(list.id);
+                    const isSelected = selectedLists.includes(list._id);
                     return (
                       <TouchableOpacity
-                        key={list.id}
+                        key={list._id}
                         style={[
                           styles.emotionChip,
                           isSelected ? { backgroundColor: '#E50914', borderColor: '#E50914' } : { borderColor: '#555' }
                         ]}
                         onPress={() => {
                           if (isSelected) {
-                            setSelectedLists(prev => prev.filter(id => id !== list.id));
+                            setSelectedLists(prev => prev.filter(id => id !== list._id));
                           } else {
-                            setSelectedLists(prev => [...prev, list.id]);
+                            setSelectedLists(prev => [...prev, list._id]);
                           }
                         }}
                       >

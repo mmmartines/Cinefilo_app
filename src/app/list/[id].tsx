@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../../services/database';
@@ -11,6 +11,10 @@ export default function ListDetails() {
   const [list, setList] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [friendTag, setFriendTag] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
 
   const formatData = (dataList: any[], numColumns: number) => {
     const numberOfFullRows = Math.floor(dataList.length / numColumns);
@@ -29,7 +33,7 @@ export default function ListDetails() {
     if (currentUser) {
       setUser(currentUser);
       const userLists = await database.getCustomLists(currentUser.id);
-      const found = userLists.find((l: any) => l.id === id);
+      const found = userLists.find((l: any) => String(l._id) === String(id));
       if (found) {
         setList(found);
       }
@@ -65,6 +69,26 @@ export default function ListDetails() {
     ]);
   };
 
+  const handleShareList = async () => {
+    if (friendTag.trim().length !== 10) {
+      Alert.alert('Erro', 'A Tag deve ter 10 caracteres.');
+      return;
+    }
+    
+    setIsSharing(true);
+    try {
+      await database.shareCustomList(user.id, String(id), friendTag.trim());
+      Alert.alert('Sucesso!', 'Lista compartilhada com sucesso.');
+      setShareModalVisible(false);
+      setFriendTag('');
+      loadList();
+    } catch (e: any) {
+      Alert.alert('Erro', e.message);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -87,9 +111,18 @@ export default function ListDetails() {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{list.name}</Text>
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteList}>
-          <Ionicons name="trash-outline" size={24} color="#E50914" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {list.owner_id === user?.id && (
+            <TouchableOpacity style={styles.shareBtn} onPress={() => setShareModalVisible(true)}>
+              <Ionicons name="share-social-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+          )}
+          {list.owner_id === user?.id && (
+            <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteList}>
+              <Ionicons name="trash-outline" size={24} color="#E50914" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <FlatList
@@ -129,6 +162,44 @@ export default function ListDetails() {
           );
         }}
       />
+      
+      {/* Modal de Compartilhamento */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={shareModalVisible}
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Compartilhar Lista</Text>
+            <Text style={styles.modalSubtitle}>Digite a Tag do seu amigo para dar acesso a esta lista.</Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Tag do amigo (ex: X7K9LM2Q1P)"
+              placeholderTextColor="#666"
+              value={friendTag}
+              onChangeText={(t) => setFriendTag(t.toUpperCase())}
+              maxLength={10}
+              autoCapitalize="characters"
+            />
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setShareModalVisible(false)}>
+                <Text style={styles.modalBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtnSave} onPress={handleShareList} disabled={isSharing}>
+                {isSharing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.modalBtnText}>Compartilhar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -153,7 +224,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#1E1E1E',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   backBtn: {
+    padding: 8,
+  },
+  shareBtn: {
     padding: 8,
   },
   deleteBtn: {
@@ -203,5 +282,58 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#666',
     marginTop: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#1E1E1E',
+    width: '100%',
+    borderRadius: 16,
+    padding: 24,
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    color: '#999',
+    fontSize: 14,
+    marginBottom: 24,
+  },
+  modalInput: {
+    backgroundColor: '#121212',
+    color: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+    marginBottom: 24,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 16,
+  },
+  modalBtnCancel: {
+    padding: 12,
+  },
+  modalBtnSave: {
+    backgroundColor: '#E50914',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
   }
 });

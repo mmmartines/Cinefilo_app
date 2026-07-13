@@ -218,9 +218,6 @@ export const database = {
         if (data.watched_movies) {
           await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(data.watched_movies));
         }
-        if (data.custom_lists) {
-          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(data.custom_lists));
-        }
 
         // Atualiza minutos totais
         const currentUser = await this.getCurrentUser();
@@ -319,29 +316,58 @@ export const database = {
   },
 
   // -------------------------
-  // Custom Lists
+  // Custom Lists (Agora Multiplayer e Salvas na Nuvem)
   // -------------------------
   async getCustomLists(userId: string) {
     try {
+      // 1. Tenta pegar o cache offline rápido
       const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
-      return listsJson ? JSON.parse(listsJson) : [];
+      let localLists = listsJson ? JSON.parse(listsJson) : [];
+
+      // 2. Tenta pegar a versão atualizada da nuvem
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+        const response = await fetch(`${apiUrl}/api/lists`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          localLists = result.data || [];
+          // Atualiza o cache
+          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
+        }
+      }
+      
+      return localLists;
     } catch (e) {
       console.error('Erro ao buscar listas customizadas', e);
-      return [];
+      // Fallback para cache se estiver offline
+      const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+      return listsJson ? JSON.parse(listsJson) : [];
     }
   },
 
   async createCustomList(userId: string, listName: string) {
     try {
-      const lists = await this.getCustomLists(userId);
-      const newList = {
-        id: new Date().getTime().toString(),
-        name: listName,
-        movies: []
-      };
-      lists.push(newList);
-      await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(lists));
-      return newList;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/lists`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` 
+        },
+        body: JSON.stringify({ name: listName })
+      });
+
+      if (!response.ok) throw new Error('Falha ao criar lista na nuvem');
+      
+      // Força a atualização do cache
+      await this.getCustomLists(userId);
+      return true;
     } catch (e) {
       console.error('Erro ao criar lista', e);
       throw e;
@@ -350,22 +376,30 @@ export const database = {
 
   async addMovieToCustomList(userId: string, listId: string, movie: any) {
     try {
-      const lists = await this.getCustomLists(userId);
-      const listIndex = lists.findIndex((l: any) => l.id === listId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/list_movies`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` 
+        },
+        body: JSON.stringify({ 
+          list_id: listId, 
+          movie: {
+             movieId: movie.id,
+             title: movie.title,
+             poster_path: movie.poster_path,
+             backdrop_path: movie.backdrop_path
+          } 
+        })
+      });
+
+      if (!response.ok) throw new Error('Falha ao adicionar filme');
       
-      if (listIndex >= 0) {
-        const list = lists[listIndex];
-        // Evita duplicados
-        if (!list.movies.some((m: any) => m.movieId === movie.id)) {
-          list.movies.push({
-            movieId: movie.id,
-            title: movie.title,
-            poster_path: movie.poster_path,
-            addedAt: new Date().toISOString()
-          });
-          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(lists));
-        }
-      }
+      await this.getCustomLists(userId); // refresh cache
       return true;
     } catch (e) {
       console.error('Erro ao adicionar em lista', e);
@@ -373,27 +407,52 @@ export const database = {
     }
   },
 
-  async removeCustomList(userId: string, listId: string) {
+  async removeMovieFromCustomList(userId: string, listId: string, movieId: number) {
     try {
-      const lists = await this.getCustomLists(userId);
-      const newLists = lists.filter((l: any) => l.id !== listId);
-      await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(newLists));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/list_movies`, {
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` 
+        },
+        body: JSON.stringify({ list_id: listId, movie: { movieId } })
+      });
+
+      if (!response.ok) throw new Error('Falha ao remover filme');
+      
+      await this.getCustomLists(userId); // refresh cache
+      return true;
     } catch (e) {
-      console.error('Erro ao remover lista', e);
+      console.error('Erro ao remover filme da lista', e);
       throw e;
     }
   },
-
-  async removeMovieFromCustomList(userId: string, listId: string, movieId: number) {
+  
+  async shareCustomList(userId: string, listId: string, friendTag: string) {
     try {
-      const lists = await this.getCustomLists(userId);
-      const listIndex = lists.findIndex((l: any) => l.id === listId);
-      if (listIndex >= 0) {
-        lists[listIndex].movies = lists[listIndex].movies.filter((m: any) => m.movieId !== movieId);
-        await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(lists));
-      }
-    } catch (e) {
-      console.error('Erro ao remover filme da lista', e);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/list_share`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}` 
+        },
+        body: JSON.stringify({ list_id: listId, friend_tag: friendTag })
+      });
+      
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Falha ao compartilhar lista');
+      
+      return true;
+    } catch (e: any) {
+      console.error('Erro ao compartilhar lista', e);
       throw e;
     }
   }
