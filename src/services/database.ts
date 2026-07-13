@@ -84,16 +84,22 @@ export const database = {
       const users = await this.getUsers();
       const index = users.findIndex((u: any) => u.email === updatedData.email);
       
-      if (index === -1) {
-        throw new Error('Usuário não encontrado.');
+      if (index !== -1) {
+        // Preserva o email e mescla os novos dados
+        users[index] = { ...users[index], ...updatedData };
+        await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
       }
 
-      // Preserva o email e mescla os novos dados
-      users[index] = { ...users[index], ...updatedData };
+      // Sempre atualiza a sessão atual se for o usuário logado
+      const currentUser = await this.getCurrentUser();
+      if (currentUser && currentUser.email === updatedData.email) {
+        const newCurrentUser = { ...currentUser, ...updatedData };
+        await this.setCurrentUser(newCurrentUser);
+        return newCurrentUser;
+      }
       
-      await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
-      await this.setCurrentUser(users[index]); // Atualiza a sessão
-      return users[index];
+      if (index !== -1) return users[index];
+      return null;
     } catch (e) {
       console.error('Erro ao atualizar usuário', e);
       throw e;
