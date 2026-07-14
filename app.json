@@ -4,18 +4,18 @@
     "slug": "Cinefilo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.jpg",
+    "icon": "./assets/icon.png",
     "scheme": "cinefilo",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/icon.jpg",
+      "icon": "./assets/icon.png",
       "bundleIdentifier": "com.mmmartines.Cinefilo"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#121212",
-        "foregroundImage": "./assets/icon.jpg",
-        "backgroundImage": "./assets/icon.jpg"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.mmmartines.Cinefilo"
@@ -30,7 +30,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#121212",
-          "image": "./assets/splash.jpg",
+          "image": "./assets/splash.png",
           "resizeMode": "cover"
         }
       ],
