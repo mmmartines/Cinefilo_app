@@ -121,7 +121,8 @@ export const database = {
         throw new Error('E-mail já cadastrado.');
       }
 
-      const newUser = { id: Date.now().toString(), ...userData };
+      const generatedTag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
+      const newUser = { id: Date.now().toString(), tag: generatedTag, ...userData };
       users.push(newUser);
 
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -190,7 +191,8 @@ export const database = {
       id: `social_${Date.now()}`,
       name: `Usuário via ${provider}`,
       email: `user@${provider.toLowerCase()}.com`,
-      provider
+      provider,
+      tag: Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A')
     };
     await this.setCurrentUser(mockUser);
     return mockUser;
@@ -210,7 +212,28 @@ export const database = {
   async getCurrentUser() {
     try {
       const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
-      return userJson ? JSON.parse(userJson) : null;
+      if (!userJson) return null;
+      let user = JSON.parse(userJson);
+      
+      // Auto-generate tag if missing for backwards compatibility
+      if (!user.tag) {
+        user.tag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
+        await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        
+        try {
+          const usersJson = await AsyncStorage.getItem(USERS_KEY);
+          if (usersJson) {
+            const users = JSON.parse(usersJson);
+            const index = users.findIndex((u: any) => u.email === user.email);
+            if (index !== -1) {
+              users[index].tag = user.tag;
+              await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+            }
+          }
+        } catch(e) {}
+      }
+      
+      return user;
     } catch (e) {
       return null;
     }
@@ -455,18 +478,30 @@ export const database = {
   async createCustomList(userId: string, listName: string) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
+      let createdOnCloud = false;
 
-      const response = await fetch(`${API_URL}/api/lists`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ name: listName })
-      });
+      if (session) {
+        try {
+          const response = await fetch(`${API_URL}/api/lists`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ name: listName })
+          });
+          if (response.ok) createdOnCloud = true;
+        } catch (err) {
+          console.warn('Backend unavailable, creating list locally.');
+        }
+      }
 
-      if (!response.ok) throw new Error('Falha ao criar lista na nuvem');
+      if (!createdOnCloud) {
+        const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+        const localLists = listsJson ? JSON.parse(listsJson) : [];
+        localLists.push({ id: `local_${Date.now()}`, name: listName, movies: [] });
+        await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
+      }
 
       await this.getCustomLists(userId);
       return true;
@@ -479,26 +514,49 @@ export const database = {
   async addMovieToCustomList(userId: string, listId: string, movie: any) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
+      let addedOnCloud = false;
 
-      const response = await fetch(`${API_URL}/api/lists?action=movies`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          list_id: listId,
-          movie: {
-            movieId: movie.id,
-            title: movie.title,
-            poster_path: movie.poster_path,
-            backdrop_path: movie.backdrop_path
+      if (session && !String(listId).startsWith('local_')) {
+        try {
+          const response = await fetch(`${API_URL}/api/lists?action=movies`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              list_id: listId,
+              movie: {
+                movieId: movie.id,
+                title: movie.title,
+                poster_path: movie.poster_path,
+                backdrop_path: movie.backdrop_path
+              }
+            })
+          });
+          if (response.ok) addedOnCloud = true;
+        } catch (err) {
+          console.warn('Backend unavailable, adding movie locally.');
+        }
+      }
+
+      if (!addedOnCloud) {
+        const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+        const localLists = listsJson ? JSON.parse(listsJson) : [];
+        const listIndex = localLists.findIndex((l: any) => l.id === listId);
+        if (listIndex >= 0) {
+          if (!localLists[listIndex].movies) localLists[listIndex].movies = [];
+          if (!localLists[listIndex].movies.find((m: any) => m.movieId === movie.id)) {
+            localLists[listIndex].movies.push({
+              movieId: movie.id,
+              title: movie.title,
+              poster_path: movie.poster_path,
+              backdrop_path: movie.backdrop_path
+            });
+            await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
           }
-        })
-      });
-
-      if (!response.ok) throw new Error('Falha ao adicionar filme');
+        }
+      }
 
       await this.getCustomLists(userId);
       return true;
@@ -511,18 +569,33 @@ export const database = {
   async removeMovieFromCustomList(userId: string, listId: string, movieId: number) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
+      let removedOnCloud = false;
 
-      const response = await fetch(`${API_URL}/api/lists?action=movies`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ list_id: listId, movie: { movieId } })
-      });
+      if (session && !String(listId).startsWith('local_')) {
+        try {
+          const response = await fetch(`${API_URL}/api/lists?action=movies`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ list_id: listId, movie: { movieId } })
+          });
+          if (response.ok) removedOnCloud = true;
+        } catch (err) {
+          console.warn('Backend unavailable, removing movie locally.');
+        }
+      }
 
-      if (!response.ok) throw new Error('Falha ao remover filme');
+      if (!removedOnCloud) {
+        const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+        const localLists = listsJson ? JSON.parse(listsJson) : [];
+        const listIndex = localLists.findIndex((l: any) => l.id === listId);
+        if (listIndex >= 0 && localLists[listIndex].movies) {
+          localLists[listIndex].movies = localLists[listIndex].movies.filter((m: any) => m.movieId !== movieId);
+          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
+        }
+      }
 
       await this.getCustomLists(userId);
       return true;

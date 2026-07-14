@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   listContent: {
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 100, // Evita corte pelo tab bar
     paddingHorizontal: 12,
   },
   columnWrapper: {

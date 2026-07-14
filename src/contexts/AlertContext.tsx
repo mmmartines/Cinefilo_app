@@ -16,6 +16,7 @@ type AlertOptions = {
 
 interface AlertContextData {
   showAlert: (title: string, message?: string, buttons?: AlertButton[]) => void;
+  showToast: (message: string, icon?: string, color?: string) => void;
 }
 
 const AlertContext = createContext<AlertContextData>({} as AlertContextData);
@@ -23,6 +24,11 @@ const AlertContext = createContext<AlertContextData>({} as AlertContextData);
 export const AlertProvider = ({ children }: { children: ReactNode }) => {
   const [visible, setVisible] = useState(false);
   const [options, setOptions] = useState<AlertOptions | null>(null);
+
+  // Toast States
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastConfig, setToastConfig] = useState({ message: '', icon: 'information-circle', color: '#fff' });
+  const [toastAnim] = useState(new Animated.Value(0));
 
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -51,6 +57,18 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const showToast = (message: string, icon = 'trophy', color = '#FFD700') => {
+    setToastConfig({ message, icon, color });
+    setToastVisible(true);
+    Animated.sequence([
+      Animated.timing(toastAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(3000),
+      Animated.timing(toastAnim, { toValue: 0, duration: 300, useNativeDriver: true })
+    ]).start(() => {
+      setToastVisible(false);
+    });
+  };
+
   const handleButtonPress = (btn: AlertButton) => {
     if (btn.onPress) {
       btn.onPress();
@@ -75,9 +93,23 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AlertContext.Provider value={{ showAlert }}>
+    <AlertContext.Provider value={{ showAlert, showToast }}>
       {children}
       
+      {/* Toast */}
+      {toastVisible && (
+        <Animated.View style={[
+          styles.toastContainer, 
+          { 
+            opacity: toastAnim,
+            transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-50, 0] }) }]
+          }
+        ]}>
+          <Ionicons name={toastConfig.icon as any} size={24} color={toastConfig.color} />
+          <Text style={styles.toastText}>{toastConfig.message}</Text>
+        </Animated.View>
+      )}
+
       <Modal visible={visible} transparent={true} animationType="none">
         <View style={styles.overlay}>
           <Animated.View style={[styles.modalBox, { opacity: fadeAnim, transform: [{ scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }]}>
@@ -139,6 +171,29 @@ export const useAlert = () => {
 };
 
 const styles = StyleSheet.create({
+  toastContainer: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    elevation: 10,
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    gap: 12,
+  },
+  toastText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',

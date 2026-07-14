@@ -38,45 +38,7 @@ export function CatalogScreen() {
     formatMoviesGrid,
   } = useCatalog();
 
-  if (isLoading) {
-    return (
-      <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
-        <View style={styles.header}>
-          <Skeleton width={120} height={30} borderRadius={8} />
-          <Skeleton width={40} height={40} borderRadius={20} />
-        </View>
-        <View style={styles.filterContainer}>
-          <Skeleton width="100%" height={80} borderRadius={12} style={{ marginBottom: 16 }} />
-          <View style={styles.searchRow}>
-            <Skeleton width="60%" height={40} borderRadius={8} />
-            <Skeleton width="20%" height={40} borderRadius={8} />
-            <Skeleton width={40} height={40} borderRadius={8} />
-          </View>
-          <View style={styles.genreScroll}>
-            <Skeleton width={80} height={30} borderRadius={16} style={{ marginRight: 8 }} />
-            <Skeleton width={100} height={30} borderRadius={16} style={{ marginRight: 8 }} />
-            <Skeleton width={120} height={30} borderRadius={16} />
-          </View>
-        </View>
-        <View style={styles.listContent}>
-           <View style={styles.searchRow}>
-              {[1,2,3,4].map(i => <Skeleton key={i} width="22%" height={150} borderRadius={8} />)}
-           </View>
-           <View style={styles.searchRow}>
-              {[5,6,7,8].map(i => <Skeleton key={i} width="22%" height={150} borderRadius={8} />)}
-           </View>
-        </View>
-      </View>
-    );
-  }
 
-  if (moviesList.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={{color: 'white'}}>Nenhum filme encontrado.</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -183,22 +145,38 @@ export function CatalogScreen() {
           ))}
         </ScrollView>
       </View>
-      <FlatList
-        data={formatMoviesGrid(moviesList, 4)}
-        keyExtractor={(item, index) => item.empty ? `empty-${index}` : `${item.id}-${index}`}
-        numColumns={4}
-        renderItem={({ item }) => {
-          if (item.empty) {
-            return <View style={{ flex: 1, margin: 4, backgroundColor: 'transparent' }} />;
-          }
-          return <MovieCard movie={item} status={watchedStatus[item.id]} />;
-        }}
-        contentContainerStyle={styles.listContent}
-        columnWrapperStyle={styles.columnWrapper}
-        onEndReached={handleLoadMoreMovies}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={isLoadingMore ? <Loading /> : null}
-      />
+      
+      {isLoading ? (
+        <View style={styles.listContent}>
+           <View style={styles.searchRow}>
+              {[1,2,3,4].map(i => <Skeleton key={i} width="22%" height={150} borderRadius={8} />)}
+           </View>
+           <View style={styles.searchRow}>
+              {[5,6,7,8].map(i => <Skeleton key={i} width="22%" height={150} borderRadius={8} />)}
+           </View>
+        </View>
+      ) : moviesList.length === 0 ? (
+        <View style={[styles.center, {flex: 1, paddingBottom: 100}]}>
+          <Text style={{color: 'white'}}>Nenhum filme encontrado.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={formatMoviesGrid(moviesList, 4)}
+          keyExtractor={(item, index) => item.empty ? `empty-${index}` : `${item.id}-${index}`}
+          numColumns={4}
+          renderItem={({ item }) => {
+            if (item.empty) {
+              return <View style={{ flex: 1, margin: 4, backgroundColor: 'transparent' }} />;
+            }
+            return <MovieCard movie={item} status={watchedStatus[item.id]} />;
+          }}
+          contentContainerStyle={styles.listContent}
+          columnWrapperStyle={styles.columnWrapper}
+          onEndReached={handleLoadMoreMovies}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={isLoadingMore ? <Loading /> : null}
+        />
+      )}
 
       {/* Modal de IA */}
       <Modal visible={isAiModalVisible} transparent animationType="slide">
@@ -275,7 +253,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   listContent: {
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: 100, // Evita corte pelo tab bar
     paddingHorizontal: 12,
   },
   columnWrapper: {
@@ -372,7 +351,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 90, // Mais alto para ficar acima do tab bar
     right: 24,
     width: 64,
     height: 64,

@@ -28,7 +28,6 @@ export function ProfileScreen() {
     birthdateDate,
     isDatePickerVisible,
     setIsDatePickerVisible,
-    userBadges,
     handleChangeDate,
     handlePickImage,
     handleToggleNotifications,
@@ -72,19 +71,6 @@ export function ProfileScreen() {
           <Text style={styles.tagText} selectable={true}>{userProfile.tag || 'GERANDO...'}</Text>
         </View>
 
-        <View style={styles.badgesContainer}>
-          <Text style={styles.badgesTitle}>Suas Conquistas</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScroll}>
-            {userBadges.map(badge => (
-              <View key={badge.id} style={[styles.badgeItem, !badge.unlocked && styles.badgeLocked]}>
-                <View style={[styles.badgeIconWrapper, { backgroundColor: badge.unlocked ? badge.color : '#333' }]}>
-                  <Ionicons name={badge.icon as any} size={24} color="#fff" />
-                </View>
-                <Text style={styles.badgeName}>{badge.name}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
       </View>
 
       <View style={styles.form}>
@@ -273,11 +259,4 @@ const styles = StyleSheet.create({
   modalDeleteBtn: { flex: 1, height: 48, borderRadius: 8, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' },
   modalDeleteBtnDisabled: { backgroundColor: '#555' },
   modalDeleteText: { color: '#fff', fontWeight: 'bold' },
-  badgesContainer: { marginTop: 8, marginBottom: 16 },
-  badgesTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 },
-  badgesScroll: { gap: 16 },
-  badgeItem: { alignItems: 'center', width: 80 },
-  badgeLocked: { opacity: 0.4 },
-  badgeIconWrapper: { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  badgeName: { color: '#ccc', fontSize: 12, textAlign: 'center' }
 });

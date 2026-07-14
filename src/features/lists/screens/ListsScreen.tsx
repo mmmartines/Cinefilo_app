@@ -206,6 +206,7 @@ const styles = StyleSheet.create({
   },
   listsContainer: {
     padding: 16,
+    paddingBottom: 100, // Evita corte pelo tab bar
     gap: 16,
   },
   listCard: {

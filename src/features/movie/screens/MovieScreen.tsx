@@ -37,8 +37,9 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
     setSelectedCustomLists,
     isChatModalVisible,
     setIsChatModalVisible,
-    friendTagsInput,
-    setFriendTagsInput,
+    friendsList,
+    selectedFriends,
+    setSelectedFriends,
     isCreatingChatGroup,
     isTrailerVisible,
     setIsTrailerVisible,
@@ -142,8 +143,8 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                   {selectedMovieEmotions.map((emotionLabel, index) => {
                     const em = EMOTIONS.find(e => e.label === emotionLabel);
                     return (
-                      <View key={index} style={[styles.tagBadge, { backgroundColor: em?.color || '#666' }]}>
-                        <Text style={styles.tagTextBadge}>{emotionLabel}</Text>
+                      <View key={index} style={[styles.tagBadge, { backgroundColor: em ? `${em.color}22` : '#333', borderColor: em?.color || '#666', borderWidth: 1 }]}>
+                        <Text style={[styles.tagTextBadge, { color: em?.color || '#fff' }]}>{emotionLabel}</Text>
                       </View>
                     );
                   })}
@@ -294,7 +295,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                     key={index}
                     style={[
                       styles.emotionChip,
-                      isSelected ? { backgroundColor: emotion.color, borderColor: emotion.color } : { borderColor: '#555' }
+                      isSelected ? { backgroundColor: `${emotion.color}22`, borderColor: emotion.color } : { borderColor: '#555' }
                     ]}
                     onPress={() => {
                       if (isSelected) {
@@ -304,7 +305,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                       }
                     }}
                   >
-                    <Text style={[styles.emotionChipText, isSelected ? { color: '#fff' } : { color: '#bbb' }]}>
+                    <Text style={[styles.emotionChipText, isSelected ? { color: emotion.color } : { color: '#bbb' }]}>
                       {emotion.label}
                     </Text>
                   </TouchableOpacity>
@@ -323,7 +324,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                         key={list._id}
                         style={[
                           styles.emotionChip,
-                          isSelected ? { backgroundColor: '#E50914', borderColor: '#E50914' } : { borderColor: '#555' }
+                          isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: '#555' }
                         ]}
                         onPress={() => {
                           if (isSelected) {
@@ -333,7 +334,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                           }
                         }}
                       >
-                        <Text style={[styles.emotionChipText, isSelected ? { color: '#fff' } : { color: '#bbb' }]}>
+                        <Text style={[styles.emotionChipText, isSelected ? { color: '#E50914' } : { color: '#bbb' }]}>
                           {list.name}
                         </Text>
                       </TouchableOpacity>
@@ -390,16 +391,35 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
         <BlurView intensity={80} tint="dark" style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Criar Clube do Filme</Text>
-            <Text style={styles.modalSubtitle}>Convide amigos pelas suas #Tags (separadas por vírgula):</Text>
+            <Text style={styles.modalSubtitle}>Selecione os amigos para o clube:</Text>
             
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Ex: X7K9LM2Q1P, AB12CD34EF"
-              placeholderTextColor="#666"
-              value={friendTagsInput}
-              onChangeText={setFriendTagsInput}
-              autoCapitalize="characters"
-            />
+            <ScrollView style={{ width: '100%', maxHeight: 200, marginBottom: 24 }}>
+              {friendsList.length === 0 ? (
+                <Text style={{ color: '#999', textAlign: 'center', marginTop: 16 }}>Nenhum amigo encontrado.</Text>
+              ) : (
+                friendsList.map(friend => {
+                  const isSelected = selectedFriends.some(f => f.id === friend.id);
+                  return (
+                    <TouchableOpacity 
+                      key={friend.id} 
+                      style={[styles.friendSelectRow, isSelected && styles.friendSelectRowActive]}
+                      onPress={() => {
+                        if (isSelected) {
+                          setSelectedFriends(prev => prev.filter(f => f.id !== friend.id));
+                        } else {
+                          setSelectedFriends(prev => [...prev, friend]);
+                        }
+                      }}
+                    >
+                      <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
+                        {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                      </View>
+                      <Text style={[styles.friendSelectName, isSelected && { color: '#E50914' }]}>{friend.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
             
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setIsChatModalVisible(false)}>
@@ -512,6 +532,11 @@ const styles = StyleSheet.create({
   tagBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 },
   tagTextBadge: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   modalInput: { backgroundColor: '#121212', color: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#333', marginBottom: 24, width: '100%' },
+  friendSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' },
+  friendSelectRowActive: { backgroundColor: 'rgba(229, 9, 20, 0.05)' },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#666', marginRight: 12, alignItems: 'center', justifyContent: 'center' },
+  checkboxActive: { backgroundColor: '#E50914', borderColor: '#E50914' },
+  friendSelectName: { color: '#fff', fontSize: 16 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, width: '100%' },
   modalBtnCancel: { padding: 12 },
   modalBtnSave: { backgroundColor: '#E50914', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },

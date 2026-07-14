@@ -24,6 +24,7 @@ export function FeedScreen() {
     if (item.action === 'watched') actionText = 'assistiu ao filme';
     else if (item.action === 'rated') actionText = 'avaliou o filme';
     else if (item.action === 'added_to_list') actionText = 'adicionou a uma lista';
+    else if (item.action === 'unlocked_badge') actionText = 'desbloqueou uma conquista!';
 
     const isSpoilerHidden = item.has_spoiler && !revealedSpoilers.includes(item._id);
 
@@ -42,7 +43,12 @@ export function FeedScreen() {
               </View>
             )}
             <View style={styles.headerText}>
-              <Text style={styles.userName}>{item.user_name}</Text>
+              <Text style={styles.userName}>
+                {item.user_name}
+                {currentUser && (currentUser.id === item.user_id || currentUser.name === item.user_name) && (
+                  <Text style={styles.youBadge}> (Você)</Text>
+                )}
+              </Text>
               <Text style={styles.actionText}>{actionText}</Text>
             </View>
             <Text style={styles.timeAgo}>
@@ -50,39 +56,51 @@ export function FeedScreen() {
             </Text>
           </View>
 
-          <View style={styles.movieContent}>
-            {item.movie_poster && (
-              <Image 
-                source={{ uri: `https://image.tmdb.org/t/p/w200${item.movie_poster}` }} 
-                style={styles.moviePoster} 
-              />
-            )}
-            <View style={styles.movieInfo}>
-              <Text style={styles.movieTitle}>{item.movie_title}</Text>
-              {item.rating > 0 && (
-                <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={16} color="#FFD700" />
-                  <Text style={styles.ratingText}>{item.rating}/5</Text>
-                </View>
-              )}
-              {item.review ? (
-                <View style={{ position: 'relative' }}>
-                  <Text style={styles.reviewText}>"{item.review}"</Text>
-                  
-                  {isSpoilerHidden && (
-                    <TouchableOpacity 
-                      style={styles.spoilerOverlay} 
-                      onPress={() => toggleSpoilerVisibility(item._id)}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="eye-off" size={24} color="#fff" />
-                      <Text style={styles.spoilerOverlayText}>Contém Spoiler. Toque para ver.</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ) : null}
+          {item.action === 'unlocked_badge' && item.badge ? (
+            <View style={[styles.movieContent, { alignItems: 'center', borderColor: item.badge.color || '#333', borderWidth: 1 }]}>
+              <View style={[styles.badgeIconContainerFeed, { backgroundColor: item.badge.color ? `${item.badge.color}22` : '#333' }]}>
+                <Ionicons name={item.badge.icon as any} size={32} color={item.badge.color || '#fff'} />
+              </View>
+              <View style={styles.movieInfo}>
+                <Text style={[styles.movieTitle, { color: item.badge.color || '#fff' }]}>{item.badge.name}</Text>
+                <Text style={styles.reviewText}>{item.badge.description}</Text>
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.movieContent}>
+              {item.movie_poster && (
+                <Image 
+                  source={{ uri: `https://image.tmdb.org/t/p/w200${item.movie_poster}` }} 
+                  style={styles.moviePoster} 
+                />
+              )}
+              <View style={styles.movieInfo}>
+                <Text style={styles.movieTitle}>{item.movie_title}</Text>
+                {item.rating > 0 && (
+                  <View style={styles.ratingRow}>
+                    <Ionicons name="star" size={16} color="#FFD700" />
+                    <Text style={styles.ratingText}>{item.rating}/5</Text>
+                  </View>
+                )}
+                {item.review ? (
+                  <View style={{ position: 'relative' }}>
+                    <Text style={styles.reviewText}>"{item.review}"</Text>
+                    
+                    {isSpoilerHidden && (
+                      <TouchableOpacity 
+                        style={styles.spoilerOverlay} 
+                        onPress={() => toggleSpoilerVisibility(item._id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="eye-off" size={24} color="#fff" />
+                        <Text style={styles.spoilerOverlayText}>Contém Spoiler. Toque para ver.</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ) : null}
+              </View>
+            </View>
+          )}
 
           <View style={styles.cardFooter}>
             <TouchableOpacity style={styles.actionButton} onPress={() => toggleLikeActivity(item._id)}>
@@ -164,6 +182,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
   headerText: { flex: 1, marginLeft: 12 },
   userName: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  youBadge: { color: '#E50914', fontSize: 12, fontWeight: 'normal' },
   actionText: { color: '#aaa', fontSize: 14 },
   timeAgo: { color: '#666', fontSize: 12 },
   movieContent: { flexDirection: 'row', backgroundColor: '#2a2a2a', borderRadius: 8, padding: 12 },
@@ -180,5 +199,6 @@ const styles = StyleSheet.create({
   spoilerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(20,20,20,0.95)', borderRadius: 4, justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 4, padding: 8, zIndex: 10 },
   spoilerOverlayText: { color: '#fff', fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
   offlineBanner: { backgroundColor: '#FFD700', padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  offlineText: { color: '#000', fontWeight: 'bold', fontSize: 12 }
+  offlineText: { color: '#000', fontWeight: 'bold', fontSize: 12 },
+  badgeIconContainerFeed: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' }
 });

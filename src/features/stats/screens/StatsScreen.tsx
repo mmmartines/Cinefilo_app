@@ -153,7 +153,7 @@ export function StatsScreen() {
         )}
       </View>
 
-      <View style={[styles.podiumSection, { marginBottom: 40 }]}>
+      <View style={styles.podiumSection}>
         <Text style={styles.sectionTitle}>Radar de Emoções</Text>
         
         {radarEmotions.length === 6 && radarEmotions[0].name !== '' ? (
@@ -235,11 +235,11 @@ export function StatsScreen() {
         <Text style={styles.sectionTitle}>Minhas Conquistas</Text>
         <View style={styles.badgesGrid}>
           {userBadges.map(b => (
-            <View key={b.id} style={[styles.badgeItem, !b.active && styles.badgeItemInactive]}>
-              <View style={[styles.badgeIconContainer, !b.active && styles.badgeIconInactive]}>
-                <Ionicons name={b.icon as any} size={32} color={b.active ? "#FFD700" : "#666"} />
+            <View key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemInactive]}>
+              <View style={[styles.badgeIconContainer, !b.unlocked ? styles.badgeIconInactive : { borderColor: b.color, backgroundColor: `${b.color}22` }]}>
+                <Ionicons name={b.icon as any} size={32} color={b.unlocked ? b.color : "#666"} />
               </View>
-              <Text style={[styles.badgeName, !b.active && {color: '#666'}]}>{b.name}</Text>
+              <Text style={[styles.badgeName, !b.unlocked && {color: '#666'}]}>{b.name}</Text>
             </View>
           ))}
         </View>
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, alignItems: 'center' },
   statValue: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 8 },
   statLabel: { color: '#999', fontSize: 12, marginTop: 4 },
-  podiumSection: { margin: 16, marginTop: 32, padding: 16, backgroundColor: '#1E1E1E', borderRadius: 16 },
+  podiumSection: { marginHorizontal: 16, marginTop: 16, padding: 16, backgroundColor: '#1E1E1E', borderRadius: 16 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   podiumContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', minHeight: 200, gap: 12 },
   podiumItem: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },

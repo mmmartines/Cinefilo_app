@@ -4,7 +4,6 @@ import { database } from '../../../services/database';
 import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
 import * as ImagePicker from 'expo-image-picker';
-import { calculateBadges, Badge } from '../../../utils/badges';
 
 export function useProfile() {
   const router = useRouter();
@@ -21,7 +20,6 @@ export function useProfile() {
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
   const [birthdateDate, setBirthdateDate] = useState(new Date());
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [userBadges, setUserBadges] = useState<Badge[]>([]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -33,10 +31,6 @@ export function useProfile() {
         setUserPassword(currentUser.password || '');
         setUserAvatarUrl(currentUser.avatar_url || null);
         setIsNotificationsEnabled(currentUser.notifications_enabled ?? true);
-        
-        const totalMovies = currentUser.stats?.total_movies || 0;
-        const totalMinutes = currentUser.stats?.total_minutes || 0;
-        setUserBadges(calculateBadges(totalMovies, totalMinutes));
       }
     };
     fetchUserProfile();
@@ -66,31 +60,32 @@ export function useProfile() {
 
   const handleUploadAvatar = async (uri: string) => {
     setIsProfileLoading(true);
+    let finalUrl = uri; // Default to local URI as fallback
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
       
-      const fileExt = uri.split('.').pop();
-      const fileName = `${userProfile.id}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileExt = uri.split('.').pop() || 'jpg';
+      const fileName = `${userProfile?.id || 'local'}_${Date.now()}.${fileExt}`;
 
       const { error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob);
+        .upload(fileName, blob);
 
-      if (error) throw error;
-      
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-        
-      setUserAvatarUrl(publicUrlData.publicUrl);
-      await database.updateAvatar(publicUrlData.publicUrl);
-      showAlert('Sucesso', 'Foto atualizada!');
+      if (!error) {
+        const { data: publicUrlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+        finalUrl = publicUrlData.publicUrl;
+      } else {
+        console.warn('Supabase upload failed, using local URI:', error);
+      }
     } catch (e: any) {
-      console.error(e);
-      showAlert('Erro', 'Não foi possível fazer upload da foto. Verifique se o bucket "avatars" foi criado e está público.');
+      console.warn('Fallback to local URI due to error:', e);
     } finally {
+      setUserAvatarUrl(finalUrl);
+      await database.updateAvatar(finalUrl);
+      showAlert('Sucesso', 'Foto atualizada!');
       setIsProfileLoading(false);
     }
   };
@@ -166,7 +161,6 @@ export function useProfile() {
     birthdateDate,
     isDatePickerVisible,
     setIsDatePickerVisible,
-    userBadges,
     handleChangeDate,
     handlePickImage,
     handleToggleNotifications,

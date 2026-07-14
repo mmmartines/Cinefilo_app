@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import MapView, { Marker } from 'react-native-maps';
 import { useAlert } from '../contexts/AlertContext';
 
 export default function CinemasScreen() {
@@ -15,11 +16,24 @@ export default function CinemasScreen() {
   const [loading, setLoading] = useState(false);
   const [searchCity, setSearchCity] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [mapRegion, setMapRegion] = useState({
+    latitude: -14.235,
+    longitude: -51.925,
+    latitudeDelta: 10,
+    longitudeDelta: 10,
+  });
 
   // Busca cinemas usando Overpass API
   const fetchCinemasByLocation = async (lat: number, lon: number) => {
     setLoading(true);
     setLocationStatus('Buscando cinemas num raio de 15km...');
+    setMapRegion({
+      latitude: lat,
+      longitude: lon,
+      latitudeDelta: 0.1,
+      longitudeDelta: 0.1,
+    });
     try {
       const query = `
         [out:json];
@@ -58,7 +72,17 @@ export default function CinemasScreen() {
         body: query
       });
       const data = await response.json();
-      setCinemas(data.elements || []);
+      const fetchedCinemas = data.elements || [];
+      setCinemas(fetchedCinemas);
+      
+      if (fetchedCinemas.length > 0) {
+        setMapRegion({
+          latitude: fetchedCinemas[0].lat,
+          longitude: fetchedCinemas[0].lon,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1,
+        });
+      }
     } catch (e) {
       showAlert('Erro', 'Não foi possível buscar os cinemas.');
     } finally {
@@ -206,19 +230,49 @@ export default function CinemasScreen() {
             {locationStatus ? <Text style={styles.statusText}>{locationStatus}</Text> : null}
           </View>
         ) : (
-          <FlatList
-            data={cinemas}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderCinema}
-            contentContainerStyle={styles.listContent}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>
-                {cinemas.length === 0 && !loading && locationStatus === '' 
-                  ? 'Busque por GPS ou digite uma cidade.' 
-                  : 'Nenhum cinema encontrado na base de dados.'}
-              </Text>
-            }
-          />
+          <>
+            <View style={styles.viewToggleRow}>
+              <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}>
+                <Ionicons name="list" size={16} color={viewMode === 'list' ? "#fff" : "#999"} style={{marginRight: 6}} />
+                <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>Lista</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setViewMode('map')} style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}>
+                <Ionicons name="map" size={16} color={viewMode === 'map' ? "#fff" : "#999"} style={{marginRight: 6}} />
+                <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Mapa</Text>
+              </TouchableOpacity>
+            </View>
+
+            {viewMode === 'map' ? (
+              <MapView
+                style={{ flex: 1 }}
+                region={mapRegion}
+                showsUserLocation
+              >
+                {cinemas.map(item => (
+                  <Marker
+                    key={item.id}
+                    coordinate={{ latitude: item.lat, longitude: item.lon }}
+                    title={item.tags?.name || 'Cinema'}
+                    description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
+                  />
+                ))}
+              </MapView>
+            ) : (
+              <FlatList
+                data={cinemas}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderCinema}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>
+                    {cinemas.length === 0 && !loading && locationStatus === '' 
+                      ? 'Busque por GPS ou digite uma cidade.' 
+                      : 'Nenhum cinema encontrado na base de dados.'}
+                  </Text>
+                }
+              />
+            )}
+          </>
         )}
       </View>
     </View>
@@ -310,8 +364,37 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
   },
+  viewToggleRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 12,
+  },
+  toggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333'
+  },
+  toggleBtnActive: {
+    backgroundColor: '#333',
+    borderColor: '#E50914',
+  },
+  toggleText: {
+    color: '#999',
+    fontWeight: 'bold'
+  },
+  toggleTextActive: {
+    color: '#fff'
+  },
   listContent: {
     padding: 16,
+    paddingBottom: 40,
     gap: 16,
   },
   cinemaCard: {

@@ -4,6 +4,7 @@ import { getMovieDetails } from '../../../services/api';
 import { database } from '../../../services/database';
 import { useAlert } from '../../../contexts/AlertContext';
 import { useQuery } from '@tanstack/react-query';
+import { calculateBadges } from '../../../utils/badges';
 
 const EMOTIONS = [
   { label: '🤩 Espetacular', type: 'good', color: '#4CAF50' },
@@ -29,7 +30,7 @@ const EMOTIONS = [
 
 export function useMovieDetails(movieId: string | undefined) {
   const router = useRouter();
-  const { showAlert } = useAlert();
+  const { showAlert, showToast } = useAlert();
   
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isMovieWatched, setIsMovieWatched] = useState(false);
@@ -46,7 +47,8 @@ export function useMovieDetails(movieId: string | undefined) {
   
   // Chat Modal
   const [isChatModalVisible, setIsChatModalVisible] = useState(false);
-  const [friendTagsInput, setFriendTagsInput] = useState('');
+  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [selectedFriends, setSelectedFriends] = useState<any[]>([]);
   const [isCreatingChatGroup, setIsCreatingChatGroup] = useState(false);
   
   // Trailer Modal
@@ -92,6 +94,17 @@ export function useMovieDetails(movieId: string | undefined) {
         
         const inLists = lists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(movieId))).map((l: any) => l._id);
         setSelectedCustomLists(inLists);
+
+        const { data: { session } } = await database.supabase.auth.getSession();
+        if (session) {
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+          fetch(`${apiUrl}/api/friends`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          })
+          .then(r => r.json())
+          .then(res => setFriendsList(res.data || []))
+          .catch(e => console.log(e));
+        }
       }
     };
     fetchUserData();
@@ -109,6 +122,11 @@ export function useMovieDetails(movieId: string | undefined) {
     }
     
     try {
+      const watchedBefore = await database.getWatchedMovies(currentUser.id);
+      const moviesBefore = watchedBefore.filter((m: any) => m.status === 'watched').length;
+      const minsBefore = watchedBefore.filter((m: any) => m.status === 'watched').reduce((acc: number, m: any) => acc + (m.runtime || 0), 0);
+      const badgesBefore = calculateBadges(moviesBefore, minsBefore);
+
       await database.saveWatchedMovie(currentUser.id, movieData, movieRating, movieReview, movieData.runtime, selectedMovieEmotions, 'watched', hasMovieSpoiler);
       
       for (const listId of selectedCustomLists) {
@@ -119,6 +137,32 @@ export function useMovieDetails(movieId: string | undefined) {
       setIsMovieInWatchlist(false);
       setIsRatingModalVisible(false);
       showAlert('Sucesso', 'Filme salvo na sua lista!');
+
+      const watchedAfter = await database.getWatchedMovies(currentUser.id);
+      const moviesAfter = watchedAfter.filter((m: any) => m.status === 'watched').length;
+      const minsAfter = watchedAfter.filter((m: any) => m.status === 'watched').reduce((acc: number, m: any) => acc + (m.runtime || 0), 0);
+      const badgesAfter = calculateBadges(moviesAfter, minsAfter);
+
+      const unlockedBadges = badgesAfter.filter(ba => ba.unlocked && !badgesBefore.find(bb => bb.id === ba.id && bb.unlocked));
+      
+      if (unlockedBadges.length > 0) {
+        unlockedBadges.forEach((badge, index) => {
+          setTimeout(() => {
+            showToast(`Conquista Desbloqueada: ${badge.name}`, badge.icon, badge.color);
+            
+            database.supabase.auth.getSession().then(({ data: { session } }) => {
+              if (session) {
+                const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+                fetch(`${apiUrl}/api/feed`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+                  body: JSON.stringify({ action: 'unlocked_badge', badge })
+                }).catch(console.error);
+              }
+            });
+          }, 1000 + (index * 3500));
+        });
+      }
     } catch (error) {
       showAlert('Erro', 'Não foi possível salvar o filme.');
     }
@@ -151,32 +195,25 @@ export function useMovieDetails(movieId: string | undefined) {
   };
 
   const handleCreateMovieChatGroup = async () => {
-    if (!friendTagsInput.trim()) {
-      showAlert('Aviso', 'Digite ao menos uma Tag de amigo.');
+    if (selectedFriends.length === 0) {
+      showAlert('Aviso', 'Selecione pelo menos um amigo.');
       return;
     }
     
     setIsCreatingChatGroup(true);
     try {
-      const tagsArray = friendTagsInput.split(',').map(t => t.trim().toUpperCase());
-      const { data: friendsData } = await database.supabase
-        .from('profiles')
-        .select('id, name')
-        .in('tag', tagsArray);
-        
-      const friendsList = (friendsData && friendsData.length > 0) 
-        ? friendsData 
-        : [{ id: 'dummy-id', name: 'Amigo Convidado' }];
+      const friendsToAdd = selectedFriends.map(f => ({ id: f.id, name: f.name }));
       
       const newChat = await database.createChatGroup(
         movieData.id, 
         movieData.title, 
         movieData.poster_path, 
-        friendsList,
+        friendsToAdd,
         currentUser.name || 'Eu'
       );
       
       setIsChatModalVisible(false);
+      setSelectedFriends([]);
       showAlert('Sucesso', 'Clube do Filme criado!');
       router.push(`/chat/${newChat.id}`);
     } catch (e: any) {
@@ -216,8 +253,9 @@ export function useMovieDetails(movieId: string | undefined) {
     setSelectedCustomLists,
     isChatModalVisible,
     setIsChatModalVisible,
-    friendTagsInput,
-    setFriendTagsInput,
+    friendsList,
+    selectedFriends,
+    setSelectedFriends,
     isCreatingChatGroup,
     isTrailerVisible,
     setIsTrailerVisible,

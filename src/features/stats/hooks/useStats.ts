@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { database } from '../../../services/database';
+import { calculateBadges, Badge } from '../../../utils/badges';
 
 const GENRE_ADJECTIVES: Record<string, string> = {
   'Ação': 'Explosivo',
@@ -52,7 +53,7 @@ export function useStats() {
   const [currentXp, setCurrentXp] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [nextLevelXp, setNextLevelXp] = useState(100);
-  const [userBadges, setUserBadges] = useState<{id: string, name: string, icon: any, active: boolean}[]>([]);
+  const [userBadges, setUserBadges] = useState<Badge[]>([]);
   
   const viewShotRef = useRef<any>();
 
@@ -164,14 +165,7 @@ export function useStats() {
     setCurrentLevel(calculatedLevel);
     setNextLevelXp(nextXp);
 
-    const newBadges = [
-      { id: 'first_movie', name: 'Iniciante', icon: 'videocam', active: watchedList.length >= 1 },
-      { id: 'cinephile', name: 'Cinéfilo', icon: 'star', active: watchedList.length >= 50 },
-      { id: 'director', name: 'Diretor', icon: 'megaphone', active: watchedList.length >= 200 },
-      { id: 'genre_master', name: sortedGenres[0] ? `Mestre: ${sortedGenres[0].name}` : 'Mestre de Gênero', icon: 'ribbon', active: sortedGenres.length > 0 && sortedGenres[0].count >= 10 },
-      { id: 'social', name: 'Popular', icon: 'people', active: friendsCount >= 5 },
-      { id: 'critic', name: 'Crítico', icon: 'chatbubbles', active: countRating >= 20 }
-    ];
+    const newBadges = calculateBadges(watchedList.length, minutes);
     setUserBadges(newBadges);
 
     setIsLoading(false);

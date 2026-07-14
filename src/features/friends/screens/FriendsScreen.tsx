@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '../../../components/AnimatedButton';
@@ -82,22 +82,20 @@ export function FriendsScreen() {
         <View style={{ width: 40 }} />
         <Text style={styles.title}>Ranking</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity 
-            style={styles.profileIcon} 
-            onPress={() => router.push('/friend_requests')}
-          >
-            <Ionicons name="mail" size={20} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.profileIcon, currentUser?.avatar_url && { backgroundColor: 'transparent', padding: 0 }]} 
-            onPress={() => router.push('/profile')}
-          >
-            {currentUser?.avatar_url ? (
-              <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
-            ) : (
-              <Ionicons name="person" size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
+          <Link href="/friend_requests" asChild>
+            <TouchableOpacity style={styles.profileIcon}>
+              <Ionicons name="mail" size={20} color="#fff" />
+            </TouchableOpacity>
+          </Link>
+          <Link href="/profile" asChild>
+            <TouchableOpacity style={[styles.profileIcon, currentUser?.avatar_url && { backgroundColor: 'transparent', padding: 0 }]}>
+              {currentUser?.avatar_url ? (
+                <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
+              ) : (
+                <Ionicons name="person" size={20} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </Link>
         </View>
       </View>
 
@@ -168,7 +166,7 @@ const styles = StyleSheet.create({
   addButton: { backgroundColor: '#E50914', width: 56, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   listContainer: { flex: 1, paddingHorizontal: 24 },
   listTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
-  listContent: { paddingBottom: 24, gap: 12 },
+  listContent: { paddingBottom: 100, gap: 12 },
   friendCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, alignItems: 'center' },
   myCard: { borderColor: '#E50914', borderWidth: 1, backgroundColor: '#2A1112' },
   rankContainer: { width: 32, justifyContent: 'center', alignItems: 'center', marginRight: 8 },
