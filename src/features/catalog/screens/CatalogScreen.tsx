@@ -30,6 +30,8 @@ export function CatalogScreen() {
     setIsAiModalVisible,
     isAiLoading,
     aiRecommendationText,
+    currentChallenge,
+    isChallengeCompleted,
     handleManualSearch,
     handleLoadMoreMovies,
     fetchAiRecommendation,
@@ -95,13 +97,24 @@ export function CatalogScreen() {
 
       <View style={styles.filterContainer}>
         {/* Desafio Semanal */}
-        <View style={styles.challengeBanner}>
-          <View style={styles.challengeHeader}>
-            <Ionicons name="star" size={16} color="#FFD700" />
-            <Text style={styles.challengeTitle}>Desafio da Semana</Text>
+        {currentChallenge && (
+          <View style={[styles.challengeBanner, isChallengeCompleted && { borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.1)' }]}>
+            <View style={styles.challengeHeader}>
+              <Ionicons name={isChallengeCompleted ? "checkmark-circle" : "star"} size={16} color={isChallengeCompleted ? "#4CAF50" : "#FFD700"} />
+              <Text style={[styles.challengeTitle, isChallengeCompleted && { color: '#4CAF50' }]}>
+                {isChallengeCompleted ? "Desafio Concluído!" : "Desafio da Semana"}
+              </Text>
+            </View>
+            <Text style={styles.challengeText}>
+              {isChallengeCompleted ? "Você garantiu seu XP bônus!" : currentChallenge.desc}
+            </Text>
+            {!isChallengeCompleted && (
+              <Text style={{ color: '#FFD700', fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
+                Recompensa: +{currentChallenge.xp} XP
+              </Text>
+            )}
           </View>
-          <Text style={styles.challengeText}>Assista a 1 Filme de Ficção Científica e ganhe +500 XP!</Text>
-        </View>
+        )}
 
         {/* Busca por Nome e Ano */}
         <View style={styles.searchRow}>

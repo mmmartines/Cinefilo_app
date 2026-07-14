@@ -7,6 +7,19 @@ const AVATAR_KEY = '@cinefilo_avatar';
 const STATS_KEY = '@cinefilo_stats';
 const API_URL = 'https://cinefilo-server.vercel.app';
 
+const WEEKLY_CHALLENGES = [
+  { id: 0, title: 'Ficção e Ciência', desc: 'Assista a 1 Filme de Ficção Científica', xp: 500, targetGenre: 'Ficção científica' },
+  { id: 1, title: 'Risadas Garantidas', desc: 'Assista a 1 Filme de Comédia', xp: 400, targetGenre: 'Comédia' },
+  { id: 2, title: 'Noite de Terror', desc: 'Assista a 1 Filme de Terror', xp: 500, targetGenre: 'Terror' },
+  { id: 3, title: 'Ação Pura', desc: 'Assista a 1 Filme de Ação', xp: 400, targetGenre: 'Ação' },
+  { id: 4, title: 'Mundo Animado', desc: 'Assista a 1 Animação', xp: 300, targetGenre: 'Animação' },
+  { id: 5, title: 'Suspense Total', desc: 'Assista a 1 Thriller', xp: 400, targetGenre: 'Thriller' },
+  { id: 6, title: 'Amor no Ar', desc: 'Assista a 1 Filme de Romance', xp: 300, targetGenre: 'Romance' },
+  { id: 7, title: 'Aventura Épica', desc: 'Assista a 1 Filme de Aventura', xp: 400, targetGenre: 'Aventura' },
+  { id: 8, title: 'Drama Emocionante', desc: 'Assista a 1 Filme de Drama', xp: 300, targetGenre: 'Drama' },
+  { id: 9, title: 'Mistério Sem Fim', desc: 'Assista a 1 Filme de Mistério', xp: 500, targetGenre: 'Mistério' },
+];
+
 type AuthListener = (user: any) => void;
 const authListeners: AuthListener[] = [];
 
@@ -23,6 +36,68 @@ export const database = {
 
   notifyAuthListeners(user: any) {
     authListeners.forEach(listener => listener(user));
+  },
+
+  // --- DESAFIO SEMANAL ---
+  getWeeklyChallenge() {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
+    const challengeIndex = weekNo % WEEKLY_CHALLENGES.length;
+    return {
+      weekId: `${d.getUTCFullYear()}_W${weekNo}`,
+      ...WEEKLY_CHALLENGES[challengeIndex]
+    };
+  },
+
+  async isWeeklyChallengeCompleted(userId: string, weekId: string) {
+    const key = `@cinefilo_challenges_${userId}`;
+    const data = await AsyncStorage.getItem(key);
+    const completed = data ? JSON.parse(data) : [];
+    return completed.includes(weekId);
+  },
+
+  async getBonusXp(userId: string) {
+    const key = `@cinefilo_bonus_xp_${userId}`;
+    const data = await AsyncStorage.getItem(key);
+    return data ? parseInt(data) : 0;
+  },
+
+  async checkAndCompleteChallenge(userId: string, movieGenres: any[]) {
+    const challenge = this.getWeeklyChallenge();
+    const isCompleted = await this.isWeeklyChallengeCompleted(userId, challenge.weekId);
+    
+    if (isCompleted) return;
+
+    const hasTargetGenre = movieGenres.some((g: any) => g.name === challenge.targetGenre);
+    
+    if (hasTargetGenre) {
+      const key = `@cinefilo_challenges_${userId}`;
+      const data = await AsyncStorage.getItem(key);
+      const completed = data ? JSON.parse(data) : [];
+      completed.push(challenge.weekId);
+      await AsyncStorage.setItem(key, JSON.stringify(completed));
+
+      const currentBonus = await this.getBonusXp(userId);
+      await AsyncStorage.setItem(`@cinefilo_bonus_xp_${userId}`, String(currentBonus + challenge.xp));
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        fetch(`${API_URL}/api/feed`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            action: 'challenge_completed',
+            challenge_title: challenge.title,
+            challenge_xp: challenge.xp
+          })
+        }).catch(console.error);
+      }
+    }
   },
 
   // Retorna todos os usuários cadastrados
@@ -290,6 +365,11 @@ export const database = {
 
       if (status === 'watched') {
         this.syncStatsToCloud(userId);
+        
+        // Verifica se concluiu o desafio semanal com esse filme
+        if (movieData.genres.length > 0) {
+           await this.checkAndCompleteChallenge(userId, movieData.genres);
+        }
 
         // Dispara o feed (fire and forget)
         const { data: { session } } = await supabase.auth.getSession();

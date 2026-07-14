@@ -155,7 +155,8 @@ export function useStats() {
     } catch (e) {
     }
 
-    const calculatedXp = (watchedList.length * 10) + (userLists.length * 50) + (friendsCount * 20);
+    const bonusXp = await database.getBonusXp(currentUser.id);
+    const calculatedXp = (watchedList.length * 10) + (userLists.length * 50) + (friendsCount * 20) + bonusXp;
     const calculatedLevel = Math.floor(calculatedXp / 100) + 1;
     const nextXp = calculatedLevel * 100;
     

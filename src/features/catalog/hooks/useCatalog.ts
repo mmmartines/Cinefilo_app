@@ -8,6 +8,8 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 export function useCatalog() {
   const [watchedStatus, setWatchedStatus] = useState<Record<number, 'watched' | 'watchlist'>>({});
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [currentChallenge, setCurrentChallenge] = useState<any>(null);
+  const [isChallengeCompleted, setIsChallengeCompleted] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchYear, setSearchYear] = useState('');
@@ -51,6 +53,11 @@ export function useCatalog() {
         const user = await database.getCurrentUser();
         if (user) {
           if (user.avatar_url) setUserAvatarUrl(user.avatar_url);
+          
+          const challenge = database.getWeeklyChallenge();
+          setCurrentChallenge(challenge);
+          const completed = await database.isWeeklyChallengeCompleted(user.id, challenge.weekId);
+          setIsChallengeCompleted(completed);
           
           const watchedList = await database.getWatchedMovies(user.id);
           const statuses: Record<number, 'watched' | 'watchlist'> = {};
@@ -123,6 +130,8 @@ export function useCatalog() {
     watchedStatus,
     genresList,
     userAvatarUrl,
+    currentChallenge,
+    isChallengeCompleted,
     searchQuery,
     setSearchQuery,
     searchYear,
