@@ -13,7 +13,7 @@ if (Platform.OS !== 'web') {
 export function useLoginForm() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +45,7 @@ export function useLoginForm() {
       if (error) {
         throw error;
       }
-      
+
       if (data.session) {
         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
         try {
@@ -55,31 +55,31 @@ export function useLoginForm() {
               'Authorization': `Bearer ${data.session.access_token}`,
             }
           });
-          
+
           let tag = '';
           if (!response.ok) {
-             console.error('Falha ao sincronizar com o backend:', await response.text());
+            console.error('Falha ao sincronizar com o backend:', await response.text());
           } else {
-             const apiData = await response.json();
-             tag = apiData.data?.tag || '';
+            const apiData = await response.json();
+            tag = apiData.data?.tag || '';
           }
-          
+
           await database.setCurrentUser({
-             id: data.user.id,
-             email: data.user.email,
-             name: data.user.user_metadata?.name || '',
-             tag: tag
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || '',
+            tag: tag
           });
-          
+
           await database.syncCloudToLocal(data.user.id);
-          
+
         } catch (err) {
           console.error('Erro de rede ao sincronizar:', err);
           await database.setCurrentUser({
-             id: data.user.id,
-             email: data.user.email,
-             name: data.user.user_metadata?.name || '',
-             tag: ''
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || '',
+            tag: ''
           });
         }
       }
@@ -95,7 +95,7 @@ export function useLoginForm() {
   const handleSocialLogin = async (provider: 'google') => {
     try {
       const redirectTo = Linking.createURL('/');
-      
+
       if (Platform.OS === 'web') {
         await supabase.auth.signInWithOAuth({
           provider: 'google',
@@ -118,55 +118,55 @@ export function useLoginForm() {
 
       if (data?.url) {
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-        
+
         if (res.type === 'success') {
           const { url } = res;
           const hashMatch = url.match(/#access_token=([^&]+).*&refresh_token=([^&]+)/);
-          
+
           if (hashMatch) {
-             const access_token = hashMatch[1];
-             const refresh_token = hashMatch[2];
-             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token,
-                refresh_token,
-             });
-             
-             if (sessionError) throw sessionError;
-             
-             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-             try {
-               const response = await fetch(`${apiUrl}/api/users`, {
-                 method: 'GET',
-                 headers: {
-                   'Authorization': `Bearer ${sessionData.session?.access_token}`,
-                 }
-               });
-               
-               let tag = '';
-               if (response.ok) {
-                 const apiData = await response.json();
-                 tag = apiData.data?.tag || '';
-               }
-               
-               await database.setCurrentUser({
-                 id: sessionData.user?.id,
-                 email: sessionData.user?.email,
-                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                 tag: tag
-               });
-               
-               await database.syncCloudToLocal(sessionData.user?.id || '');
-               
-             } catch (err) {
-               await database.setCurrentUser({
-                 id: sessionData.user?.id,
-                 email: sessionData.user?.email,
-                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                 tag: ''
-               });
-             }
-             
-             router.replace('/');
+            const access_token = hashMatch[1];
+            const refresh_token = hashMatch[2];
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+
+            if (sessionError) throw sessionError;
+
+            const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+            try {
+              const response = await fetch(`${apiUrl}/api/users`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                }
+              });
+
+              let tag = '';
+              if (response.ok) {
+                const apiData = await response.json();
+                tag = apiData.data?.tag || '';
+              }
+
+              await database.setCurrentUser({
+                id: sessionData.user?.id,
+                email: sessionData.user?.email,
+                name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                tag: tag
+              });
+
+              await database.syncCloudToLocal(sessionData.user?.id || '');
+
+            } catch (err) {
+              await database.setCurrentUser({
+                id: sessionData.user?.id,
+                email: sessionData.user?.email,
+                name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                tag: ''
+              });
+            }
+
+            router.replace('/');
           }
         }
       }

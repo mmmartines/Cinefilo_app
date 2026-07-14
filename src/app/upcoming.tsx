@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
-import { getUpcomingMovies } from '../../services/api';
+import { getUpcomingMovies } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configurar o comportamento das notificações
@@ -14,13 +14,15 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
 export default function UpcomingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  
+
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminders, setReminders] = useState<string[]>([]);
@@ -44,14 +46,14 @@ export default function UpcomingScreen() {
   const fetchMovies = async () => {
     try {
       const data = await getUpcomingMovies(1);
-      
+
       // Filtrar apenas filmes com datas futuras
       const today = new Date().toISOString().split('T')[0];
       const future = data.filter((m: any) => m.release_date && m.release_date >= today);
-      
+
       // Ordenar por data
       future.sort((a: any, b: any) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
-      
+
       setMovies(future);
     } catch (e) {
       console.error(e);
@@ -62,7 +64,7 @@ export default function UpcomingScreen() {
 
   const scheduleReminder = async (movie: any) => {
     const isRemembered = reminders.includes(movie.id.toString());
-    
+
     if (isRemembered) {
       Alert.alert("Já Agendado", "Você já programou um lembrete para este filme.");
       return;
@@ -118,7 +120,7 @@ export default function UpcomingScreen() {
       const newReminders = [...reminders, movie.id.toString()];
       setReminders(newReminders);
       await AsyncStorage.setItem('@cinefilo_reminders', JSON.stringify(newReminders));
-      
+
       Alert.alert('Pronto!', `Um lembrete foi agendado para a manhã do dia ${releaseDate.toLocaleDateString('pt-BR')}.`);
     } catch (e) {
       console.error(e);
@@ -128,7 +130,7 @@ export default function UpcomingScreen() {
 
   const renderMovie = ({ item }: { item: any }) => {
     const isRemembered = reminders.includes(item.id.toString());
-    
+
     // Formatar data: YYYY-MM-DD -> DD/MM/YYYY
     const dateParts = item.release_date.split('-');
     const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : item.release_date;
@@ -136,9 +138,9 @@ export default function UpcomingScreen() {
     return (
       <View style={styles.movieCard}>
         <TouchableOpacity onPress={() => router.push(`/movie/${item.id}`)}>
-          <Image 
-            source={{ uri: `https://image.tmdb.org/t/p/w342${item.poster_path}` }} 
-            style={styles.poster} 
+          <Image
+            source={{ uri: `https://image.tmdb.org/t/p/w342${item.poster_path}` }}
+            style={styles.poster}
             contentFit="cover"
           />
         </TouchableOpacity>
@@ -146,9 +148,9 @@ export default function UpcomingScreen() {
           <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
           <Text style={styles.dateText}>📅 Estreia: {formattedDate}</Text>
           <Text style={styles.overview} numberOfLines={3}>{item.overview || 'Sinopse não disponível.'}</Text>
-          
+
           <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.remindButton, isRemembered && styles.remindButtonActive]}
               onPress={() => scheduleReminder(item)}
             >

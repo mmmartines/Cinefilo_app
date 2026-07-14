@@ -12,8 +12,8 @@ const { width, height } = Dimensions.get('window');
 export default function WrappedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const viewRef = useRef<any>();
-  
+  const viewRef = useRef<any>(null);
+
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
 
@@ -25,16 +25,16 @@ export default function WrappedScreen() {
     try {
       const currentUser = await database.getCurrentUser();
       if (!currentUser) return router.replace('/login');
-      
+
       const fullList = await database.getWatchedMovies(currentUser.id);
       const watched = fullList.filter((m: any) => m.status === 'watched' || !m.status);
-      
+
       const totalMovies = watched.length;
       const totalMinutes = watched.reduce((acc: number, m: any) => acc + (m.runtime || 0), 0);
       const hours = Math.floor(totalMinutes / 60);
-      
+
       let bestMovie = watched.length > 0 ? watched.reduce((prev: any, current: any) => (prev.rating > current.rating) ? prev : current) : null;
-      
+
       const genreCounts: Record<string, number> = {};
       watched.forEach((movie: any) => {
         if (movie.genres && Array.isArray(movie.genres)) {
@@ -52,7 +52,7 @@ export default function WrappedScreen() {
         bestMovie,
         topGenre
       });
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ export default function WrappedScreen() {
         format: 'png',
         quality: 1,
       });
-      
+
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable) {
         await Sharing.shareAsync(uri, { dialogTitle: 'Cinéfilo Wrapped' });
@@ -82,23 +82,23 @@ export default function WrappedScreen() {
   return (
     <View style={styles.container}>
       <ViewShot ref={viewRef} options={{ format: "png", quality: 1 }} style={styles.shotContainer}>
-        
+
         <View style={styles.header}>
           <Text style={styles.title}>Cinéfilo Wrapped</Text>
           <Text style={styles.year}>2026</Text>
         </View>
-        
+
         <View style={styles.content}>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.hours}h</Text>
             <Text style={styles.statLabel}>Tempo de Tela</Text>
           </View>
-          
+
           <View style={styles.statBox}>
             <Text style={styles.statValue}>{stats.totalMovies}</Text>
             <Text style={styles.statLabel}>Filmes Assistidos</Text>
           </View>
-          
+
           <View style={styles.statBoxAlt}>
             <Text style={styles.statLabelAlt}>Seu Gênero Favorito</Text>
             <Text style={styles.statValueAlt}>{stats.topGenre}</Text>
@@ -111,7 +111,7 @@ export default function WrappedScreen() {
             </View>
           )}
         </View>
-        
+
         <Text style={styles.footerText}>@cinefiloapp</Text>
       </ViewShot>
 
@@ -119,7 +119,7 @@ export default function WrappedScreen() {
         <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
-        
+
         <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
           <Ionicons name="share-social" size={24} color="#fff" />
           <Text style={styles.shareText}>Compartilhar</Text>
