@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Linking, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useAlert } from '../../../contexts/AlertContext';
 import { supabase } from '../../../services/supabase';
