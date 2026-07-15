@@ -1,39 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
-import { WebView } from 'react-native-webview';
-
-class MapErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, errorMsg: string}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, errorMsg: '' };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, errorMsg: error?.message || error?.toString() || 'Erro desconhecido' };
-  }
-
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("Map Error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          <Ionicons name="warning-outline" size={48} color="#E50914" style={{ marginBottom: 16 }} />
-          <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Erro ao carregar o Mapa</Text>
-          <Text style={{ color: '#aaa', textAlign: 'center' }}>{this.state.errorMsg}</Text>
-        </View>
-      );
-    }
-    return this.props.children;
-  }
-}
+import MapView, { Marker } from 'react-native-maps';
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -45,6 +17,7 @@ export default function CinemasScreen() {
   const [searchCity, setSearchCity] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [mapUnavailable, setMapUnavailable] = useState(false);
 
   const [mapRegion, setMapRegion] = useState({
     latitude: -14.235,
@@ -53,43 +26,24 @@ export default function CinemasScreen() {
     longitudeDelta: 10,
   });
 
-  // Busca cinemas usando Overpass API
-  const fetchOverpass = async (query: string) => {
-    const endpoints = [
-      'https://overpass-api.de/api/interpreter',
-      'https://lz4.overpass-api.de/api/interpreter',
-      'https://z.overpass-api.de/api/interpreter'
-    ];
-    
-    for (const url of endpoints) {
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'CinefiloApp/1.1 (matheusmarquesm31@gmail.com)'
-          },
-          body: `data=${encodeURIComponent(query)}`
-        });
-        
-        const text = await response.text();
-        try {
-          const data = JSON.parse(text);
-          if (data && data.elements) {
-            return data;
-          }
-        } catch (err) {
-          console.warn(`Servidor ${url} retornou HTML ou erro. Tentando próximo...`);
-          continue; // Tenta o próximo
-        }
-      } catch (err) {
-        console.warn(`Falha na requisição para ${url}. Tentando próximo...`);
-      }
+  const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  // Trata o retorno do Google Places e verifica cotas
+  const handleGooglePlacesResponse = async (response: Response) => {
+    const data = await response.json();
+    if (data.status === 'OVER_QUERY_LIMIT' || data.status === 'REQUEST_DENIED') {
+      setMapUnavailable(true);
+      throw new Error('QUOTA_EXCEEDED');
     }
-    throw new Error("Todos os servidores de mapa estão sobrecarregados.");
+    setMapUnavailable(false);
+    return data.results || [];
   };
 
   const fetchCinemasByLocation = async (lat: number, lon: number) => {
+    if (!GOOGLE_API_KEY) {
+      setMapUnavailable(true);
+      return;
+    }
     setLoading(true);
     setLocationStatus('Buscando cinemas num raio de 15km...');
     setMapRegion({
@@ -99,18 +53,25 @@ export default function CinemasScreen() {
       longitudeDelta: 0.1,
     });
     try {
-      const query = `
-        [out:json][timeout:25];
-        node
-          ["amenity"="cinema"]
-          (around:15000,${lat},${lon});
-        out;
-      `;
-      const data = await fetchOverpass(query);
-      setCinemas(data.elements || []);
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=15000&type=movie_theater&key=${GOOGLE_API_KEY}`;
+      const response = await fetch(url);
+      const results = await handleGooglePlacesResponse(response);
+      
+      const mappedCinemas = results.map((place: any) => ({
+        id: place.place_id,
+        lat: place.geometry.location.lat,
+        lon: place.geometry.location.lng,
+        tags: {
+          name: place.name,
+          'addr:street': place.vicinity
+        }
+      }));
+      setCinemas(mappedCinemas);
     } catch (e: any) {
       console.warn('Erro GPS Busca:', e);
-      showAlert('Erro', 'Os servidores de mapa estão sobrecarregados. Tente novamente em alguns minutos.');
+      if (e.message !== 'QUOTA_EXCEEDED') {
+        showAlert('Erro', 'Não foi possível buscar os cinemas na sua região.');
+      }
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -119,44 +80,43 @@ export default function CinemasScreen() {
 
   const fetchCinemasByCity = async (city: string) => {
     if (!city.trim()) return;
+    if (!GOOGLE_API_KEY) {
+      setMapUnavailable(true);
+      return;
+    }
     setLoading(true);
     setLocationStatus(`Buscando cinemas em ${city}...`);
     try {
-      const query = `
-        [out:json][timeout:25];
-        area["name"="${city}"]->.searchArea;
-        (
-          node["amenity"="cinema"](area.searchArea);
-          way["amenity"="cinema"](area.searchArea);
-          relation["amenity"="cinema"](area.searchArea);
-        );
-        out center;
-      `;
+      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cinemas+in+${encodeURIComponent(city)}&type=movie_theater&key=${GOOGLE_API_KEY}`;
+      const response = await fetch(url);
+      const results = await handleGooglePlacesResponse(response);
       
-      const data = await fetchOverpass(query);
-      const fetchedCinemas = data.elements || [];
-      
-      setCinemas(fetchedCinemas);
-      
-      if (fetchedCinemas.length > 0) {
-        // Pega as coordenadas do primeiro cinema para centralizar o mapa na cidade
-        const first = fetchedCinemas[0];
-        const lat = first.lat || first.center?.lat;
-        const lon = first.lon || first.center?.lon;
-        if (lat && lon) {
-          setMapRegion({
-            latitude: lat,
-            longitude: lon,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1,
-          });
+      const mappedCinemas = results.map((place: any) => ({
+        id: place.place_id,
+        lat: place.geometry.location.lat,
+        lon: place.geometry.location.lng,
+        tags: {
+          name: place.name,
+          'addr:street': place.formatted_address
         }
+      }));
+      setCinemas(mappedCinemas);
+      
+      if (mappedCinemas.length > 0) {
+        setMapRegion({
+          latitude: mappedCinemas[0].lat,
+          longitude: mappedCinemas[0].lon,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1,
+        });
       } else {
         showAlert('Aviso', `Nenhum cinema encontrado em ${city}.`);
       }
     } catch (e: any) {
       console.warn('Erro Busca Cidade', e);
-      showAlert('Erro', 'Os servidores de mapa estão sobrecarregados. Tente novamente em alguns minutos.');
+      if (e.message !== 'QUOTA_EXCEEDED') {
+        showAlert('Erro', 'Não foi possível buscar cinemas nessa cidade.');
+      }
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -175,7 +135,6 @@ export default function CinemasScreen() {
         return;
       }
 
-      // Fallback para getLastKnown caso o current position falhe em alguns Androids
       let location = await Location.getLastKnownPositionAsync({});
       if (!location) {
         location = await Location.getCurrentPositionAsync({ 
@@ -200,83 +159,40 @@ export default function CinemasScreen() {
     });
   };
 
-  const openWebsite = (website: string) => {
-    Linking.openURL(website).catch(() => {
-      showAlert('Erro', 'Não foi possível abrir o site.');
-    });
-  };
-
-  const callPhone = (phone: string) => {
-    Linking.openURL(`tel:${phone}`).catch(() => {
-      showAlert('Erro', 'Não foi possível abrir o discador.');
-    });
-  };
-
-  const renderCinema = ({ item }: { item: any }) => {
-    const tags = item.tags || {};
-    const name = tags.name || 'Cinema (Sem nome)';
-    const address = tags['addr:street'] 
-      ? `${tags['addr:street']}, ${tags['addr:housenumber'] || ''}`
-      : 'Endereço não cadastrado';
-
-    return (
-      <View style={styles.cinemaCard}>
-        <View style={styles.cinemaInfo}>
-          <Text style={styles.cinemaName}>{name}</Text>
-          <Text style={styles.cinemaAddress}>{address}</Text>
-          
-          {tags.opening_hours && (
-            <Text style={styles.cinemaHours}>⏱️ {tags.opening_hours}</Text>
-          )}
-        </View>
-
-        <View style={styles.actionRow}>
-          <TouchableOpacity 
-            style={styles.actionBtn} 
-            onPress={() => openMaps(item.lat, item.lon, name)}
-          >
-            <Ionicons name="map-outline" size={20} color="#fff" />
-            <Text style={styles.actionText}>Mapa</Text>
-          </TouchableOpacity>
-          
-          {tags.website && (
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#333' }]} 
-              onPress={() => openWebsite(tags.website)}
-            >
-              <Ionicons name="globe-outline" size={20} color="#fff" />
-              <Text style={styles.actionText}>Site</Text>
-            </TouchableOpacity>
-          )}
-
-          {tags.phone && (
-            <TouchableOpacity 
-              style={[styles.actionBtn, { backgroundColor: '#333' }]} 
-              onPress={() => callPhone(tags.phone)}
-            >
-              <Ionicons name="call-outline" size={20} color="#fff" />
-              <Text style={styles.actionText}>Ligar</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+  const renderCinema = ({ item }: { item: any }) => (
+    <View style={styles.cinemaCard}>
+      <View style={styles.cinemaInfo}>
+        <Text style={styles.cinemaName}>{item.tags?.name || 'Cinema Desconhecido'}</Text>
+        {item.tags?.['addr:street'] && (
+          <Text style={styles.cinemaAddress}>{item.tags['addr:street']}</Text>
+        )}
       </View>
-    );
-  };
+      <View style={styles.actionRow}>
+        <TouchableOpacity 
+          style={styles.actionBtn}
+          onPress={() => openMaps(item.lat, item.lon, item.tags?.name)}
+        >
+          <Ionicons name="navigate" size={16} color="#fff" />
+          <Text style={styles.actionText}>Como Chegar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backIcon} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cinemas Próximos</Text>
-        <View style={{ width: 40 }} />
+        <View style={{width: 40}} />
       </View>
 
       <View style={styles.searchSection}>
         <TouchableOpacity style={styles.gpsBtn} onPress={handleUseGPS} disabled={loading}>
-          <Ionicons name="location-outline" size={20} color="#fff" />
-          <Text style={styles.gpsBtnText}>Usar meu GPS</Text>
+          <Ionicons name="location" size={20} color="#fff" />
+          <Text style={styles.gpsBtnText}>Usar Minha Localização GPS</Text>
         </TouchableOpacity>
 
         <View style={styles.orDivider}>
@@ -325,48 +241,27 @@ export default function CinemasScreen() {
 
             {viewMode === 'map' ? (
               <View style={{ flex: 1, marginTop: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1c23' }}>
-                <WebView
-                  style={{ flex: 1 }}
-                  originWhitelist={['*']}
-                source={{
-                  html: `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-                      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-                      <style>
-                        body { padding: 0; margin: 0; background-color: #0f1115; }
-                        html, body, #map { height: 100%; width: 100vw; }
-                      </style>
-                    </head>
-                    <body>
-                      <div id="map"></div>
-                      <script>
-                        var map = L.map('map', { zoomControl: false }).setView([${mapRegion.latitude}, ${mapRegion.longitude}], 13);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                          maxZoom: 19,
-                          attribution: '© OpenStreetMap contributors & CARTO'
-                        }).addTo(map);
-
-                        var markers = ${JSON.stringify(cinemas.map((c: any) => ({
-                          lat: c.lat,
-                          lon: c.lon,
-                          title: c.tags?.name?.replace(/'/g, "\\'") || 'Cinema',
-                          address: c.tags?.['addr:street']?.replace(/'/g, "\\'") || 'Ver Lista'
-                        })))};
-
-                        markers.forEach(function(m) {
-                          L.marker([m.lat, m.lon]).addTo(map)
-                            .bindPopup("<b>" + m.title + "</b><br>" + m.address);
-                        });
-                      </script>
-                    </body>
-                    </html>
-                  `
-                }}
-              />
+                {mapUnavailable ? (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#1E1E1E' }}>
+                    <Ionicons name="map-outline" size={48} color="#E50914" style={{ marginBottom: 16 }} />
+                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível no Momento</Text>
+                    <Text style={{ color: '#aaa', textAlign: 'center' }}>A cota de uso foi atingida ou não está configurada corretamente.</Text>
+                  </View>
+                ) : (
+                  <MapView
+                    style={{ flex: 1 }}
+                    region={mapRegion}
+                  >
+                    {cinemas.map((item: any) => (
+                      <Marker
+                        key={item.id}
+                        coordinate={{ latitude: item.lat, longitude: item.lon }}
+                        title={item.tags?.name || 'Cinema'}
+                        description={item.tags?.['addr:street'] || 'Ver Lista'}
+                      />
+                    ))}
+                  </MapView>
+                )}
               </View>
             ) : (
               <FlatList
@@ -378,7 +273,7 @@ export default function CinemasScreen() {
                   <Text style={styles.emptyText}>
                     {cinemas.length === 0 && !loading && locationStatus === '' 
                       ? 'Busque por GPS ou digite uma cidade.' 
-                      : 'Nenhum cinema encontrado na base de dados.'}
+                      : 'Nenhum cinema encontrado.'}
                   </Text>
                 }
               />
@@ -528,10 +423,6 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     marginBottom: 8,
-  },
-  cinemaHours: {
-    color: '#ccc',
-    fontSize: 14,
   },
   actionRow: {
     flexDirection: 'row',
