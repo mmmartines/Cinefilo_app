@@ -5,7 +5,35 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
-import MapView, { Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
+
+class MapErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, errorMsg: string}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, errorMsg: '' };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, errorMsg: error?.message || error?.toString() || 'Erro desconhecido' };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Map Error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Ionicons name="warning-outline" size={48} color="#E50914" style={{ marginBottom: 16 }} />
+          <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Erro ao carregar o Mapa</Text>
+          <Text style={{ color: '#aaa', textAlign: 'center' }}>{this.state.errorMsg}</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -256,27 +284,48 @@ export default function CinemasScreen() {
             </View>
 
             {viewMode === 'map' ? (
-              Platform.OS === 'web' ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-                  <Ionicons name="map-outline" size={48} color="#666" style={{ marginBottom: 16 }} />
-                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível</Text>
-                  <Text style={{ color: '#aaa', textAlign: 'center' }}>O mapa nativo não funciona na web. Use a "Lista".</Text>
-                </View>
-              ) : (
-                <MapView
-                  style={{ flex: 1 }}
-                  region={mapRegion}
-                >
-                  {cinemas.map((item: any) => (
-                    <Marker
-                      key={item.id}
-                      coordinate={{ latitude: item.lat, longitude: item.lon }}
-                      title={item.tags?.name || 'Cinema'}
-                      description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
-                    />
-                  ))}
-                </MapView>
-              )
+              <WebView
+                style={{ flex: 1 }}
+                originWhitelist={['*']}
+                source={{
+                  html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                      <style>
+                        body { padding: 0; margin: 0; background-color: #0f1115; }
+                        html, body, #map { height: 100%; width: 100vw; }
+                      </style>
+                    </head>
+                    <body>
+                      <div id="map"></div>
+                      <script>
+                        var map = L.map('map', { zoomControl: false }).setView([${mapRegion.latitude}, ${mapRegion.longitude}], 13);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                          maxZoom: 19,
+                          attribution: '© OpenStreetMap contributors & CARTO'
+                        }).addTo(map);
+
+                        var markers = ${JSON.stringify(cinemas.map((c: any) => ({
+                          lat: c.lat,
+                          lon: c.lon,
+                          title: c.tags?.name?.replace(/'/g, "\\'") || 'Cinema',
+                          address: c.tags?.['addr:street']?.replace(/'/g, "\\'") || 'Ver Lista'
+                        })))};
+
+                        markers.forEach(function(m) {
+                          L.marker([m.lat, m.lon]).addTo(map)
+                            .bindPopup("<b>" + m.title + "</b><br>" + m.address);
+                        });
+                      </script>
+                    </body>
+                    </html>
+                  `
+                }}
+              />
             ) : (
               <FlatList
                 data={cinemas}
