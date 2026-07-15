@@ -5,18 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
-
-let MapViewComponent: any = null;
-let MarkerComponent: any = null;
-if (Platform.OS !== 'web') {
-  try {
-    const Maps = require('react-native-maps');
-    MapViewComponent = Maps.default || Maps;
-    MarkerComponent = Maps.Marker || (Maps.default && Maps.default.Marker);
-  } catch (e) {
-    console.warn('Erro ao carregar react-native-maps:', e);
-  }
-}
+import MapView, { Marker } from 'react-native-maps';
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -267,26 +256,26 @@ export default function CinemasScreen() {
             </View>
 
             {viewMode === 'map' ? (
-              Platform.OS === 'web' || !MapViewComponent || !MarkerComponent ? (
+              Platform.OS === 'web' ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                   <Ionicons name="map-outline" size={48} color="#666" style={{ marginBottom: 16 }} />
                   <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível</Text>
-                  <Text style={{ color: '#aaa', textAlign: 'center' }}>Houve um problema ao carregar o mapa nativo ou você está na web. Use a "Lista".</Text>
+                  <Text style={{ color: '#aaa', textAlign: 'center' }}>O mapa nativo não funciona na web. Use a "Lista".</Text>
                 </View>
               ) : (
-                <MapViewComponent
+                <MapView
                   style={{ flex: 1 }}
                   region={mapRegion}
                 >
                   {cinemas.map((item: any) => (
-                    <MarkerComponent
+                    <Marker
                       key={item.id}
                       coordinate={{ latitude: item.lat, longitude: item.lon }}
                       title={item.tags?.name || 'Cinema'}
                       description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
                     />
                   ))}
-                </MapViewComponent>
+                </MapView>
               )
             ) : (
               <FlatList

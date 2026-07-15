@@ -114,7 +114,7 @@ export function useCatalog() {
       if (response.ok) {
         setAiRecommendationText(result.recommendation);
       } else {
-        setAiRecommendationText('Não foi possível obter recomendações no momento. O servidor pode estar indisponível.');
+        setAiRecommendationText(`Erro do servidor: ${result.error || 'Indisponível'}`);
       }
     } catch (error) {
       setAiRecommendationText('Ops! A IA está descansando. Erro ao conectar ao serviço de recomendação.');
