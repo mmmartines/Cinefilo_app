@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { getMovieDetails } from '../../../services/api';
 import { database } from '../../../services/database';
+import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
 import { useQuery } from '@tanstack/react-query';
 import { calculateBadges } from '../../../utils/badges';
@@ -95,7 +96,7 @@ export function useMovieDetails(movieId: string | undefined) {
         const inLists = lists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(movieId))).map((l: any) => l._id);
         setSelectedCustomLists(inLists);
 
-        const { data: { session } } = await database.supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
           fetch(`${apiUrl}/api/friends`, {
@@ -150,7 +151,7 @@ export function useMovieDetails(movieId: string | undefined) {
           setTimeout(() => {
             showToast(`Conquista Desbloqueada: ${badge.name}`, badge.icon, badge.color);
             
-            database.supabase.auth.getSession().then(({ data: { session } }) => {
+            supabase.auth.getSession().then(({ data: { session } }) => {
               if (session) {
                 const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
                 fetch(`${apiUrl}/api/feed`, {

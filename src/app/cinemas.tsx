@@ -10,8 +10,8 @@ let MapView: any = null;
 let Marker: any = null;
 if (Platform.OS !== 'web') {
   const Maps = require('react-native-maps');
-  MapView = Maps.default;
-  Marker = Maps.Marker;
+  MapView = Maps.default || Maps;
+  Marker = Maps.Marker || (Maps.default && Maps.default.Marker);
 }
 
 export default function CinemasScreen() {
