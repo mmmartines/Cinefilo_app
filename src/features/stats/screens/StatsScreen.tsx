@@ -33,7 +33,7 @@ export function StatsScreen() {
   } = useStats();
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity style={styles.shareButton} onPress={handleShareStats}>
           <Ionicons name="share-social" size={20} color="#fff" />

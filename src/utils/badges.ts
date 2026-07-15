@@ -35,12 +35,12 @@ export function calculateBadges(totalMovies: number, totalMinutes: number): Badg
     { id: 'time_6000', name: 'Diretor de Fotografia', description: '100 horas de tela.', icon: 'camera', color: '#2196F3', unlocked: totalMinutes >= 6000 },
     { id: 'time_9000', name: 'Assinatura Premium', description: '150 horas de tela.', icon: 'card', color: '#4CAF50', unlocked: totalMinutes >= 9000 },
     { id: 'time_12000', name: 'Poltrona VIP', description: '200 horas de tela.', icon: 'star-half', color: '#FFC107', unlocked: totalMinutes >= 12000 },
-    { id: 'time_18000', name: 'Cadeira de Diretor', description: '300 horas de tela.', icon: 'easel', color: '#E91E63', unlocked: totalMinutes >= 18000 },
-    { id: 'time_24000', name: 'Tapete Vermelho', description: '400 horas de tela.', icon: 'walk', color: '#E50914', unlocked: totalMinutes >= 24000 },
+    { id: 'time_18000', name: 'Cadeira de Diretor', description: '300 horas de tela.', icon: 'images', color: '#E91E63', unlocked: totalMinutes >= 18000 },
+    { id: 'time_24000', name: 'Tapete Vermelho', description: '400 horas de tela.', icon: 'footsteps', color: '#E50914', unlocked: totalMinutes >= 24000 },
     { id: 'time_30000', name: 'Olhos Quadrados', description: '500 horas de tela.', icon: 'tv', color: '#00BCD4', unlocked: totalMinutes >= 30000 },
     { id: 'time_42000', name: 'Vivendo no Cinema', description: '700 horas de tela.', icon: 'home', color: '#8BC34A', unlocked: totalMinutes >= 42000 },
     { id: 'time_60000', name: 'Um Ano de Pipoca', description: '1000 horas de tela.', icon: 'calendar', color: '#9C27B0', unlocked: totalMinutes >= 60000 },
-    { id: 'time_90000', name: 'Especialista em Telas', description: '1500 horas de tela.', icon: 'desktop', color: '#3F51B5', unlocked: totalMinutes >= 90000 },
+    { id: 'time_90000', name: 'Especialista em Telas', description: '1500 horas de tela.', icon: 'laptop', color: '#3F51B5', unlocked: totalMinutes >= 90000 },
     { id: 'time_120000', name: 'A Arte do Tempo', description: '2000 horas de tela.', icon: 'hourglass', color: '#FFD700', unlocked: totalMinutes >= 120000 },
   ];
 

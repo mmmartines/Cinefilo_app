@@ -211,30 +211,37 @@ export const database = {
   // Retorna o usuário logado atualmente (usado para verificar se pula o login)
   async getCurrentUser() {
     try {
+      // 1. Verifica se existe sessão real no Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Se não houver sessão no Supabase, o usuário NÃO está logado na nuvem.
+      if (!session) {
+        // Remove qualquer "mock" de usuário local para forçar a tela de login
+        await AsyncStorage.removeItem(CURRENT_USER_KEY);
+        return null;
+      }
+
+      // 2. Se houver sessão, pega as informações do cache local
       const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
       if (!userJson) return null;
+      
       let user = JSON.parse(userJson);
       
-      // Auto-generate tag if missing for backwards compatibility
+      // 3. Auto-generate tag if missing for backwards compatibility
       if (!user.tag) {
         user.tag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        
-        try {
-          const usersJson = await AsyncStorage.getItem(USERS_KEY);
-          if (usersJson) {
-            const users = JSON.parse(usersJson);
-            const index = users.findIndex((u: any) => u.email === user.email);
-            if (index !== -1) {
-              users[index].tag = user.tag;
-              await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
-            }
-          }
-        } catch(e) {}
+      }
+      
+      // Garante que o ID do usuário bate com o ID do Supabase (migração de local para nuvem)
+      if (user.id !== session.user.id) {
+         user.id = session.user.id;
+         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       }
       
       return user;
     } catch (e) {
+      console.error('Erro em getCurrentUser', e);
       return null;
     }
   },

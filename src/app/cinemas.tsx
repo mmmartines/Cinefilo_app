@@ -4,8 +4,15 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import MapView, { Marker } from 'react-native-maps';
 import { useAlert } from '../contexts/AlertContext';
+
+let MapView: any = null;
+let Marker: any = null;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -243,20 +250,28 @@ export default function CinemasScreen() {
             </View>
 
             {viewMode === 'map' ? (
-              <MapView
-                style={{ flex: 1 }}
-                region={mapRegion}
-                showsUserLocation
-              >
-                {cinemas.map(item => (
-                  <Marker
-                    key={item.id}
-                    coordinate={{ latitude: item.lat, longitude: item.lon }}
-                    title={item.tags?.name || 'Cinema'}
-                    description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
-                  />
-                ))}
-              </MapView>
+              Platform.OS === 'web' || !MapView ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                  <Ionicons name="map-outline" size={48} color="#666" style={{ marginBottom: 16 }} />
+                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível</Text>
+                  <Text style={{ color: '#aaa', textAlign: 'center' }}>O mapa interativo funciona apenas no aplicativo para celular (Android/iOS). Use o modo "Lista" para ver os cinemas encontrados.</Text>
+                </View>
+              ) : (
+                <MapView
+                  style={{ flex: 1 }}
+                  region={mapRegion}
+                  showsUserLocation
+                >
+                  {cinemas.map((item: any) => (
+                    <Marker
+                      key={item.id}
+                      coordinate={{ latitude: item.lat, longitude: item.lon }}
+                      title={item.tags?.name || 'Cinema'}
+                      description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
+                    />
+                  ))}
+                </MapView>
+              )
             ) : (
               <FlatList
                 data={cinemas}
