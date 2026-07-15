@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, ActivityIndicator, Alert } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -74,7 +75,19 @@ export function ProfileScreen() {
 
         <View style={styles.tagBox}>
           <Text style={styles.tagLabel}>Sua #Tag de Amizade</Text>
-          <Text style={styles.tagText} selectable={true}>{userProfile.tag || 'GERANDO...'}</Text>
+          <TouchableOpacity 
+            style={styles.tagRow} 
+            activeOpacity={0.7}
+            onPress={async () => {
+              if (userProfile?.tag) {
+                await Clipboard.setStringAsync(userProfile.tag);
+                Alert.alert('Copiado!', 'Tag copiada para a área de transferência.');
+              }
+            }}
+          >
+            <Text style={styles.tagText}>{userProfile?.tag || 'GERANDO...'}</Text>
+            <Ionicons name="copy-outline" size={20} color="#E50914" />
+          </TouchableOpacity>
         </View>
 
       </View>
@@ -235,6 +248,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
   editAvatarBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#E50914', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#121212' },
   tagLabel: { color: '#999', fontSize: 14, marginBottom: 4 },
+  tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
   tagText: { color: '#E50914', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 },
   form: { paddingHorizontal: 24 },
   label: { color: '#999', marginBottom: 8, fontSize: 14 },
