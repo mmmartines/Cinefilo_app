@@ -97,8 +97,12 @@ export default function CinemasScreen() {
       const query = `
         [out:json];
         area[name="${city}"]->.searchArea;
-        node["amenity"="cinema"](area.searchArea);
-        out;
+        (
+          node["amenity"="cinema"](area.searchArea);
+          way["amenity"="cinema"](area.searchArea);
+          relation["amenity"="cinema"](area.searchArea);
+        );
+        out center;
       `;
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
@@ -110,18 +114,28 @@ export default function CinemasScreen() {
       });
       const data = await response.json();
       const fetchedCinemas = data.elements || [];
+      
       setCinemas(fetchedCinemas);
       
       if (fetchedCinemas.length > 0) {
-        setMapRegion({
-          latitude: fetchedCinemas[0].lat,
-          longitude: fetchedCinemas[0].lon,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        });
+        // Pega as coordenadas do primeiro cinema para centralizar o mapa na cidade
+        const first = fetchedCinemas[0];
+        const lat = first.lat || first.center?.lat;
+        const lon = first.lon || first.center?.lon;
+        if (lat && lon) {
+          setMapRegion({
+            latitude: lat,
+            longitude: lon,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          });
+        }
+      } else {
+        showAlert('Aviso', `Nenhum cinema encontrado em ${city}.`);
       }
-    } catch (e) {
-      showAlert('Erro', 'Não foi possível buscar os cinemas.');
+    } catch (e: any) {
+      console.warn('Erro Busca Cidade', e);
+      showAlert('Erro', 'Não foi possível buscar cinemas nessa cidade.');
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -140,9 +154,14 @@ export default function CinemasScreen() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({ 
-        accuracy: Location.Accuracy.Balanced 
-      });
+      // Fallback para getLastKnown caso o current position falhe em alguns Androids
+      let location = await Location.getLastKnownPositionAsync({});
+      if (!location) {
+        location = await Location.getCurrentPositionAsync({ 
+          accuracy: Location.Accuracy.Low 
+        });
+      }
+      
       if (!location) throw new Error('Localização vazia');
       await fetchCinemasByLocation(location.coords.latitude, location.coords.longitude);
     } catch (e: any) {
