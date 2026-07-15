@@ -6,6 +6,17 @@ import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
 
+let MapViewComponent: any = null;
+let MarkerComponent: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    const Maps = require('react-native-maps');
+    MapViewComponent = Maps.default || Maps;
+    MarkerComponent = Maps.Marker || (Maps.default && Maps.default.Marker);
+  } catch (e) {
+    console.warn('Erro ao carregar react-native-maps:', e);
+  }
+}
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -17,21 +28,6 @@ export default function CinemasScreen() {
   const [searchCity, setSearchCity] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [MapViewComponent, setMapViewComponent] = useState<any>(null);
-  const [MarkerComponent, setMarkerComponent] = useState<any>(null);
-
-  useEffect(() => {
-    if (Platform.OS !== 'web') {
-      try {
-        const Maps = require('react-native-maps');
-        // Usar função de callback no setState para não invocar a classe/função
-        setMapViewComponent(() => Maps.default || Maps);
-        setMarkerComponent(() => Maps.Marker || (Maps.default && Maps.default.Marker));
-      } catch (e) {
-        console.warn('Erro ao carregar mapas nativos', e);
-      }
-    }
-  }, []);
 
   const [mapRegion, setMapRegion] = useState({
     latitude: -14.235,
