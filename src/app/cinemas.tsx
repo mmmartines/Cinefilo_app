@@ -54,6 +54,41 @@ export default function CinemasScreen() {
   });
 
   // Busca cinemas usando Overpass API
+  const fetchOverpass = async (query: string) => {
+    const endpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://lz4.overpass-api.de/api/interpreter',
+      'https://z.overpass-api.de/api/interpreter'
+    ];
+    
+    for (const url of endpoints) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'CinefiloApp/1.1 (matheusmarquesm31@gmail.com)'
+          },
+          body: `data=${encodeURIComponent(query)}`
+        });
+        
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data && data.elements) {
+            return data;
+          }
+        } catch (err) {
+          console.warn(`Servidor ${url} retornou HTML ou erro. Tentando próximo...`);
+          continue; // Tenta o próximo
+        }
+      } catch (err) {
+        console.warn(`Falha na requisição para ${url}. Tentando próximo...`);
+      }
+    }
+    throw new Error("Todos os servidores de mapa estão sobrecarregados.");
+  };
+
   const fetchCinemasByLocation = async (lat: number, lon: number) => {
     setLoading(true);
     setLocationStatus('Buscando cinemas num raio de 15km...');
@@ -65,24 +100,17 @@ export default function CinemasScreen() {
     });
     try {
       const query = `
-        [out:json];
+        [out:json][timeout:25];
         node
           ["amenity"="cinema"]
           (around:15000,${lat},${lon});
         out;
       `;
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'CinefiloApp/1.0'
-        },
-        body: `data=${encodeURIComponent(query)}`
-      });
-      const data = await response.json();
+      const data = await fetchOverpass(query);
       setCinemas(data.elements || []);
-    } catch (e) {
-      showAlert('Erro', 'Não foi possível buscar os cinemas.');
+    } catch (e: any) {
+      console.warn('Erro GPS Busca:', e);
+      showAlert('Erro', 'Os servidores de mapa estão sobrecarregados. Tente novamente em alguns minutos.');
     } finally {
       setLoading(false);
       setLocationStatus('');
@@ -104,15 +132,8 @@ export default function CinemasScreen() {
         );
         out center;
       `;
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'CinefiloApp/1.0'
-        },
-        body: `data=${encodeURIComponent(query)}`
-      });
-      const data = await response.json();
+      
+      const data = await fetchOverpass(query);
       const fetchedCinemas = data.elements || [];
       
       setCinemas(fetchedCinemas);
@@ -135,7 +156,7 @@ export default function CinemasScreen() {
       }
     } catch (e: any) {
       console.warn('Erro Busca Cidade', e);
-      showAlert('Erro', 'Não foi possível buscar cinemas nessa cidade.');
+      showAlert('Erro', 'Os servidores de mapa estão sobrecarregados. Tente novamente em alguns minutos.');
     } finally {
       setLoading(false);
       setLocationStatus('');
