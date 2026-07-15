@@ -128,7 +128,7 @@ export default function RootLayout() {
             });
           }
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         await database.logout();
       }
     });
