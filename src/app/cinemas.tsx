@@ -60,7 +60,11 @@ export default function CinemasScreen() {
       `;
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
-        body: query
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'CinefiloApp/1.0'
+        },
+        body: `data=${encodeURIComponent(query)}`
       });
       const data = await response.json();
       setCinemas(data.elements || []);
@@ -85,7 +89,11 @@ export default function CinemasScreen() {
       `;
       const response = await fetch('https://overpass-api.de/api/interpreter', {
         method: 'POST',
-        body: query
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'CinefiloApp/1.0'
+        },
+        body: `data=${encodeURIComponent(query)}`
       });
       const data = await response.json();
       const fetchedCinemas = data.elements || [];
@@ -119,10 +127,14 @@ export default function CinemasScreen() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await Location.getCurrentPositionAsync({ 
+        accuracy: Location.Accuracy.Balanced 
+      });
+      if (!location) throw new Error('Localização vazia');
       await fetchCinemasByLocation(location.coords.latitude, location.coords.longitude);
-    } catch (e) {
-      showAlert('Erro', 'Erro ao obter GPS.');
+    } catch (e: any) {
+      console.warn('Erro GPS', e);
+      showAlert('Erro', 'Não foi possível obter a sua localização. Verifique se o GPS do celular está ligado.');
       setLoading(false);
       setLocationStatus('');
     }
