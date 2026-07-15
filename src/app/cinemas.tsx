@@ -6,13 +6,6 @@ import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
 
-let MapView: any = null;
-let Marker: any = null;
-if (Platform.OS !== 'web') {
-  const Maps = require('react-native-maps');
-  MapView = Maps.default || Maps;
-  Marker = Maps.Marker || (Maps.default && Maps.default.Marker);
-}
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -24,6 +17,22 @@ export default function CinemasScreen() {
   const [searchCity, setSearchCity] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [MapViewComponent, setMapViewComponent] = useState<any>(null);
+  const [MarkerComponent, setMarkerComponent] = useState<any>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      try {
+        const Maps = require('react-native-maps');
+        // Usar função de callback no setState para não invocar a classe/função
+        setMapViewComponent(() => Maps.default || Maps);
+        setMarkerComponent(() => Maps.Marker || (Maps.default && Maps.default.Marker));
+      } catch (e) {
+        console.warn('Erro ao carregar mapas nativos', e);
+      }
+    }
+  }, []);
+
   const [mapRegion, setMapRegion] = useState({
     latitude: -14.235,
     longitude: -51.925,
@@ -250,27 +259,26 @@ export default function CinemasScreen() {
             </View>
 
             {viewMode === 'map' ? (
-              Platform.OS === 'web' || !MapView ? (
+              Platform.OS === 'web' || !MapViewComponent || !MarkerComponent ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
                   <Ionicons name="map-outline" size={48} color="#666" style={{ marginBottom: 16 }} />
                   <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível</Text>
-                  <Text style={{ color: '#aaa', textAlign: 'center' }}>O mapa interativo funciona apenas no aplicativo para celular (Android/iOS). Use o modo "Lista" para ver os cinemas encontrados.</Text>
+                  <Text style={{ color: '#aaa', textAlign: 'center' }}>Houve um problema ao carregar o mapa nativo ou você está na web. Use a "Lista".</Text>
                 </View>
               ) : (
-                <MapView
+                <MapViewComponent
                   style={{ flex: 1 }}
                   region={mapRegion}
-                  showsUserLocation
                 >
                   {cinemas.map((item: any) => (
-                    <Marker
+                    <MarkerComponent
                       key={item.id}
                       coordinate={{ latitude: item.lat, longitude: item.lon }}
                       title={item.tags?.name || 'Cinema'}
                       description={item.tags?.['addr:street'] || 'Toque em Lista para mais opções'}
                     />
                   ))}
-                </MapView>
+                </MapViewComponent>
               )
             ) : (
               <FlatList
