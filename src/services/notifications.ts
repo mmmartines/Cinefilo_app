@@ -1,19 +1,33 @@
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { database } from './database';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+let Notifications: any = null;
+let isNotificationsAvailable = false;
+
+try {
+  Notifications = require('expo-notifications');
+  isNotificationsAvailable = true;
+  
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+} catch (error) {
+  console.warn('Expo Notifications não está disponível neste ambiente (ex: Expo Go no Android).');
+}
 
 export async function registerForPushNotificationsAsync() {
   let token;
+
+  if (!isNotificationsAvailable) {
+    console.log('Push notifications desativadas neste app.');
+    return;
+  }
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
