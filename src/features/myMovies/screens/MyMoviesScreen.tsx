@@ -14,6 +14,7 @@ export function MyMoviesScreen() {
     currentFilter,
     setCurrentFilter,
     formatMoviesGrid,
+    currentUser,
   } = useMyMovies();
 
   return (
