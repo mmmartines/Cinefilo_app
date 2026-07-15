@@ -26,7 +26,7 @@ export function ListsScreen() {
       <TouchableOpacity 
         style={styles.listCard}
         activeOpacity={0.8}
-        onPress={() => router.push(`/list/${item._id}`)}
+        onPress={() => router.push(`/list/${item._id || item.id}`)}
       >
         <View style={styles.listHeader}>
           <View>
@@ -102,8 +102,8 @@ export function ListsScreen() {
       </View>
 
       <FlatList
-        data={customLists.filter(l => l.owner_id === currentUser?.id)}
-        keyExtractor={(item) => item._id.toString()}
+        data={customLists.filter(l => !l.owner_id || l.owner_id === currentUser?.id)}
+        keyExtractor={(item) => (item._id || item.id || Math.random().toString()).toString()}
         renderItem={renderListCard}
         contentContainerStyle={styles.listsContainer}
         ListHeaderComponent={<Text style={styles.sectionTitle}>Minhas Listas</Text>}
@@ -115,11 +115,11 @@ export function ListsScreen() {
         ListFooterComponent={
           <View style={{ marginTop: 24 }}>
             <Text style={styles.sectionTitle}>Compartilhadas Comigo</Text>
-            {customLists.filter(l => l.owner_id !== currentUser?.id).length === 0 ? (
+            {customLists.filter(l => l.owner_id && l.owner_id !== currentUser?.id).length === 0 ? (
               <Text style={[styles.emptyText, { marginLeft: 16 }]}>Nenhuma lista compartilhada com você.</Text>
             ) : (
-              customLists.filter(l => l.owner_id !== currentUser?.id).map((item) => (
-                <View key={item._id} style={{ marginHorizontal: 16, marginBottom: 16 }}>
+              customLists.filter(l => l.owner_id && l.owner_id !== currentUser?.id).map((item) => (
+                <View key={item._id || item.id} style={{ marginHorizontal: 16, marginBottom: 16 }}>
                   {renderListCard({ item })}
                 </View>
               ))
