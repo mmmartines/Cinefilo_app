@@ -550,7 +550,7 @@ export const database = {
       if (!addedOnCloud) {
         const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
         const localLists = listsJson ? JSON.parse(listsJson) : [];
-        const listIndex = localLists.findIndex((l: any) => l.id === listId);
+        const listIndex = localLists.findIndex((l: any) => l.id === listId || l._id === listId);
         if (listIndex >= 0) {
           if (!localLists[listIndex].movies) localLists[listIndex].movies = [];
           if (!localLists[listIndex].movies.find((m: any) => m.movieId === movie.id)) {
@@ -597,7 +597,7 @@ export const database = {
       if (!removedOnCloud) {
         const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
         const localLists = listsJson ? JSON.parse(listsJson) : [];
-        const listIndex = localLists.findIndex((l: any) => l.id === listId);
+        const listIndex = localLists.findIndex((l: any) => l.id === listId || l._id === listId);
         if (listIndex >= 0 && localLists[listIndex].movies) {
           localLists[listIndex].movies = localLists[listIndex].movies.filter((m: any) => m.movieId !== movieId);
           await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));

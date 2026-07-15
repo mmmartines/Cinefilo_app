@@ -93,7 +93,7 @@ export function useMovieDetails(movieId: string | undefined) {
         const lists = await database.getCustomLists(user.id);
         setUserCustomLists(lists);
         
-        const inLists = lists.filter((l: any) => l.movies.some((m: any) => m.movieId === Number(movieId))).map((l: any) => l._id);
+        const inLists = lists.filter((l: any) => l.movies?.some((m: any) => m.movieId === Number(movieId))).map((l: any) => l._id || l.id);
         setSelectedCustomLists(inLists);
 
         const { data: { session } } = await supabase.auth.getSession();

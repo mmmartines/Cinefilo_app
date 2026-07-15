@@ -318,19 +318,20 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                 <Text style={styles.modalSubtitle}>Adicionar às Listas</Text>
                 <View style={styles.emotionsContainer}>
                   {userCustomLists.map((list) => {
-                    const isSelected = selectedCustomLists.includes(list._id);
+                    const listIdentifier = list._id || list.id;
+                    const isSelected = selectedCustomLists.includes(listIdentifier);
                     return (
                       <TouchableOpacity
-                        key={list._id}
+                        key={listIdentifier}
                         style={[
                           styles.emotionChip,
                           isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: '#555' }
                         ]}
                         onPress={() => {
                           if (isSelected) {
-                            setSelectedCustomLists(prev => prev.filter(id => id !== list._id));
+                            setSelectedCustomLists(prev => prev.filter(id => id !== listIdentifier));
                           } else {
-                            setSelectedCustomLists(prev => [...prev, list._id]);
+                            setSelectedCustomLists(prev => [...prev, listIdentifier]);
                           }
                         }}
                       >
