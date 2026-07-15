@@ -4,8 +4,16 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { database } from '../services/database';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ViewShot, { captureRef } from 'react-native-view-shot';
+import { Platform } from 'react-native';
 import * as Sharing from 'expo-sharing';
+
+let ViewShot: any = View;
+let captureRef: any = null;
+if (Platform.OS !== 'web') {
+  const RNV = require('react-native-view-shot');
+  ViewShot = RNV.default;
+  captureRef = RNV.captureRef;
+}
 
 const { width, height } = Dimensions.get('window');
 
@@ -61,6 +69,10 @@ export default function WrappedScreen() {
 
   const handleShare = async () => {
     try {
+      if (Platform.OS === 'web' || !captureRef) {
+        alert("O compartilhamento de imagem não é suportado na versão Web.");
+        return;
+      }
       const uri = await captureRef(viewRef, {
         format: 'png',
         quality: 1,
