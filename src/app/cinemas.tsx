@@ -95,8 +95,8 @@ export default function CinemasScreen() {
     setLocationStatus(`Buscando cinemas em ${city}...`);
     try {
       const query = `
-        [out:json];
-        area[name="${city}"]->.searchArea;
+        [out:json][timeout:25];
+        area["name"="${city}"]->.searchArea;
         (
           node["amenity"="cinema"](area.searchArea);
           way["amenity"="cinema"](area.searchArea);
