@@ -303,9 +303,10 @@ export default function CinemasScreen() {
             </View>
 
             {viewMode === 'map' ? (
-              <WebView
-                style={{ flex: 1 }}
-                originWhitelist={['*']}
+              <View style={{ flex: 1, marginTop: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1c23' }}>
+                <WebView
+                  style={{ flex: 1 }}
+                  originWhitelist={['*']}
                 source={{
                   html: `
                     <!DOCTYPE html>
@@ -345,6 +346,7 @@ export default function CinemasScreen() {
                   `
                 }}
               />
+              </View>
             ) : (
               <FlatList
                 data={cinemas}
