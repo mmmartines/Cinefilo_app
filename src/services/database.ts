@@ -227,11 +227,15 @@ export const database = {
       
       let user = JSON.parse(userJson);
       
-      // 3. Auto-generate tag if missing for backwards compatibility
+      // Auto-generate tag if missing for backwards compatibility
       if (!user.tag) {
         user.tag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       }
+      
+      // Carrega o avatar mais recente do cache local
+      const avatarUrl = await AsyncStorage.getItem(AVATAR_KEY);
+      if (avatarUrl) user.avatar_url = avatarUrl;
       
       // Garante que o ID do usuário bate com o ID do Supabase (migração de local para nuvem)
       if (user.id !== session.user.id) {
@@ -639,7 +643,11 @@ export const database = {
   async updateAvatar(url: string) {
     await AsyncStorage.setItem(AVATAR_KEY, url);
     const user = await this.getCurrentUser();
-    if (user) await this.syncStatsToCloud(user.id);
+    if (user) {
+      user.avatar_url = url;
+      await this.setCurrentUser(user);
+      await this.syncStatsToCloud(user.id);
+    }
   },
 
   async updateNotificationPreferences(enabled: boolean) {

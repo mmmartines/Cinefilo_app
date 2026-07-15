@@ -21,13 +21,17 @@ export function MyMoviesScreen() {
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <View style={{ width: 40 }} />
         <Text style={styles.headerTitle}>Meus Filmes</Text>
-        <TouchableOpacity 
-          style={styles.profileIcon} 
-          onPress={() => router.push('/profile')}
-        >
-          <Ionicons name="person" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity 
+            style={[styles.profileIcon, currentUser?.avatar_url && { padding: 0 }]} 
+            onPress={() => router.push('/profile')}
+          >
+            {currentUser?.avatar_url ? (
+              <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
       
       <View style={styles.filterRow}>
         <TouchableOpacity 
@@ -111,6 +115,11 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
   },
   filterRow: {
     flexDirection: 'row',
