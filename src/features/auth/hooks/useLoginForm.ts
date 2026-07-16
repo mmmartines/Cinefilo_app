@@ -129,7 +129,7 @@ export function useLoginForm() {
 
           if (hashMatch) {
             const access_token = hashMatch[1];
-            const refresh_token = hashMatch[2];
+            const refresh_token = refreshMatch ? refreshMatch[1] : '';
             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token,
               refresh_token,
