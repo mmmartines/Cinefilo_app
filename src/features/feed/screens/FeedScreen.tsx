@@ -45,6 +45,7 @@ export function FeedScreen() {
     else if (item.action === 'rated') actionText = 'avaliou o filme';
     else if (item.action === 'added_to_list') actionText = 'adicionou a uma lista';
     else if (item.action === 'unlocked_badge') actionText = 'desbloqueou uma conquista!';
+    else if (item.action === 'challenge_completed') actionText = 'completou o Desafio Semanal!';
 
     const isSpoilerHidden = item.has_spoiler && !revealedSpoilers.includes(item._id);
 
@@ -76,7 +77,17 @@ export function FeedScreen() {
             </Text>
           </View>
 
-          {item.action === 'unlocked_badge' && item.badge ? (
+          {item.action === 'challenge_completed' ? (
+            <View style={[styles.movieContent, { alignItems: 'center', borderColor: '#E50914', borderWidth: 1 }]}>
+              <View style={[styles.badgeIconContainerFeed, { backgroundColor: '#E5091422' }]}>
+                <Ionicons name="trophy" size={32} color="#E50914" />
+              </View>
+              <View style={styles.movieInfo}>
+                <Text style={[styles.movieTitle, { color: '#E50914' }]}>{item.challenge_title || 'Desafio Semanal'}</Text>
+                <Text style={styles.reviewText}>+{(item.challenge_xp || 50)} XP conquistados!</Text>
+              </View>
+            </View>
+          ) : item.action === 'unlocked_badge' && item.badge ? (
             <View style={[styles.movieContent, { alignItems: 'center', borderColor: item.badge.color || '#333', borderWidth: 1 }]}>
               <View style={[styles.badgeIconContainerFeed, { backgroundColor: item.badge.color ? `${item.badge.color}22` : '#333' }]}>
                 <Ionicons name={item.badge.icon as any} size={32} color={item.badge.color || '#fff'} />
