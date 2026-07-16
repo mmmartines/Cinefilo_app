@@ -128,6 +128,7 @@ export function useLoginForm() {
           options: {
             redirectTo,
             scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
+          queryParams: { prompt: 'select_account' },
           },
         });
         return;
@@ -139,6 +140,7 @@ export function useLoginForm() {
           redirectTo,
           skipBrowserRedirect: true,
           scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
+          queryParams: { prompt: 'select_account' },
         },
       });
 
@@ -230,6 +232,12 @@ export function useLoginForm() {
             }
 
             router.replace('/');
+          } else {
+             showAlert('Aviso', 'Não foi possível extrair os tokens do URL retornado.');
+          }
+        } else {
+          if (res.type !== 'cancel' && res.type !== 'dismiss') {
+            showAlert('Aviso', 'O login retornou status: ' + res.type);
           }
         }
       }
