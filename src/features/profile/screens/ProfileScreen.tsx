@@ -16,7 +16,8 @@ export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
   const { themeMode, setThemeMode, colors } = useAppTheme();
-  
+  const styles = getStyles(colors);
+
   const {
     userProfile,
     userName,
@@ -259,7 +260,7 @@ export function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: colors.backgroundElement, marginBottom: 24 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#E50914' },
