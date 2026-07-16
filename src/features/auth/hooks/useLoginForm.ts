@@ -1,39 +1,24 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { Platform } from 'react-native';
-import * as Linking from 'expo-linking';
+import { supabase } from '../../../../src/services/supabase';
+import { database } from '../../../../src/services/database';
+import { useAlert } from '../../../../src/contexts/AlertContext';
 import * as WebBrowser from 'expo-web-browser';
-import { useAlert } from '../../../contexts/AlertContext';
-import { supabase } from '../../../services/supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { database } from '../../../services/database';
+import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
 }
 
 export function useLoginForm() {
-  const router = useRouter();
-  const { showAlert } = useAlert();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { showAlert } = useAlert();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showAlert('Erro', 'Preencha todos os campos.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showAlert('Erro', 'Por favor, insira um e-mail válido.');
-      return;
-    }
-
-    if (password.length < 6) {
-      showAlert('Erro', 'A senha deve ter no mínimo 6 caracteres.');
+      showAlert('Atenção', 'Preencha todos os campos.');
       return;
     }
 
@@ -44,36 +29,11 @@ export function useLoginForm() {
         password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      if (data.session) {
-        
-            let birthDateToSave = null;
-            let avatarUrlToSave = null;
-
-            if (pTokenMatch) {
-              const provider_token = pTokenMatch[1];
-              try {
-                const peopleRes = await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays,photos', {
-                  headers: { Authorization: `Bearer ${provider_token}` }
-                });
-                if (peopleRes.ok) {
-                  const peopleData = await peopleRes.json();
-                  const b = peopleData.birthdays?.[0]?.date;
-                  if (b && b.year && b.month && b.day) {
-                    birthDateToSave = `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}/${b.year}`;
-                  }
-                  const p = peopleData.photos?.[0]?.url;
-                  if (p) {
-                    avatarUrlToSave = p;
-                  }
-                }
-              } catch(e) { console.error(e); }
-            }
-
-            const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      if (data?.session?.user) {
+        let tag = '';
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
         try {
           const response = await fetch(`${apiUrl}/api/users`, {
             method: 'GET',
@@ -81,38 +41,26 @@ export function useLoginForm() {
               'Authorization': `Bearer ${data.session.access_token}`,
             }
           });
-
-          let tag = '';
-          if (!response.ok) {
-            console.error('Falha ao sincronizar com o backend:', await response.text());
-          } else {
+          if (response.ok) {
             const apiData = await response.json();
             tag = apiData.data?.tag || '';
           }
+        } catch(e) {}
 
-          await database.setCurrentUser({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name || '',
-            tag: tag
-          });
-
-          await database.syncCloudToLocal(data.user.id);
-
-        } catch (err) {
-          console.error('Erro de rede ao sincronizar:', err);
-          await database.setCurrentUser({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name || '',
-            tag: ''
-          });
-        }
+        await database.setCurrentUser({
+          id: data.session.user.id,
+          email: data.session.user.email,
+          name: data.session.user.user_metadata?.name || data.session.user.user_metadata?.full_name || '',
+          tag: tag
+        });
       }
 
-      router.replace('/');
     } catch (e: any) {
-      showAlert('Erro', e.message || 'Erro ao logar.');
+      if (e.message === 'Invalid login credentials') {
+        showAlert('Erro', 'Email ou senha inválidos.');
+      } else {
+        showAlert('Erro', e.message || 'Falha ao fazer login.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,24 +70,12 @@ export function useLoginForm() {
     try {
       const redirectTo = Linking.createURL('/');
 
-      if (Platform.OS === 'web') {
-        await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo,
-            scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
-          queryParams: { prompt: 'select_account' },
-          },
-        });
-        return;
-      }
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo,
           skipBrowserRedirect: true,
-          scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
+          scopes: 'profile email',
           queryParams: { prompt: 'select_account' },
         },
       });
@@ -153,7 +89,6 @@ export function useLoginForm() {
           const { url } = res;
           const hashMatch = url.match(/#access_token=([^&]+)/);
           const refreshMatch = url.match(/&refresh_token=([^&]+)/);
-          const pTokenMatch = url.match(/&provider_token=([^&]+)/);
 
           if (hashMatch) {
             const access_token = hashMatch[1];
@@ -186,41 +121,8 @@ export function useLoginForm() {
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
                 tag: tag
               });
-
               
               await database.syncCloudToLocal(sessionData.user?.id || '');
-
-              if (birthDateToSave || avatarUrlToSave) {
-                try {
-                  const payload: any = {};
-                  if (birthDateToSave) payload.birthdate = birthDateToSave;
-                  if (avatarUrlToSave) payload.avatar_url = avatarUrlToSave;
-                  
-                  await fetch(`${apiUrl}/api/users`, {
-                    method: 'PUT',
-                    headers: {
-                      'Authorization': `Bearer ${sessionData.session?.access_token}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                  });
-                } catch(e) {}
-              }
-
-
-              if (birthDate) {
-                try {
-                  await fetch(`${apiUrl}/api/users`, {
-                    method: 'PUT',
-                    headers: {
-                      'Authorization': `Bearer ${sessionData.session?.access_token}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ birthdate: birthDate })
-                  });
-                } catch(e) {}
-              }
-
 
             } catch (err) {
               await database.setCurrentUser({
@@ -231,7 +133,6 @@ export function useLoginForm() {
               });
             }
 
-            router.replace('/');
           } else {
              showAlert('Aviso', 'Não foi possível extrair os tokens do URL retornado.');
           }

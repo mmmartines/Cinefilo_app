@@ -1,67 +1,71 @@
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { Platform } from 'react-native';
-import * as Linking from 'expo-linking';
+import { supabase } from '../../../../src/services/supabase';
+import { database } from '../../../../src/services/database';
+import { useAlert } from '../../../../src/contexts/AlertContext';
 import * as WebBrowser from 'expo-web-browser';
-import { useAlert } from '../../../contexts/AlertContext';
-import { supabase } from '../../../services/supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { database } from '../../../services/database';
+import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
 }
 
 export function useRegisterForm() {
-  const router = useRouter();
-  const { showAlert } = useAlert();
-  
-  const [name, setName] = useState('');
-  const [birthdate, setBirthdate] = useState('31/01/1996');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const [date, setDate] = useState(new Date(1996, 0, 31));
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-
-  const onChangeDate = (event: any, selectedDate?: Date) => {
-    setIsDatePickerVisible(false);
-    if (selectedDate) {
-      setDate(selectedDate);
-      const formatted = selectedDate.toLocaleDateString('pt-BR');
-      setBirthdate(formatted);
-    }
-  };
+  const { showAlert } = useAlert();
 
   const handleRegister = async () => {
     if (!email || !password || !name) {
-      showAlert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      showAlert('Erro', 'Por favor, insira um e-mail válido.');
-      return;
-    }
-
-    if (password.length < 6) {
-      showAlert('Erro', 'A senha deve ter no mínimo 6 caracteres.');
+      showAlert('Atenção', 'Preencha todos os campos.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await database.register(email, password, name, birthdate);
-      if (error) {
-         showAlert('Erro', error.message || 'Erro ao realizar o cadastro.');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.session?.user) {
+        let tag = '';
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+        try {
+          const response = await fetch(`${apiUrl}/api/users`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${data.session.access_token}`,
+            }
+          });
+          if (response.ok) {
+            const apiData = await response.json();
+            tag = apiData.data?.tag || '';
+          }
+        } catch(e) {}
+
+        await database.setCurrentUser({
+          id: data.session.user.id,
+          email: data.session.user.email,
+          name: name,
+          tag: tag
+        });
       } else {
-         showAlert('Sucesso', 'Verifique seu e-mail para confirmar a conta!');
-         router.push('/login');
+        showAlert('Sucesso', 'Conta criada! Confirme seu email antes de fazer login.');
       }
     } catch (e: any) {
-      showAlert('Erro', e.message || 'Erro ao realizar o cadastro.');
+      if (e.message.includes('already registered')) {
+        showAlert('Atenção', 'Este email já está em uso.');
+      } else {
+        showAlert('Erro', e.message || 'Falha ao criar conta.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -70,25 +74,13 @@ export function useRegisterForm() {
   const handleSocialLogin = async (provider: 'google') => {
     try {
       const redirectTo = Linking.createURL('/');
-      
-      if (Platform.OS === 'web') {
-        await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo,
-            scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
-          queryParams: { prompt: 'select_account' },
-          },
-        });
-        return;
-      }
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo,
           skipBrowserRedirect: true,
-          scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
+          scopes: 'profile email',
           queryParams: { prompt: 'select_account' },
         },
       });
@@ -97,66 +89,54 @@ export function useRegisterForm() {
 
       if (data?.url) {
         const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-        
+
         if (res.type === 'success') {
           const { url } = res;
           const hashMatch = url.match(/#access_token=([^&]+)/);
           const refreshMatch = url.match(/&refresh_token=([^&]+)/);
-          const pTokenMatch = url.match(/&provider_token=([^&]+)/);
-          
-          if (hashMatch) {
-             const access_token = hashMatch[1];
-             const refresh_token = refreshMatch ? refreshMatch[1] : '';
-             const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token,
-                refresh_token,
-             });
-             
-             if (sessionError) throw sessionError;
-             
-             
-            let birthDateToSave = null;
-            let avatarUrlToSave = null;
 
-            if (pTokenMatch) {
-              const provider_token = pTokenMatch[1];
-              try {
-                const peopleRes = await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays,photos', {
-                  headers: { Authorization: `Bearer ${provider_token}` }
-                });
-                if (peopleRes.ok) {
-                  const peopleData = await peopleRes.json();
-                  const b = peopleData.birthdays?.[0]?.date;
-                  if (b && b.year && b.month && b.day) {
-                    birthDateToSave = `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}/${b.year}`;
-                  }
-                  const p = peopleData.photos?.[0]?.url;
-                  if (p) {
-                    avatarUrlToSave = p;
-                  }
-                }
-              } catch(e) { console.error(e); }
-            }
+          if (hashMatch) {
+            const access_token = hashMatch[1];
+            const refresh_token = refreshMatch ? refreshMatch[1] : '';
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+
+            if (sessionError) throw sessionError;
 
             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-             const response = await fetch(`${apiUrl}/api/users`, {
-               method: 'GET',
-               headers: {
-                 'Authorization': `Bearer ${sessionData.session?.access_token}`,
-               }
-             });
-             
-             if (response.ok) {
-               const apiData = await response.json();
-               await database.setCurrentUser({
-                 id: sessionData.user?.id,
-                 email: sessionData.user?.email,
-                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                 tag: apiData.data?.tag
-               });
-             }
-             
-             router.replace('/');
+            try {
+              const response = await fetch(`${apiUrl}/api/users`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                }
+              });
+
+              let tag = '';
+              if (response.ok) {
+                const apiData = await response.json();
+                tag = apiData.data?.tag || '';
+              }
+
+              await database.setCurrentUser({
+                id: sessionData.user?.id,
+                email: sessionData.user?.email,
+                name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                tag: tag
+              });
+              
+              await database.syncCloudToLocal(sessionData.user?.id || '');
+
+            } catch (err) {
+              await database.setCurrentUser({
+                id: sessionData.user?.id,
+                email: sessionData.user?.email,
+                name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
+                tag: ''
+              });
+            }
           } else {
              showAlert('Aviso', 'Não foi possível extrair os tokens do URL retornado.');
           }
@@ -172,18 +152,13 @@ export function useRegisterForm() {
   };
 
   return {
-    name,
-    setName,
-    birthdate,
     email,
     setEmail,
     password,
     setPassword,
+    name,
+    setName,
     isLoading,
-    date,
-    isDatePickerVisible,
-    setIsDatePickerVisible,
-    onChangeDate,
     handleRegister,
     handleSocialLogin,
   };
