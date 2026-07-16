@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 import { useEffect, useState, useRef } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { database } from '../services/database';
@@ -52,11 +52,13 @@ TextInput.defaultProps.style = { fontFamily: 'Inter_400Regular' };
 function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticated: boolean | null, fontsLoaded: boolean, segments: string[] }) {
   const router = useRouter();
   const { forceSync } = useSync();
+  const navigationState = useRootNavigationState();
 
   const hasSynced = useRef(false);
 
   useEffect(() => {
     if (isAuthenticated === null) return;
+    if (!navigationState?.key) return;
 
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
 
@@ -72,7 +74,7 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
         forceSync();
       }
     }
-  }, [isAuthenticated, segments]);
+  }, [isAuthenticated, segments, navigationState?.key]);
 
   if (isAuthenticated === null || !fontsLoaded) {
     return null;
