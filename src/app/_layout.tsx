@@ -119,7 +119,8 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
 
 import { ThemeProvider } from '../contexts/ThemeContext';
 import * as Notifications from 'expo-notifications';
-import { database } from '../services/database';\nexport default function RootLayout() {
+import { database } from '../services/database';
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const segments = useSegments();
