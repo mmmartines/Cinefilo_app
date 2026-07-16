@@ -11,16 +11,11 @@ export function RegisterScreen() {
   const {
     name,
     setName,
-    birthdate,
     email,
     setEmail,
     password,
     setPassword,
     isLoading,
-    date,
-    isDatePickerVisible,
-    setIsDatePickerVisible,
-    onChangeDate,
     handleRegister,
     handleSocialLogin,
   } = useRegisterForm();
@@ -43,28 +38,6 @@ export function RegisterScreen() {
             onChangeText={setName}
           />
         </View>
-
-        <View style={styles.inputContainer}>
-          <Ionicons name="calendar" color="#999" size={20} style={styles.icon} />
-          <TouchableOpacity 
-            style={{ flex: 1, justifyContent: 'center' }} 
-            onPress={() => setIsDatePickerVisible(true)}
-          >
-            <Text style={{ color: birthdate ? '#fff' : '#666', fontSize: 16 }}>
-              {birthdate || "Data de Nascimento"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {isDatePickerVisible && (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onChangeDate}
-            maximumDate={new Date()}
-          />
-        )}
 
         <View style={styles.inputContainer}>
           <Ionicons name="mail" color="#999" size={20} style={styles.icon} />
