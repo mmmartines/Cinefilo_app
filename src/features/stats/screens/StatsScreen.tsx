@@ -1,6 +1,6 @@
 import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -236,12 +236,12 @@ export function StatsScreen() {
         <Text style={styles.sectionTitle}>Minhas Conquistas</Text>
         <View style={styles.badgesGrid}>
           {userBadges.map(b => (
-            <View key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemInactive]}>
+            <TouchableOpacity onPress={() => Alert.alert(b.name, b.unlocked ? b.description : 'Continue assistindo para desbloquear esta conquista!')} key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemInactive]}>
               <View style={[styles.badgeIconContainer, !b.unlocked ? styles.badgeIconInactive : { borderColor: b.color, backgroundColor: `${b.color}22` }]}>
                 <Ionicons name={b.icon as any} size={32} color={b.unlocked ? b.color : "#666"} />
               </View>
               <Text style={[styles.badgeName, !b.unlocked && {color: '#666'}]}>{b.name}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
