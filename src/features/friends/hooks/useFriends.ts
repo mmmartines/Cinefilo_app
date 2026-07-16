@@ -39,7 +39,10 @@ export function useFriends() {
         }
       });
       
-      if (!response.ok) throw new Error('Falha ao buscar ranking');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro na API (${response.status}): ${errorText}`);
+      }
       
       const result = await response.json();
       const fetchedFriends = result.data || [];
