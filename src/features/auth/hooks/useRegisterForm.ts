@@ -156,7 +156,7 @@ export function useRegisterForm() {
               });
             }
           } else {
-             showAlert('Aviso', 'Não foi possível extrair os tokens do URL retornado.');
+             showAlert('Aviso', 'Tokens não encontrados. URL: ' + url);
           }
         } else {
           if (res.type !== 'cancel' && res.type !== 'dismiss') {
