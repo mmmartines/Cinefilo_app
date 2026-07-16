@@ -233,15 +233,10 @@ export const database = {
 
   // Desloga
   async logout() {
-    try {
-      await supabase.auth.signOut();
-    } catch (e) {
-      console.error('Erro ao deslogar no supabase', e);
-    } finally {
-      await AsyncStorage.removeItem(CURRENT_USER_KEY);
-      await AsyncStorage.removeItem(AVATAR_KEY);
-      this.notifyAuthListeners(null);
-    }
+    supabase.auth.signOut().catch(e => console.error('Erro supabase logout', e));
+    await AsyncStorage.removeItem(CURRENT_USER_KEY);
+    await AsyncStorage.removeItem(AVATAR_KEY);
+    this.notifyAuthListeners(null);
   },
 
   // --- FILMES ASSISTIDOS ---
