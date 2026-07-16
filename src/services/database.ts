@@ -286,7 +286,7 @@ export const database = {
         bonus_xp: bonusXpStr ? parseInt(bonusXpStr) : 0
       };
 
-      if (avatarUrl) payload.avatar_url = avatarUrl;
+      if (avatarUrl && !avatarUrl.startsWith('file://')) payload.avatar_url = avatarUrl;
       if (pushToken) payload.expo_push_token = pushToken;
       if (notifsStr !== null) payload.notifications_enabled = notifsStr === 'true';
 
