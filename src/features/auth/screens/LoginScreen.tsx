@@ -79,6 +79,11 @@ export function LoginScreen() {
           <Text style={[styles.socialButtonText, { color: '#000' }]}>Continuar com Google</Text>
         </TouchableOpacity>
       </View>
+
+      <View style={styles.footerContainer}>
+        <Text style={styles.footerText}>Desenvolvido por Martines Solutions</Text>
+        <Text style={styles.footerText}>© 2026 Todos os direitos reservados</Text>
+      </View>
     </ScrollView>
   );
 }
