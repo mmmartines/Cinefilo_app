@@ -59,7 +59,7 @@ export function ProfileScreen() {
 
       <View style={styles.tagSection}>
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={handlePickImage} style={styles.avatarWrapper}>
+          <TouchableOpacity onPress={userProvider === 'google' ? undefined : handlePickImage} style={styles.avatarWrapper} activeOpacity={userProvider === 'google' ? 1 : 0.2}>
             {userAvatarUrl ? (
               <Image source={{ uri: userAvatarUrl }} style={styles.avatarImage} />
             ) : (
@@ -67,8 +67,12 @@ export function ProfileScreen() {
                 <Ionicons name="person" size={40} color="#666" />
               </View>
             )}
-            <View style={styles.editAvatarBadge}>
-              <Ionicons name="camera" size={14} color="#fff" />
+            <View style={[styles.editAvatarBadge, userProvider === 'google' && { backgroundColor: '#fff' }]}>
+              {userProvider === 'google' ? (
+                <Ionicons name="logo-google" size={14} color="#DB4437" />
+              ) : (
+                <Ionicons name="camera" size={14} color="#fff" />
+              )}
             </View>
           </TouchableOpacity>
         </View>

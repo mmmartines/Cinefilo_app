@@ -17,6 +17,7 @@ export function useProfile() {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [userProvider, setUserProvider] = useState<string>('email');
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
   const [birthdateDate, setBirthdateDate] = useState(new Date());
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
@@ -30,6 +31,7 @@ export function useProfile() {
         setUserBirthdate(currentUser.birthdate || '');
         setUserPassword(currentUser.password || '');
         setUserAvatarUrl(currentUser.avatar_url || null);
+        setUserProvider(currentUser.provider || 'email');
         setIsNotificationsEnabled(currentUser.notifications_enabled ?? true);
       }
     };
@@ -142,6 +144,7 @@ export function useProfile() {
 
   const handleUserLogout = async () => {
     await database.logout();
+    router.replace('/login');
   };
 
   return {

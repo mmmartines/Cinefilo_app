@@ -235,10 +235,12 @@ export const database = {
   async logout() {
     try {
       await supabase.auth.signOut();
-      await AsyncStorage.removeItem(CURRENT_USER_KEY);
-      this.notifyAuthListeners(null);
     } catch (e) {
-      console.error('Erro ao deslogar', e);
+      console.error('Erro ao deslogar no supabase', e);
+    } finally {
+      await AsyncStorage.removeItem(CURRENT_USER_KEY);
+      await AsyncStorage.removeItem(AVATAR_KEY);
+      this.notifyAuthListeners(null);
     }
   },
 

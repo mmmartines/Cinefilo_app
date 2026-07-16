@@ -137,7 +137,8 @@ export function useLoginForm() {
                 email: sessionData.user?.email,
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
                 tag: tag,
-                avatar_url: googleAvatar || dbAvatar || ''
+                avatar_url: googleAvatar || dbAvatar || '',
+                provider: 'google'
               });
               
               if (googleAvatar || dbAvatar) {
@@ -151,7 +152,8 @@ export function useLoginForm() {
                 id: sessionData.user?.id,
                 email: sessionData.user?.email,
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                tag: ''
+                tag: '',
+                provider: 'google'
               });
             }
 

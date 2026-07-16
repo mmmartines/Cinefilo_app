@@ -55,7 +55,8 @@ export function useRegisterForm() {
           id: data.session.user.id,
           email: data.session.user.email,
           name: name,
-          tag: tag
+          tag: tag,
+          provider: 'email'
         });
       } else {
         showAlert('Sucesso', 'Conta criada! Confirme seu email antes de fazer login.');
@@ -142,7 +143,8 @@ export function useRegisterForm() {
                 email: sessionData.user?.email,
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
                 tag: tag,
-                avatar_url: googleAvatar || dbAvatar || ''
+                avatar_url: googleAvatar || dbAvatar || '',
+                provider: 'google'
               });
               
               if (googleAvatar || dbAvatar) {
@@ -156,7 +158,8 @@ export function useRegisterForm() {
                 id: sessionData.user?.id,
                 email: sessionData.user?.email,
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                tag: ''
+                tag: '',
+                provider: 'google'
               });
             }
           } else {
