@@ -1,5 +1,4 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 
 export function useNotifications() {
@@ -27,11 +26,9 @@ export function useNotifications() {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchNotifications();
-    }, [])
-  );
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const markAsRead = async (notificationId?: string) => {
     try {

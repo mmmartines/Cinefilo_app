@@ -75,9 +75,8 @@ export function useFeed() {
   useFocusEffect(
     useCallback(() => {
       database.getCurrentUser().then(setCurrentUser);
-      setIsLoading(true);
       fetchFeedData(true, activeTab);
-    }, [])
+    }, [activeTab])
   );
 
   const changeTab = (tab: 'me' | 'social') => {
