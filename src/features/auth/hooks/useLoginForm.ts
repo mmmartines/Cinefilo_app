@@ -76,7 +76,7 @@ export function useLoginForm() {
           redirectTo,
           skipBrowserRedirect: true,
           scopes: 'profile email',
-          queryParams: { prompt: 'select_account' },
+          queryParams: { prompt: 'consent', access_type: 'offline' },
         },
       });
 
