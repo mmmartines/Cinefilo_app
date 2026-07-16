@@ -145,6 +145,10 @@ export function useRegisterForm() {
                 avatar_url: googleAvatar || dbAvatar || ''
               });
               
+              if (googleAvatar || dbAvatar) {
+                await database.updateAvatar(googleAvatar || dbAvatar);
+              }
+              
               await database.syncCloudToLocal(sessionData.user?.id || '');
 
             } catch (err) {
