@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { AnimatedButton } from '../../../components/AnimatedButton';
@@ -74,9 +74,9 @@ export function LoginScreen() {
       </View>
 
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#fff' }]} onPress={() => handleSocialLogin('google')}>
-          <FontAwesome5 name="google" color="#DB4437" size={20} />
-          <Text style={[styles.socialButtonText, { color: '#000' }]}>Continuar com Google</Text>
+        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#fff', opacity: isLoading ? 0.7 : 1 }]} disabled={isLoading} onPress={() => handleSocialLogin('google')}>
+          {isLoading ? <ActivityIndicator color="#000" /> : <FontAwesome5 name="google" color="#DB4437" size={20} />}
+          <Text style={[styles.socialButtonText, { color: '#000' }]}>{isLoading ? 'Entrando...' : 'Continuar com Google'}</Text>
         </TouchableOpacity>
       </View>
 

@@ -170,5 +170,6 @@ export function useProfile() {
     handleSaveProfile,
     handleDeleteUserAccount,
     handleUserLogout,
+    userProvider,
   };
 }

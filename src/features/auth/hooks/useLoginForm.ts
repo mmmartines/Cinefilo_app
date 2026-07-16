@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { supabase } from '../../../../src/services/supabase';
 import { database } from '../../../../src/services/database';
 import { useAlert } from '../../../../src/contexts/AlertContext';
@@ -15,6 +16,7 @@ export function useLoginForm() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { showAlert } = useAlert();
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -51,8 +53,10 @@ export function useLoginForm() {
           id: data.session.user.id,
           email: data.session.user.email,
           name: data.session.user.user_metadata?.name || data.session.user.user_metadata?.full_name || '',
-          tag: tag
+          tag: tag,
+          provider: 'email'
         });
+        setTimeout(() => router.replace('/'), 100);
       }
 
     } catch (e: any) {
@@ -65,8 +69,8 @@ export function useLoginForm() {
       setIsLoading(false);
     }
   };
-
   const handleSocialLogin = async (provider: 'google') => {
+    setIsLoading(true);
     try {
       const redirectTo = Linking.createURL('/');
 
@@ -165,9 +169,12 @@ export function useLoginForm() {
             showAlert('Aviso', 'O login retornou status: ' + res.type);
           }
         }
+        setTimeout(() => router.replace('/'), 100);
       }
     } catch (e: any) {
       showAlert('Erro', e.message || 'Falha no login social.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
