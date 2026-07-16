@@ -115,16 +115,34 @@ export function useRegisterForm() {
               });
 
               let tag = '';
+              let dbAvatar = '';
               if (response.ok) {
                 const apiData = await response.json();
                 tag = apiData.data?.tag || '';
+                dbAvatar = apiData.data?.avatar_url || '';
+              }
+              
+              const googleAvatar = sessionData.user?.user_metadata?.avatar_url || sessionData.user?.user_metadata?.picture || '';
+              
+              if (googleAvatar && !dbAvatar) {
+                try {
+                  await fetch(`${apiUrl}/api/users`, {
+                    method: 'PUT',
+                    headers: {
+                      'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ avatar_url: googleAvatar })
+                  });
+                } catch(e) {}
               }
 
               await database.setCurrentUser({
                 id: sessionData.user?.id,
                 email: sessionData.user?.email,
                 name: sessionData.user?.user_metadata?.name || sessionData.user?.user_metadata?.full_name || '',
-                tag: tag
+                tag: tag,
+                avatar_url: googleAvatar || dbAvatar || ''
               });
               
               await database.syncCloudToLocal(sessionData.user?.id || '');
