@@ -112,7 +112,31 @@ export function useRegisterForm() {
              
              if (sessionError) throw sessionError;
              
-             const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+             
+            let birthDateToSave = null;
+            let avatarUrlToSave = null;
+
+            if (pTokenMatch) {
+              const provider_token = pTokenMatch[1];
+              try {
+                const peopleRes = await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays,photos', {
+                  headers: { Authorization: `Bearer ${provider_token}` }
+                });
+                if (peopleRes.ok) {
+                  const peopleData = await peopleRes.json();
+                  const b = peopleData.birthdays?.[0]?.date;
+                  if (b && b.year && b.month && b.day) {
+                    birthDateToSave = `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}/${b.year}`;
+                  }
+                  const p = peopleData.photos?.[0]?.url;
+                  if (p) {
+                    avatarUrlToSave = p;
+                  }
+                }
+              } catch(e) { console.error(e); }
+            }
+
+            const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
              const response = await fetch(`${apiUrl}/api/users`, {
                method: 'GET',
                headers: {

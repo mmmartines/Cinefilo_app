@@ -49,7 +49,31 @@ export function useLoginForm() {
       }
 
       if (data.session) {
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+        
+            let birthDateToSave = null;
+            let avatarUrlToSave = null;
+
+            if (pTokenMatch) {
+              const provider_token = pTokenMatch[1];
+              try {
+                const peopleRes = await fetch('https://people.googleapis.com/v1/people/me?personFields=birthdays,photos', {
+                  headers: { Authorization: `Bearer ${provider_token}` }
+                });
+                if (peopleRes.ok) {
+                  const peopleData = await peopleRes.json();
+                  const b = peopleData.birthdays?.[0]?.date;
+                  if (b && b.year && b.month && b.day) {
+                    birthDateToSave = `${String(b.day).padStart(2, '0')}/${String(b.month).padStart(2, '0')}/${b.year}`;
+                  }
+                  const p = peopleData.photos?.[0]?.url;
+                  if (p) {
+                    avatarUrlToSave = p;
+                  }
+                }
+              } catch(e) { console.error(e); }
+            }
+
+            const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
         try {
           const response = await fetch(`${apiUrl}/api/users`, {
             method: 'GET',
@@ -103,6 +127,7 @@ export function useLoginForm() {
           provider: 'google',
           options: {
             redirectTo,
+            scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
           },
         });
         return;
@@ -113,6 +138,7 @@ export function useLoginForm() {
         options: {
           redirectTo,
           skipBrowserRedirect: true,
+          scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
         },
       });
 
@@ -161,6 +187,24 @@ export function useLoginForm() {
 
               
               await database.syncCloudToLocal(sessionData.user?.id || '');
+
+              if (birthDateToSave || avatarUrlToSave) {
+                try {
+                  const payload: any = {};
+                  if (birthDateToSave) payload.birthdate = birthDateToSave;
+                  if (avatarUrlToSave) payload.avatar_url = avatarUrlToSave;
+                  
+                  await fetch(`${apiUrl}/api/users`, {
+                    method: 'PUT',
+                    headers: {
+                      'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                  });
+                } catch(e) {}
+              }
+
 
               if (birthDate) {
                 try {
