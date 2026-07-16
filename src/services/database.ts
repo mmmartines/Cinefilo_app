@@ -300,7 +300,8 @@ export const database = {
       });
 
       if (!response.ok) {
-        throw new Error(`Erro API: ${response.status}`);
+        const errText = await response.text();
+        throw new Error(`Erro API ${response.status}: ${errText}`);
       }
     } catch (e) {
       console.error(`Erro ao sincronizar stats (Restam ${retries} tentativas):`, e);
