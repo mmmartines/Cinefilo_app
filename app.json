@@ -1,24 +1,24 @@
 {
   "expo": {
-    "name": "Cinéfilo",
-    "slug": "Cinefilo",
+    "name": "Cinelândia",
+    "slug": "cinelandia",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "scheme": "cinefilo",
+    "icon": "./assets/icon.jpg",
+    "scheme": "cinelandia",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/icon.png",
-      "bundleIdentifier": "com.mmmartines.Cinefilo"
+      "icon": "./assets/icon.jpg",
+      "bundleIdentifier": "com.mmmartines.cinelandia"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#121212",
-        "foregroundImage": "./assets/icon.png",
-        "backgroundImage": "./assets/icon.png"
+        "foregroundImage": "./assets/icon.jpg",
+        "backgroundImage": "./assets/icon.jpg"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.mmmartines.Cinefilo"
+      "package": "com.mmmartines.cinelandia"
     },
     "web": {
       "output": "static",
@@ -30,7 +30,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#121212",
-          "image": "./assets/splash.png",
+          "image": "./assets/splash.jpg",
           "resizeMode": "contain"
         }
       ],

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
-import MapView, { Marker } from 'react-native-maps';
 
 export default function CinemasScreen() {
   const router = useRouter();
@@ -39,13 +39,15 @@ export default function CinemasScreen() {
     return data.results || [];
   };
 
-  const fetchCinemasByLocation = async (lat: number, lon: number) => {
+  const fetchCinemasByLocation = async (lat: number, lon: number, cityConstraint?: string) => {
     if (!GOOGLE_API_KEY) {
       setMapUnavailable(true);
+      setLoading(false);
+      setLocationStatus('');
       return;
     }
     setLoading(true);
-    setLocationStatus('Buscando cinemas num raio de 15km...');
+    setLocationStatus(cityConstraint ? `Filtrando cinemas em ${cityConstraint}...` : 'Buscando cinemas num raio de 15km...');
     setMapRegion({
       latitude: lat,
       longitude: lon,
@@ -55,7 +57,15 @@ export default function CinemasScreen() {
     try {
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lon}&radius=15000&type=movie_theater&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
-      const results = await handleGooglePlacesResponse(response);
+      let results = await handleGooglePlacesResponse(response);
+      
+      if (cityConstraint) {
+        const lowerCity = cityConstraint.toLowerCase();
+        results = results.filter((p: any) => 
+          p.vicinity?.toLowerCase().includes(lowerCity) || 
+          p.plus_code?.compound_code?.toLowerCase().includes(lowerCity)
+        );
+      }
       
       const mappedCinemas = results.map((place: any) => ({
         id: place.place_id,
@@ -67,6 +77,9 @@ export default function CinemasScreen() {
         }
       }));
       setCinemas(mappedCinemas);
+      if (mappedCinemas.length === 0 && cityConstraint) {
+        showAlert('Aviso', `Nenhum cinema encontrado restrito à cidade de ${cityConstraint}.`);
+      }
     } catch (e: any) {
       console.warn('Erro GPS Busca:', e);
       if (e.message !== 'QUOTA_EXCEEDED') {
@@ -89,7 +102,10 @@ export default function CinemasScreen() {
     try {
       const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=cinemas+in+${encodeURIComponent(city)}&type=movie_theater&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
-      const results = await handleGooglePlacesResponse(response);
+      let results = await handleGooglePlacesResponse(response);
+      
+      const lowerCity = city.toLowerCase();
+      results = results.filter((p: any) => p.formatted_address?.toLowerCase().includes(lowerCity));
       
       const mappedCinemas = results.map((place: any) => ({
         id: place.place_id,
@@ -143,7 +159,21 @@ export default function CinemasScreen() {
       }
       
       if (!location) throw new Error('Localização vazia');
-      await fetchCinemasByLocation(location.coords.latitude, location.coords.longitude);
+      
+      let userCity = '';
+      try {
+        const geocode = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        });
+        if (geocode && geocode.length > 0) {
+          userCity = geocode[0].city || geocode[0].subregion || '';
+        }
+      } catch (err) {
+        console.warn('Erro no reverse geocode', err);
+      }
+
+      await fetchCinemasByLocation(location.coords.latitude, location.coords.longitude, userCity);
     } catch (e: any) {
       console.warn('Erro GPS', e);
       showAlert('Erro', 'Não foi possível obter a sua localização. Verifique se o GPS do celular está ligado.');
@@ -248,19 +278,47 @@ export default function CinemasScreen() {
                     <Text style={{ color: '#aaa', textAlign: 'center' }}>A cota de uso foi atingida ou não está configurada corretamente.</Text>
                   </View>
                 ) : (
-                  <MapView
-                    style={{ flex: 1 }}
-                    region={mapRegion}
-                  >
-                    {cinemas.map((item: any) => (
-                      <Marker
-                        key={item.id}
-                        coordinate={{ latitude: item.lat, longitude: item.lon }}
-                        title={item.tags?.name || 'Cinema'}
-                        description={item.tags?.['addr:street'] || 'Ver Lista'}
-                      />
-                    ))}
-                  </MapView>
+                  <WebView
+                    style={{ flex: 1, backgroundColor: '#1a1c23' }}
+                    originWhitelist={['*']}
+                    source={{
+                      html: `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                          <style>
+                            body { padding: 0; margin: 0; }
+                            html, body, #map { height: 100%; width: 100%; background: #ffffff; }
+                            .leaflet-container { background: #ffffff; }
+                          </style>
+                        </head>
+                        <body>
+                          <div id="map"></div>
+                          <script>
+                            var map = L.map('map', { zoomControl: false }).setView([${mapRegion.latitude}, ${mapRegion.longitude}], 13);
+                            
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                              maxZoom: 19,
+                              attribution: '&copy; OpenStreetMap contributors'
+                            }).addTo(map);
+
+                            var cinemas = ${JSON.stringify(cinemas)};
+                            
+                            cinemas.forEach(function(c) {
+                              if (c.lat && c.lon) {
+                                var marker = L.marker([c.lat, c.lon]).addTo(map);
+                                marker.bindPopup("<b>" + (c.tags?.name || "Cinema") + "</b><br>" + (c.tags?.['addr:street'] || "Ver Lista"));
+                              }
+                            });
+                          </script>
+                        </body>
+                        </html>
+                      `
+                    }}
+                  />
                 )}
               </View>
             ) : (

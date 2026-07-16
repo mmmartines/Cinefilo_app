@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useAlert } from '../../../contexts/AlertContext';
 import { supabase } from '../../../services/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../../services/database';
 
 if (Platform.OS !== 'web') {
@@ -75,6 +76,7 @@ export function useRegisterForm() {
           provider: 'google',
           options: {
             redirectTo,
+            scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
           },
         });
         return;
@@ -85,6 +87,7 @@ export function useRegisterForm() {
         options: {
           redirectTo,
           skipBrowserRedirect: true,
+          scopes: 'profile email https://www.googleapis.com/auth/user.birthday.read',
         },
       });
 
@@ -95,7 +98,9 @@ export function useRegisterForm() {
         
         if (res.type === 'success') {
           const { url } = res;
-          const hashMatch = url.match(/#access_token=([^&]+).*&refresh_token=([^&]+)/);
+          const hashMatch = url.match(/#access_token=([^&]+)/);
+          const refreshMatch = url.match(/&refresh_token=([^&]+)/);
+          const pTokenMatch = url.match(/&provider_token=([^&]+)/);
           
           if (hashMatch) {
              const access_token = hashMatch[1];

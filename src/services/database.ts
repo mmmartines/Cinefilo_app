@@ -82,6 +82,9 @@ export const database = {
       const currentBonus = await this.getBonusXp(userId);
       await AsyncStorage.setItem(`@cinefilo_bonus_xp_${userId}`, String(currentBonus + challenge.xp));
 
+      // Força a subida das conquistas e XP para a nuvem
+      await this.fullSync(userId);
+
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         fetch(`${API_URL}/api/feed`, {
@@ -211,36 +214,14 @@ export const database = {
   // Retorna o usuário logado atualmente (usado para verificar se pula o login)
   async getCurrentUser() {
     try {
-      // 1. Verifica se existe sessão real no Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Se não houver sessão no Supabase, o usuário NÃO está logado na nuvem.
-      if (!session) {
-        // Remove qualquer "mock" de usuário local para forçar a tela de login
-        await AsyncStorage.removeItem(CURRENT_USER_KEY);
-        return null;
-      }
-
-      // 2. Se houver sessão, pega as informações do cache local
       const userJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
       if (!userJson) return null;
       
       let user = JSON.parse(userJson);
       
-      // Auto-generate tag if missing for backwards compatibility
       if (!user.tag) {
         user.tag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      }
-      
-      // Carrega o avatar mais recente do cache local
-      const avatarUrl = await AsyncStorage.getItem(AVATAR_KEY);
-      if (avatarUrl) user.avatar_url = avatarUrl;
-      
-      // Garante que o ID do usuário bate com o ID do Supabase (migração de local para nuvem)
-      if (user.id !== session.user.id) {
-         user.id = session.user.id;
-         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       }
       
       return user;
@@ -263,6 +244,16 @@ export const database = {
 
   // --- FILMES ASSISTIDOS ---
 
+  // Sincronização global (baixar e subir)
+  async fullSync(userId: string) {
+    try {
+      await this.syncCloudToLocal(userId);
+      await this.syncStatsToCloud(userId);
+    } catch (e) {
+      console.error('Erro no fullSync:', e);
+    }
+  },
+
   async getWatchedMovies(userId: string) {
     try {
       const watchedJson = await AsyncStorage.getItem(`@cinefilo_watched_${userId}`);
@@ -278,22 +269,24 @@ export const database = {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const watched = await this.getWatchedMovies(userId);
-      const watchedOnly = watched.filter((m: any) => m.status === 'watched');
-      const total_movies = watchedOnly.length;
-
       const watchedList = await this.getWatchedMovies(userId);
-      const statsJson = await AsyncStorage.getItem(STATS_KEY);
-      const stats = statsJson ? JSON.parse(statsJson) : { total_movies: 0, total_minutes: 0 };
+      const watchedOnly = watchedList.filter((m: any) => m.status === 'watched');
+      
+      const total_movies = watchedOnly.length;
+      const total_minutes = watchedOnly.reduce((acc: number, curr: any) => acc + (curr.runtime || 0), 0);
 
       const avatarUrl = await AsyncStorage.getItem(AVATAR_KEY);
       const pushToken = await AsyncStorage.getItem('expo_push_token');
       const notifsStr = await AsyncStorage.getItem('notifications_enabled');
+      const challengesStr = await AsyncStorage.getItem(`@cinefilo_challenges_${userId}`);
+      const bonusXpStr = await AsyncStorage.getItem(`@cinefilo_bonus_xp_${userId}`);
 
       const payload: any = {
-        total_movies: stats.total_movies,
-        total_minutes: stats.total_minutes,
-        watched_movies: watchedList
+        total_movies,
+        total_minutes,
+        watched_movies: watchedList,
+        completed_challenges: challengesStr ? JSON.parse(challengesStr) : [],
+        bonus_xp: bonusXpStr ? parseInt(bonusXpStr) : 0
       };
 
       if (avatarUrl) payload.avatar_url = avatarUrl;
@@ -337,14 +330,81 @@ export const database = {
       if (response.ok) {
         const { data: cloudProfile } = await response.json();
 
+        // Faz o Merge Bidirecional dos filmes Assistidos
         if (cloudProfile.watched_movies) {
-          await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(cloudProfile.watched_movies));
+          const localWatchedStr = await AsyncStorage.getItem(`@cinefilo_watched_${userId}`);
+          const localWatched = localWatchedStr ? JSON.parse(localWatchedStr) : [];
+          
+          const mergedMoviesMap = new Map();
+          
+          // Adiciona os locais
+          localWatched.forEach((m: any) => {
+            const id = m.movieId || m.id;
+            mergedMoviesMap.set(id, m);
+          });
+          
+          // Adiciona ou sobrescreve com os da nuvem (nuvem é a fonte primária aqui no startup, 
+          // mas como vamos forçar internet em tudo, a nuvem sempre estará atualizada)
+          cloudProfile.watched_movies.forEach((m: any) => {
+            const id = m.movieId || m.id;
+            if (!mergedMoviesMap.has(id) || new Date(m.added_at) > new Date(mergedMoviesMap.get(id).added_at || 0)) {
+              mergedMoviesMap.set(id, m);
+            }
+          });
+          
+          const mergedMovies = Array.from(mergedMoviesMap.values());
+          await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(mergedMovies));
         }
 
-        // Sync initial fields se existirem
-        if (cloudProfile.avatar_url) await AsyncStorage.setItem(AVATAR_KEY, cloudProfile.avatar_url);
-        if (cloudProfile.notifications_enabled !== undefined) await AsyncStorage.setItem('notifications_enabled', String(cloudProfile.notifications_enabled));
+        // Faz o Merge Bidirecional das Listas Personalizadas se existirem
+        const listsResponse = await fetch(`${API_URL}/api/lists`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        if (listsResponse.ok) {
+          const listsResult = await listsResponse.json();
+          const cloudLists = listsResult.data || [];
+          
+          const localListsStr = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+          const localLists = localListsStr ? JSON.parse(localListsStr) : [];
+          
+          const mergedListsMap = new Map();
+          localLists.forEach((l: any) => mergedListsMap.set(l.id, l));
+          cloudLists.forEach((l: any) => mergedListsMap.set(l.id, l));
+          
+          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(Array.from(mergedListsMap.values())));
+        }
 
+        // Sincroniza campos básicos do perfil
+        if (cloudProfile.avatar_url) await AsyncStorage.setItem(AVATAR_KEY, cloudProfile.avatar_url);
+        if (cloudProfile.expo_push_token) await AsyncStorage.setItem('expo_push_token', cloudProfile.expo_push_token);
+        if (cloudProfile.notifications_enabled !== undefined) await AsyncStorage.setItem('notifications_enabled', String(cloudProfile.notifications_enabled));
+        
+        // Atualiza a tag local se vier da nuvem
+        if (cloudProfile.tag) {
+           const currentUserJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
+           if (currentUserJson) {
+             const user = JSON.parse(currentUserJson);
+             user.tag = cloudProfile.tag;
+             await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+           }
+        }
+        
+        // Merge de Challenges e XP
+        if (cloudProfile.completed_challenges) {
+           const localChallStr = await AsyncStorage.getItem(`@cinefilo_challenges_${userId}`);
+           const localChall = localChallStr ? JSON.parse(localChallStr) : [];
+           const mergedChall = Array.from(new Set([...localChall, ...cloudProfile.completed_challenges]));
+           await AsyncStorage.setItem(`@cinefilo_challenges_${userId}`, JSON.stringify(mergedChall));
+        }
+
+        if (cloudProfile.bonus_xp !== undefined) {
+           const localXpStr = await AsyncStorage.getItem(`@cinefilo_bonus_xp_${userId}`);
+           const localXp = localXpStr ? parseInt(localXpStr) : 0;
+           const mergedXp = Math.max(localXp, cloudProfile.bonus_xp);
+           await AsyncStorage.setItem(`@cinefilo_bonus_xp_${userId}`, String(mergedXp));
+        }
+        
         return {
           id: cloudProfile.id,
           name: cloudProfile.name,
@@ -398,7 +458,7 @@ export const database = {
       await AsyncStorage.setItem(`@cinefilo_watched_${userId}`, JSON.stringify(watched));
 
       if (status === 'watched') {
-        this.syncStatsToCloud(userId);
+        await this.fullSync(userId);
         
         // Verifica se concluiu o desafio semanal com esse filme
         if (movieData.genres.length > 0) {
@@ -453,7 +513,7 @@ export const database = {
       }
 
       if (movieToRemove.status === 'watched') {
-        this.syncStatsToCloud(userId);
+        await this.fullSync(userId);
       }
     } catch (e) {
       console.error('Erro ao remover filme assistido', e);
@@ -646,20 +706,20 @@ export const database = {
     if (user) {
       user.avatar_url = url;
       await this.setCurrentUser(user);
-      await this.syncStatsToCloud(user.id);
+      await this.fullSync(user.id);
     }
   },
 
   async updateNotificationPreferences(enabled: boolean) {
     await AsyncStorage.setItem('notifications_enabled', String(enabled));
     const user = await this.getCurrentUser();
-    if (user) await this.syncStatsToCloud(user.id);
+    if (user) await this.fullSync(user.id);
   },
 
   async savePushToken(token: string) {
     await AsyncStorage.setItem('expo_push_token', token);
     const user = await this.getCurrentUser();
-    if (user) await this.syncStatsToCloud(user.id);
+    if (user) await this.fullSync(user.id);
   },
 
   async createChatGroup(movieId: number, movieTitle: string, moviePoster: string, friends: { id: string, name: string }[], userName: string) {

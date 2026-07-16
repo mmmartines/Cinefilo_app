@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

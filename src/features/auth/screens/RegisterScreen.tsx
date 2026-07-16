@@ -29,7 +29,7 @@ export function RegisterScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Criar Conta</Text>
-        <Text style={styles.subtitle}>Junte-se ao Cinefilo hoje mesmo</Text>
+        <Text style={styles.subtitle}>Junte-se à Cinelândia hoje mesmo</Text>
       </View>
 
       <View style={styles.form}>

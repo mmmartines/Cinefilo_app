@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { Image } from 'expo-image';
@@ -120,7 +121,9 @@ export function ListsScreen() {
           <View style={{ marginTop: 24 }}>
             <Text style={styles.sectionTitle}>Compartilhadas Comigo</Text>
             {customLists.filter(l => l.owner_id && l.owner_id !== currentUser?.id).length === 0 ? (
-              <Text style={[styles.emptyText, { marginLeft: 16 }]}>Nenhuma lista compartilhada com você.</Text>
+              <View style={styles.center}>
+                <Text style={styles.emptyText}>Nenhuma lista compartilhada com você.</Text>
+              </View>
             ) : (
               customLists.filter(l => l.owner_id && l.owner_id !== currentUser?.id).map((item) => (
                 <View key={item._id || item.id} style={{ marginHorizontal: 16, marginBottom: 16 }}>

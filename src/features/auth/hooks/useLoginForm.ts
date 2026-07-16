@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useAlert } from '../../../contexts/AlertContext';
 import { supabase } from '../../../services/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../../services/database';
 
 if (Platform.OS !== 'web') {
@@ -122,7 +123,9 @@ export function useLoginForm() {
 
         if (res.type === 'success') {
           const { url } = res;
-          const hashMatch = url.match(/#access_token=([^&]+).*&refresh_token=([^&]+)/);
+          const hashMatch = url.match(/#access_token=([^&]+)/);
+          const refreshMatch = url.match(/&refresh_token=([^&]+)/);
+          const pTokenMatch = url.match(/&provider_token=([^&]+)/);
 
           if (hashMatch) {
             const access_token = hashMatch[1];
@@ -156,7 +159,22 @@ export function useLoginForm() {
                 tag: tag
               });
 
+              
               await database.syncCloudToLocal(sessionData.user?.id || '');
+
+              if (birthDate) {
+                try {
+                  await fetch(`${apiUrl}/api/users`, {
+                    method: 'PUT',
+                    headers: {
+                      'Authorization': `Bearer ${sessionData.session?.access_token}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ birthdate: birthDate })
+                  });
+                } catch(e) {}
+              }
+
 
             } catch (err) {
               await database.setCurrentUser({

@@ -4,20 +4,28 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Notifications from 'expo-notifications';
 import { getUpcomingMovies } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configurar o comportamento das notificações
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+let Notifications: any = null;
+let isNotificationsAvailable = false;
+try {
+  Notifications = require('expo-notifications');
+  isNotificationsAvailable = true;
+  
+  // Configurar o comportamento das notificações
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  // Ignora se estiver no Expo Go
+}
 
 export default function UpcomingScreen() {
   const router = useRouter();
@@ -79,7 +87,7 @@ export default function UpcomingScreen() {
         // Ignora para não travar o teste, mas avisa. Em produção real, você validaria melhor.
       }
 
-      if (Platform.OS !== 'web') {
+      if (Platform.OS !== 'web' && isNotificationsAvailable) {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
         if (existingStatus !== 'granted') {
@@ -104,13 +112,15 @@ export default function UpcomingScreen() {
 
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: "🎬 É hoje!",
+            title: "Estreia hoje!",
             body: `O filme "${movie.title}" estreia hoje nos cinemas!`,
             data: { movieId: movie.id },
           },
           // @ts-ignore
           trigger,
         });
+      } else if (!isNotificationsAvailable && Platform.OS !== 'web') {
+        Alert.alert('Aviso', 'Notificações não suportadas neste ambiente de teste.');
       }
 
       const newReminders = [...reminders, movie.id.toString()];

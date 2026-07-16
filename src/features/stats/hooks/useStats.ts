@@ -181,7 +181,7 @@ export function useStats() {
       if (Platform.OS === 'web') {
         const link = document.createElement('a');
         link.href = uri;
-        link.download = 'meu_perfil_cinefilo.png';
+        link.download = 'meu_perfil_cinelandia.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -189,7 +189,7 @@ export function useStats() {
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
           await Sharing.shareAsync(uri, {
-             dialogTitle: 'Meu Perfil Cinéfilo',
+             dialogTitle: 'Meu Perfil Cinelândia',
           });
         }
       }

@@ -20,7 +20,7 @@ export function LoginScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.logo}>Cinefilo 🍿</Text>
+        <Text style={styles.logo}>Cinelândia 🍿</Text>
         <Text style={styles.subtitle}>Faça login para continuar</Text>
       </View>
 

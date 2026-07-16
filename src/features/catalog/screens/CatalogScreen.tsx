@@ -44,7 +44,8 @@ export function CatalogScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <View style={{ width: 40 }} />
-        <Text style={styles.headerTitle}>Cinéfilo 🍿</Text>
+        <Text style={styles.headerTitle}>Cinelândia 🍿</Text>
+        <NotificationBell />
         <TouchableOpacity 
           style={styles.profileIcon} 
           onPress={() => router.push('/profile')}
@@ -188,7 +189,7 @@ export function CatalogScreen() {
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.modalScroll}>
+            <ScrollView contentContainerStyle={styles.modalScrollContent}>
               {isAiLoading ? (
                 <View style={{ padding: 40, alignItems: 'center' }}>
                   <ActivityIndicator size="large" color="#6200EE" />
@@ -341,8 +342,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  modalScroll: {
+  modalScrollContent: {
     padding: 24,
+    paddingBottom: 48,
   },
   aiText: {
     color: '#fff',

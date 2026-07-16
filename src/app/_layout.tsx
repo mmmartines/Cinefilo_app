@@ -1,17 +1,19 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { database } from '../services/database';
 import { supabase } from '../services/supabase';
 import { NetworkAlert } from '../components/NetworkAlert';
+import { NetworkEnforcer } from '../components/NetworkEnforcer';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../services/notifications';
 import { AlertProvider } from '../contexts/AlertContext';
+import { SyncProvider, useSync } from '../contexts/SyncContext';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -47,11 +49,51 @@ if (TextInput.defaultProps == null) TextInput.defaultProps = {};
 // @ts-ignore
 TextInput.defaultProps.style = { fontFamily: 'Inter_400Regular' };
 
+function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticated: boolean | null, fontsLoaded: boolean, segments: string[] }) {
+  const router = useRouter();
+  const { forceSync } = useSync();
+
+  const hasSynced = useRef(false);
+
+  useEffect(() => {
+    if (isAuthenticated === null) return;
+
+    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace('/login');
+      hasSynced.current = false;
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace('/');
+    } else if (isAuthenticated && !inAuthGroup) {
+      // Assim que autentica e não está nas telas de login, força o sync APENAS 1 VEZ
+      if (!hasSynced.current) {
+        hasSynced.current = true;
+        forceSync();
+      }
+    }
+  }, [isAuthenticated, segments]);
+
+  if (isAuthenticated === null || !fontsLoaded) {
+    return null;
+  }
+
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="profile" options={{ presentation: 'modal', headerShown: false }} />
+      </Stack>
+      <NetworkAlert />
+      <NetworkEnforcer />
+    </>
+  );
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const segments = useSegments();
-  const router = useRouter();
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -73,19 +115,21 @@ export default function RootLayout() {
       }
     }
 
-    const checkUser = async () => {
-      const user = await database.getCurrentUser();
-      setIsAuthenticated(!!user);
-      
-      if (user) {
-        registerForPushNotificationsAsync().then(token => {
-          if (token) database.savePushToken(token);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      if (session) {
+        database.getCurrentUser().then(user => {
+           if (user) {
+             registerForPushNotificationsAsync().then(token => {
+               if (token) database.savePushToken(token);
+             });
+           }
         });
+      } else {
+        AsyncStorage.removeItem('@cinefilo_current_user');
       }
-
       SplashScreen.hideAsync();
-    };
-    checkUser();
+    });
 
     const unsubscribe = database.subscribeAuth((user: any) => {
       setIsAuthenticated(!!user);
@@ -139,22 +183,6 @@ export default function RootLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated === null) return;
-
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
-
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/');
-    }
-  }, [isAuthenticated, segments]);
-
-  if (isAuthenticated === null || !fontsLoaded) {
-    return null;
-  }
-
   return (
     <PersistQueryClientProvider
       client={queryClient}
@@ -162,11 +190,9 @@ export default function RootLayout() {
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AlertProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="profile" options={{ presentation: 'modal', headerShown: false }} />
-          </Stack>
-          <NetworkAlert />
+          <SyncProvider>
+            <AppContent isAuthenticated={isAuthenticated} fontsLoaded={fontsLoaded} segments={segments} />
+          </SyncProvider>
         </AlertProvider>
       </ThemeProvider>
     </PersistQueryClientProvider>

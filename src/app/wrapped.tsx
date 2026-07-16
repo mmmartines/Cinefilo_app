@@ -80,7 +80,7 @@ export default function WrappedScreen() {
 
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable) {
-        await Sharing.shareAsync(uri, { dialogTitle: 'Cinéfilo Wrapped' });
+        await Sharing.shareAsync(uri, { dialogTitle: 'Cinelândia Wrapped' });
       }
     } catch (err) {
       console.error('Erro ao compartilhar', err);
@@ -96,7 +96,7 @@ export default function WrappedScreen() {
       <ViewShot ref={viewRef} options={{ format: "png", quality: 1 }} style={styles.shotContainer}>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Cinéfilo Wrapped</Text>
+          <Text style={styles.title}>Cinelândia Wrapped</Text>
           <Text style={styles.year}>2026</Text>
         </View>
 
@@ -124,7 +124,7 @@ export default function WrappedScreen() {
           )}
         </View>
 
-        <Text style={styles.footerText}>@cinefiloapp</Text>
+        <Text style={styles.footerText}>@cinelandiaapp</Text>
       </ViewShot>
 
       <View style={[styles.actions, { paddingBottom: Math.max(insets.bottom, 24) }]}>

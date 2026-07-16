@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, Link } from 'expo-router';
@@ -82,20 +83,19 @@ export function FriendsScreen() {
         <View style={{ width: 40 }} />
         <Text style={styles.title}>Ranking</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Link href="/friend_requests" asChild>
-            <TouchableOpacity style={styles.profileIcon}>
-              <Ionicons name="mail" size={20} color="#fff" />
-            </TouchableOpacity>
-          </Link>
-          <Link href="/profile" asChild>
-            <TouchableOpacity style={[styles.profileIcon, currentUser?.avatar_url && { backgroundColor: 'transparent', padding: 0 }]}>
-              {currentUser?.avatar_url ? (
-                <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
-              ) : (
-                <Ionicons name="person" size={20} color="#fff" />
-              )}
-            </TouchableOpacity>
-          </Link>
+          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/friend_requests')}>
+            <Ionicons name="mail" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.profileIcon, currentUser?.avatar_url ? { backgroundColor: 'transparent', padding: 0 } : {}]}
+            onPress={() => router.push('/profile')}
+          >
+            {currentUser?.avatar_url ? (
+              <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
+            ) : (
+              <Ionicons name="person" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
