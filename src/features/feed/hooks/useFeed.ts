@@ -3,133 +3,83 @@ import { useFocusEffect } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 import { supabase } from '../../../services/supabase';
 import { database } from '../../../services/database';
-import { cache } from '../../../services/cache';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useFeed() {
-  const [feedActivities, setFeedActivities] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'me' | 'social'>('social');
-  const [page, setPage] = useState(1);
-
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [revealedSpoilers, setRevealedSpoilers] = useState<string[]>([]);
   const [isOffline, setIsOffline] = useState(false);
 
-  const fetchFeedData = async (reset = false, targetTab = activeTab) => {
-    try {
-      const state = await NetInfo.fetch();
-      
-      if (!state.isConnected) {
-        setIsOffline(true);
-        const cached = await cache.get(`feed_${targetTab}`);
-        if (cached && reset) setFeedActivities(cached);
-        return;
-      }
-      
-      setIsOffline(false);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const currentPage = reset ? 1 : page;
-      
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const response = await fetch(`${apiUrl}/api/feed?tab=${targetTab}&page=${currentPage}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
-      
-      const result = await response.json();
-      if (response.ok) {
-        if (reset) {
-          setFeedActivities(result.data);
-          setPage(2);
-          setHasMore(result.data.length === 10);
-          cache.set(`feed_${targetTab}`, result.data);
-        } else {
-          setFeedActivities(prev => [...prev, ...result.data]);
-          setPage(prev => prev + 1);
-          setHasMore(result.data.length === 10);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      setIsOffline(true);
-      if (reset) {
-         const cached = await cache.get(`feed_${targetTab}`);
-         if (cached) setFeedActivities(cached);
-      }
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setIsLoadingMore(false);
-    }
-  };
-
+  // Focus effect to update offline state and current user
   useFocusEffect(
     useCallback(() => {
       database.getCurrentUser().then(setCurrentUser);
-      fetchFeedData(true, activeTab);
-    }, [activeTab])
+      NetInfo.fetch().then(state => setIsOffline(!state.isConnected));
+    }, [])
   );
 
+  const fetchFeedPage = async ({ pageParam = 1, queryKey }: any) => {
+    const [, tab] = queryKey;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+    const response = await fetch(`${apiUrl}/api/feed?tab=${tab}&page=${pageParam}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch feed');
+    const result = await response.json();
+    return {
+      data: result.data,
+      nextPage: result.data.length === 10 ? pageParam + 1 : undefined
+    };
+  };
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    refetch,
+    isLoading
+  } = useInfiniteQuery({
+    queryKey: ['feed', activeTab],
+    queryFn: fetchFeedPage,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  });
+
+  // Flatten infinite query pages into a single array
+  const feedActivities = data ? data.pages.flatMap(page => page.data) : [];
+
   const changeTab = (tab: 'me' | 'social') => {
-    if (tab === activeTab) return;
-    setActiveTab(tab);
-    setIsLoading(true);
-    fetchFeedData(true, tab);
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
   };
 
   const handleRefreshFeed = () => {
-    setIsRefreshing(true);
-    fetchFeedData(true, activeTab);
+    refetch();
   };
 
   const loadMore = () => {
-    if (isLoadingMore || !hasMore || isOffline) return;
-    setIsLoadingMore(true);
-    fetchFeedData(false, activeTab);
+    if (hasNextPage && !isFetchingNextPage && !isOffline) {
+      fetchNextPage();
+    }
   };
 
-  const handleReaction = async (activityId: string, reactionType: string) => {
-    const previousFeed = [...feedActivities];
-    
-    // Atualização otimista
-    setFeedActivities(prev => prev.map(activity => {
-      if (activity._id === activityId) {
-        let reactions = [...(activity.reactions || [])];
-        const existingIndex = reactions.findIndex((r: any) => r.user_id === currentUser?.id);
-        
-        if (existingIndex > -1) {
-           if (reactions[existingIndex].type === reactionType) {
-              reactions.splice(existingIndex, 1);
-           } else {
-              reactions[existingIndex].type = reactionType;
-           }
-        } else {
-           reactions.push({
-             user_id: currentUser?.id,
-             type: reactionType,
-             user_name: currentUser?.name
-           });
-        }
-        return { ...activity, reactions };
-      }
-      return activity;
-    }));
-
-    try {
+  const reactionMutation = useMutation({
+    mutationFn: async ({ activityId, reactionType }: { activityId: string, reactionType: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
+      if (!session) throw new Error('Not authenticated');
+      
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      await fetch(`${apiUrl}/api/feed`, {
+      const response = await fetch(`${apiUrl}/api/feed`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -137,10 +87,56 @@ export function useFeed() {
         },
         body: JSON.stringify({ activity_id: activityId, reaction_type: reactionType })
       });
-    } catch (e) {
-      console.error(e);
-      setFeedActivities(previousFeed); // Rollback
+      if (!response.ok) throw new Error('Failed to react');
+    },
+    onMutate: async ({ activityId, reactionType }) => {
+      await queryClient.cancelQueries({ queryKey: ['feed', activeTab] });
+      const previousData = queryClient.getQueryData(['feed', activeTab]);
+
+      queryClient.setQueryData(['feed', activeTab], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((activity: any) => {
+              if (activity._id === activityId) {
+                let reactions = [...(activity.reactions || [])];
+                const existingIndex = reactions.findIndex((r: any) => r.user_id === currentUser?.id);
+                
+                if (existingIndex > -1) {
+                   if (reactions[existingIndex].type === reactionType) {
+                      reactions.splice(existingIndex, 1);
+                   } else {
+                      reactions[existingIndex].type = reactionType;
+                   }
+                } else {
+                   reactions.push({
+                     user_id: currentUser?.id,
+                     type: reactionType,
+                     user_name: currentUser?.name
+                   });
+                }
+                return { ...activity, reactions };
+              }
+              return activity;
+            })
+          }))
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(['feed', activeTab], context?.previousData);
+    },
+    onSettled: () => {
+      // Opt: queryClient.invalidateQueries({ queryKey: ['feed', activeTab] });
     }
+  });
+
+  const handleReaction = (activityId: string, reactionType: string) => {
+    reactionMutation.mutate({ activityId, reactionType });
   };
 
   const toggleSpoilerVisibility = (activityId: string) => {
@@ -149,10 +145,10 @@ export function useFeed() {
 
   return {
     feedActivities,
-    isLoading,
-    isRefreshing,
-    isLoadingMore,
-    hasMore,
+    isLoading: isLoading && isFetching && !isFetchingNextPage, // Initial loading state
+    isRefreshing: isFetching && !isFetchingNextPage && !isLoading,
+    isLoadingMore: isFetchingNextPage,
+    hasMore: !!hasNextPage,
     activeTab,
     changeTab,
     currentUser,
