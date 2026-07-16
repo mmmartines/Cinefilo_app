@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../../components/NotificationBell';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';

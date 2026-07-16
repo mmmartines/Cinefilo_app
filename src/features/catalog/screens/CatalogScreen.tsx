@@ -1,3 +1,4 @@
+import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TextInput, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
