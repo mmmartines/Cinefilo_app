@@ -182,4 +182,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 12,
   },
+  footerContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  footerText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
+  },
 });

@@ -118,6 +118,10 @@ export function RegisterScreen() {
           <Text style={styles.socialButtonText}>Continuar com Google</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.footerContainer}>
+        <Text style={styles.footerText}>Desenvolvido por Martines Solutions</Text>
+        <Text style={styles.footerText}>© 2026 Todos os direitos reservados</Text>
+      </View>
     </ScrollView>
   );
 }
@@ -212,5 +216,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 12,
+  },
+  footerContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+    opacity: 0.6,
+  },
+  footerText: {
+    color: '#fff',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
