@@ -57,7 +57,7 @@ export function CatalogScreen() {
             <Ionicons name="person" size={20} color="#fff" />
           )}
         </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={{position: 'absolute', bottom: 24, right: 24, backgroundColor: '#E50914', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5}} onPress={() => router.push('/ai-chat')}><Ionicons name="chatbubble-ellipses" size={28} color="#fff" /></TouchableOpacity></View>
 
       <View style={styles.filterContainer}>
         {/* Desafio Semanal */}

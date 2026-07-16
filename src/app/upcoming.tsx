@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getUpcomingMovies } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAlert } from '../contexts/AlertContext';
+import * as ImagePicker from 'expo-image-picker';
 
 let Notifications: any = null;
 let isNotificationsAvailable = false;
@@ -14,7 +15,6 @@ try {
   Notifications = require('expo-notifications');
   isNotificationsAvailable = true;
   
-  // Configurar o comportamento das notificações
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -36,10 +36,12 @@ export default function UpcomingScreen() {
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminders, setReminders] = useState<string[]>([]);
+  const [tickets, setTickets] = useState<Record<string, { uri: string, releaseDate: string }>>({});
 
   useEffect(() => {
     fetchMovies();
     loadReminders();
+    loadTickets();
   }, []);
 
   const loadReminders = async () => {
@@ -53,17 +55,42 @@ export default function UpcomingScreen() {
     }
   };
 
+  const loadTickets = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('@cinefilo_tickets');
+      if (stored) {
+        let parsed = JSON.parse(stored);
+        let changed = false;
+        const now = new Date();
+        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+        
+        Object.keys(parsed).forEach(key => {
+          if (parsed[key].releaseDate) {
+            const release = new Date(parsed[key].releaseDate);
+            if (now.getTime() - release.getTime() > thirtyDaysInMs) {
+              delete parsed[key];
+              changed = true;
+            }
+          }
+        });
+
+        setTickets(parsed);
+        if (changed) {
+          await AsyncStorage.setItem('@cinefilo_tickets', JSON.stringify(parsed));
+          console.log('🧹 Ingressos com mais de 30 dias foram apagados!');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const fetchMovies = async () => {
     try {
       const data = await getUpcomingMovies(1);
-
-      // Filtrar apenas filmes com datas futuras
       const today = new Date().toISOString().split('T')[0];
       const future = data.filter((m: any) => m.release_date && m.release_date >= today);
-
-      // Ordenar por data
       future.sort((a: any, b: any) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
-
       setMovies(future);
     } catch (e) {
       console.error(e);
@@ -74,20 +101,13 @@ export default function UpcomingScreen() {
 
   const scheduleReminder = async (movie: any) => {
     const isRemembered = reminders.includes(movie.id.toString());
-
     if (isRemembered) {
       showAlert("Já Agendado", "Você já programou um lembrete para este filme.");
       return;
     }
-
     try {
       let releaseDate = new Date(movie.release_date);
       let now = new Date();
-
-      if (releaseDate.getTime() < now.getTime()) {
-        // Se a data já passou (estamos num fuso diferente ou a API retornou um filme que lançou ontem)
-        // Ignora para não travar o teste, mas avisa. Em produção real, você validaria melhor.
-      }
 
       if (Platform.OS !== 'web' && isNotificationsAvailable) {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -102,7 +122,6 @@ export default function UpcomingScreen() {
         }
 
         releaseDate.setHours(10, 0, 0, 0);
-
         const trigger = {
           type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
           year: releaseDate.getFullYear(),
@@ -121,53 +140,106 @@ export default function UpcomingScreen() {
           // @ts-ignore
           trigger,
         });
-      } else if (!isNotificationsAvailable && Platform.OS !== 'web') {
-        showAlert('Aviso', 'Notificações não suportadas neste ambiente de teste.');
       }
 
       const newReminders = [...reminders, movie.id.toString()];
       setReminders(newReminders);
       await AsyncStorage.setItem('@cinefilo_reminders', JSON.stringify(newReminders));
-
-      showAlert('Pronto!', `Um lembrete foi salvo${Platform.OS === 'web' ? ' (Modo Web: sem notificação Push)' : ''} para o dia ${releaseDate.toLocaleDateString('pt-BR')}.`);
+      showAlert('Pronto!', `Um lembrete foi salvo para o dia ${releaseDate.toLocaleDateString('pt-BR')}.`);
     } catch (e) {
       console.error(e);
       showAlert('Erro', 'Não foi possível agendar o lembrete.');
     }
   };
 
+  const handlePickTicket = async (movieId: number, releaseDate: string) => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        showAlert('Erro', 'Permissão negada para acessar a galeria.');
+        return;
+      }
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      
+      if (!result.canceled) {
+        const imageUri = result.assets[0].uri;
+        const newTickets = { ...tickets, [movieId.toString()]: { uri: imageUri, releaseDate } };
+        setTickets(newTickets);
+        await AsyncStorage.setItem('@cinefilo_tickets', JSON.stringify(newTickets));
+        showAlert('Sucesso', 'Ingresso anexado com sucesso!');
+      }
+    } catch (e) {
+      showAlert('Erro', 'Ocorreu um erro ao anexar a imagem do ingresso.');
+    }
+  };
+
+  const removeTicket = async (movieId: number) => {
+    const newTickets = { ...tickets };
+    delete newTickets[movieId.toString()];
+    setTickets(newTickets);
+    await AsyncStorage.setItem('@cinefilo_tickets', JSON.stringify(newTickets));
+  };
+
   const renderMovie = ({ item }: { item: any }) => {
     const isRemembered = reminders.includes(item.id.toString());
+    const ticketObj = tickets[item.id.toString()];
+    const ticketUri = ticketObj ? ticketObj.uri : null;
 
-    // Formatar data: YYYY-MM-DD -> DD/MM/YYYY
     const dateParts = item.release_date.split('-');
     const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : item.release_date;
 
     return (
       <View style={styles.movieCard}>
-        <TouchableOpacity onPress={() => router.push(`/movie/${item.id}`)}>
-          <Image
-            source={{ uri: `https://image.tmdb.org/t/p/w342${item.poster_path}` }}
-            style={styles.poster}
-            contentFit="cover"
-          />
-        </TouchableOpacity>
-        <View style={styles.movieInfo}>
-          <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-          <Text style={styles.dateText}>📅 Estreia: {formattedDate}</Text>
-          <Text style={styles.overview} numberOfLines={3}>{item.overview || 'Sinopse não disponível.'}</Text>
-
-          <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <TouchableOpacity
-              style={[styles.remindButton, isRemembered && styles.remindButtonActive]}
-              onPress={() => scheduleReminder(item)}
-            >
-              <Ionicons name={isRemembered ? "notifications" : "notifications-outline"} size={18} color="#fff" />
-              <Text style={styles.remindButtonText}>
-                {isRemembered ? 'Lembrete Ativo' : 'Me Lembrar'}
-              </Text>
-            </TouchableOpacity>
+        <View style={styles.movieContentRow}>
+          <TouchableOpacity onPress={() => router.push(`/movie/${item.id}`)}>
+            <Image
+              source={{ uri: `https://image.tmdb.org/t/p/w342${item.poster_path}` }}
+              style={styles.poster}
+              contentFit="cover"
+            />
+          </TouchableOpacity>
+          <View style={styles.movieInfo}>
+            <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.dateText}>📅 Estreia: {formattedDate}</Text>
+            <Text style={styles.overview} numberOfLines={3}>{item.overview || 'Sinopse não disponível.'}</Text>
           </View>
+        </View>
+
+        {ticketUri && (
+          <View style={styles.ticketContainer}>
+            <Text style={styles.ticketLabel}>Seu Ingresso:</Text>
+            <View style={styles.ticketWrapper}>
+              <Image source={{ uri: ticketUri }} style={styles.ticketImage} contentFit="cover" />
+              <TouchableOpacity style={styles.removeTicketBtn} onPress={() => removeTicket(item.id)}>
+                <Ionicons name="close-circle" size={24} color="#F44336" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.buttonsRow}>
+          <TouchableOpacity
+            style={[styles.actionButton, isRemembered && styles.remindButtonActive]}
+            onPress={() => scheduleReminder(item)}
+          >
+            <Ionicons name={isRemembered ? "notifications" : "notifications-outline"} size={18} color="#fff" />
+            <Text style={styles.actionButtonText}>
+              {isRemembered ? 'Lembrete Ativo' : 'Me Lembrar'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.ticketButton} onPress={() => handlePickTicket(item.id, item.release_date)}>
+            <Ionicons name={ticketUri ? "refresh" : "ticket-outline"} size={18} color="#fff" />
+            <Text style={styles.actionButtonText}>
+              {ticketUri ? 'Trocar Ingresso' : 'Anexar Ingresso'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -179,7 +251,7 @@ export default function UpcomingScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={28} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Em Breve</Text>
+        <Text style={styles.headerTitle}>Lançamentos & Ingressos</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -206,13 +278,21 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16, gap: 16 },
-  movieCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 12, padding: 12, gap: 12, borderWidth: 1, borderColor: '#333' },
+  movieCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#333' },
+  movieContentRow: { flexDirection: 'row', gap: 12 },
   poster: { width: 90, height: 135, borderRadius: 8, backgroundColor: '#333' },
   movieInfo: { flex: 1 },
   title: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   dateText: { color: '#E50914', fontSize: 13, fontWeight: 'bold', marginBottom: 6 },
-  overview: { color: '#aaa', fontSize: 12, lineHeight: 18, marginBottom: 8 },
-  remindButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#333', paddingVertical: 8, borderRadius: 8 },
+  overview: { color: '#aaa', fontSize: 12, lineHeight: 18 },
+  ticketContainer: { marginTop: 12, padding: 8, backgroundColor: '#111', borderRadius: 8, borderWidth: 1, borderColor: '#333', borderStyle: 'dashed' },
+  ticketLabel: { color: '#999', fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
+  ticketWrapper: { position: 'relative', width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' },
+  ticketImage: { width: '100%', height: '100%' },
+  removeTicketBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12 },
+  buttonsRow: { flexDirection: 'row', gap: 8, marginTop: 16 },
+  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#333', paddingVertical: 10, borderRadius: 8 },
   remindButtonActive: { backgroundColor: '#00A859' },
-  remindButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
+  ticketButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E50914', paddingVertical: 10, borderRadius: 8 },
+  actionButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 13 }
 });

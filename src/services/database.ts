@@ -849,44 +849,27 @@ export const database = {
     };
   },
 
-  // --- MATCH DE FILMES ---
+      // --- MATCH DE FILMES ---
   async saveMovieMatch(friendId: string, movieId: number, action: 'liked' | 'passed') {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Não autenticado');
 
-      const { data, error } = await supabase
-        .from('movie_matches')
-        .insert([{
-          user_id: session.user.id,
-          friend_id: friendId,
-          movie_id: movieId,
-          action: action
-        }])
-        .select()
-        .single();
+      const response = await fetch(`${API_URL}/api/social?route=swipes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ friendId, movieId, action })
+      });
 
-      if (error && error.code !== '23505') { // Ignora se já existe (unique constraint)
-        throw error;
+      if (!response.ok) {
+        throw new Error('Falha ao salvar match');
       }
 
-      // Se foi liked, verifica se deu match
-      if (action === 'liked') {
-        const { data: friendMatch } = await supabase
-          .from('movie_matches')
-          .select('id')
-          .eq('user_id', friendId)
-          .eq('friend_id', session.user.id)
-          .eq('movie_id', movieId)
-          .eq('action', 'liked')
-          .single();
-
-        if (friendMatch) {
-          return { isMatch: true };
-        }
-      }
-
-      return { isMatch: false };
+      const result = await response.json();
+      return { isMatch: result.isMatch };
     } catch (e) {
       console.error('Erro ao salvar match', e);
       return { isMatch: false };
