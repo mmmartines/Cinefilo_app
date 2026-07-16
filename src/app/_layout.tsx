@@ -1,3 +1,5 @@
+import { ThemeProvider as AppThemeProvider } from '../contexts/ThemeContext';
+import * as Notifications from 'expo-notifications';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
@@ -117,8 +119,6 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
   );
 }
 
-import { ThemeProvider as AppThemeProvider } from '../contexts/ThemeContext';
-import * as Notifications from 'expo-notifications';
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
