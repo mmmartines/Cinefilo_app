@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getUpcomingMovies } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAlert } from '../contexts/AlertContext';
 
 let Notifications: any = null;
 let isNotificationsAvailable = false;
@@ -30,6 +31,7 @@ try {
 export default function UpcomingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { showAlert } = useAlert();
 
   const [movies, setMovies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export default function UpcomingScreen() {
     const isRemembered = reminders.includes(movie.id.toString());
 
     if (isRemembered) {
-      Alert.alert("Já Agendado", "Você já programou um lembrete para este filme.");
+      showAlert("Já Agendado", "Você já programou um lembrete para este filme.");
       return;
     }
 
@@ -95,7 +97,7 @@ export default function UpcomingScreen() {
           finalStatus = status;
         }
         if (finalStatus !== 'granted') {
-          Alert.alert('Permissão negada', 'Habilite as notificações nas configurações para receber lembretes.');
+          showAlert('Permissão negada', 'Habilite as notificações nas configurações para receber lembretes.');
           return;
         }
 
@@ -120,17 +122,17 @@ export default function UpcomingScreen() {
           trigger,
         });
       } else if (!isNotificationsAvailable && Platform.OS !== 'web') {
-        Alert.alert('Aviso', 'Notificações não suportadas neste ambiente de teste.');
+        showAlert('Aviso', 'Notificações não suportadas neste ambiente de teste.');
       }
 
       const newReminders = [...reminders, movie.id.toString()];
       setReminders(newReminders);
       await AsyncStorage.setItem('@cinefilo_reminders', JSON.stringify(newReminders));
 
-      Alert.alert('Pronto!', `Um lembrete foi salvo${Platform.OS === 'web' ? ' (Modo Web: sem notificação Push)' : ''} para o dia ${releaseDate.toLocaleDateString('pt-BR')}.`);
+      showAlert('Pronto!', `Um lembrete foi salvo${Platform.OS === 'web' ? ' (Modo Web: sem notificação Push)' : ''} para o dia ${releaseDate.toLocaleDateString('pt-BR')}.`);
     } catch (e) {
       console.error(e);
-      Alert.alert('Erro', 'Não foi possível agendar o lembrete.');
+      showAlert('Erro', 'Não foi possível agendar o lembrete.');
     }
   };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Switch, ActivityIndicator,  } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,10 +7,12 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { useProfile } from '../hooks/useProfile';
+import { useAlert } from '../../../contexts/AlertContext';
 
 export function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { showAlert } = useAlert();
   
   const {
     userProfile,
@@ -86,7 +88,7 @@ export function ProfileScreen() {
             onPress={async () => {
               if (userProfile?.tag) {
                 await Clipboard.setStringAsync(userProfile.tag);
-                Alert.alert('Copiado!', 'Tag copiada para a área de transferência.');
+                showAlert('Copiado!', 'Tag copiada para a área de transferência.');
               }
             }}
           >

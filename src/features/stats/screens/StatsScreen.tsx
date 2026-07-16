@@ -9,9 +9,11 @@ import ViewShot from 'react-native-view-shot';
 import { Image } from 'expo-image';
 import { MotiView } from 'moti';
 import { useStats } from '../hooks/useStats';
+import { useAlert } from '../../../contexts/AlertContext';
 
 export function StatsScreen() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
   
   const {
@@ -236,7 +238,7 @@ export function StatsScreen() {
         <Text style={styles.sectionTitle}>Minhas Conquistas</Text>
         <View style={styles.badgesGrid}>
           {userBadges.map(b => (
-            <TouchableOpacity onPress={() => Alert.alert(b.name, b.unlocked ? b.description : 'Continue assistindo para desbloquear esta conquista!')} key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemInactive]}>
+            <TouchableOpacity onPress={() => showAlert(b.name, b.unlocked ? b.description : 'Continue assistindo para desbloquear esta conquista!')} key={b.id} style={[styles.badgeItem, !b.unlocked && styles.badgeItemInactive]}>
               <View style={[styles.badgeIconContainer, !b.unlocked ? styles.badgeIconInactive : { borderColor: b.color, backgroundColor: `${b.color}22` }]}>
                 <Ionicons name={b.icon as any} size={32} color={b.unlocked ? b.color : "#666"} />
               </View>
