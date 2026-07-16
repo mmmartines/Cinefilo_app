@@ -117,7 +117,7 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
   );
 }
 
-import { ThemeProvider } from '../contexts/ThemeContext';
+import { ThemeProvider as AppThemeProvider } from '../contexts/ThemeContext';
 import * as Notifications from 'expo-notifications';
 import { database } from '../services/database';
 export default function RootLayout() {
@@ -219,11 +219,11 @@ export default function RootLayout() {
       persistOptions={{ persister: asyncStoragePersister }}
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <ThemeProvider><AlertProvider>
+        <AppThemeProvider><AlertProvider>
           <SyncProvider>
             <AppContent isAuthenticated={isAuthenticated} fontsLoaded={fontsLoaded} segments={segments} />
           </SyncProvider>
-        </AlertProvider></ThemeProvider>
+        </AlertProvider></AppThemeProvider>
       </ThemeProvider>
     </PersistQueryClientProvider>
   );
