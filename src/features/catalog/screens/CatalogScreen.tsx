@@ -57,7 +57,7 @@ export function CatalogScreen() {
             <Ionicons name="person" size={20} color="#fff" />
           )}
         </TouchableOpacity>
-      <TouchableOpacity style={{position: 'absolute', bottom: 24, right: 24, backgroundColor: '#E50914', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5}} onPress={() => router.push('/ai-chat')}><Ionicons name="chatbubble-ellipses" size={28} color="#fff" /></TouchableOpacity></View>
+      </View>
 
       <View style={styles.filterContainer}>
         {/* Desafio Semanal */}
@@ -130,12 +130,7 @@ export function CatalogScreen() {
           >
             <Text style={styles.genreText}>📍 Cinemas Próximos</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.genrePill, { backgroundColor: '#6200EE' }]}
-            onPress={fetchAiRecommendation}
-          >
-            <Text style={[styles.genreText, { color: '#fff', fontWeight: 'bold' }]}>✨ Sugestões da IA</Text>
-          </TouchableOpacity>
+
           {genresList.map((g) => (
             <TouchableOpacity 
               key={g.id}
@@ -204,13 +199,22 @@ export function CatalogScreen() {
         </View>
       </Modal>
 
-      {/* FAB Roleta */}
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => router.push('/roulette')}
-      >
-        <Ionicons name="dice" size={32} color="#fff" />
-      </TouchableOpacity>
+      {/* FABs (Roleta e Chat) */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity 
+          style={styles.chatFab}
+          onPress={() => router.push('/ai-chat')}
+        >
+          <Ionicons name="chatbubble-ellipses" size={28} color="#fff" />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => router.push('/roulette')}
+        >
+          <Ionicons name="dice" size={32} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -352,10 +356,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
-    bottom: 90, // Mais alto para ficar acima do tab bar
+    bottom: 90,
     right: 24,
+    gap: 16,
+    alignItems: 'center',
+  },
+  chatFab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#6200EE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  fab: {
     width: 64,
     height: 64,
     borderRadius: 32,
