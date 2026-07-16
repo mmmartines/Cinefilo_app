@@ -58,29 +58,6 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
   const hasSynced = useRef(false);
 
   
-  useEffect(() => {
-    async function registerForPushNotificationsAsync() {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== 'granted') return;
-      
-      try {
-        const Constants = require('expo-constants').default;
-        const projectId = Constants.expoConfig?.extra?.eas?.projectId || '9abf2762-bba6-4baa-b363-5d3d9b9e1424'; // usually automatically resolved in Expo Go
-        const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        if (token) {
-          database.savePushToken(token);
-        }
-      } catch (e) {
-        console.error('Error fetching push token', e);
-      }
-    }
-    registerForPushNotificationsAsync();
-  }, []);
 
   useEffect(() => {
     if (isAuthenticated === null) return;
