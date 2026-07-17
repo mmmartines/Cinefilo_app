@@ -1,4 +1,4 @@
-import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useAppTheme } from '../../contexts/ThemeContext';
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { Image } from 'expo-image';

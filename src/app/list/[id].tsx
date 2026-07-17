@@ -1,4 +1,4 @@
-import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useAppTheme } from '../../contexts/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';

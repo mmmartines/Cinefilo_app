@@ -1,4 +1,4 @@
-import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useAppTheme } from '../contexts/ThemeContext';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';

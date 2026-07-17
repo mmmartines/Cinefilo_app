@@ -1,4 +1,4 @@
-import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useAppTheme } from '../contexts/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
