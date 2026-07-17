@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function ClubsScreen() {
   const insets = useSafeAreaInsets();
@@ -22,9 +23,7 @@ export function ClubsScreen() {
   
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    fetchClubs();
-  }, []);
+  
 
   const fetchClubs = async () => {
     try {
@@ -72,7 +71,7 @@ export function ClubsScreen() {
         showAlert('Sucesso', 'Clube criado!');
         setClubName('');
         setClubDesc('');
-        fetchClubs();
+        queryClient.invalidateQueries({ queryKey: ['clubs'] });
       } else {
         showAlert('Erro', result.error || 'Erro ao criar');
       }
@@ -108,7 +107,7 @@ export function ClubsScreen() {
       if (result.success) {
         showAlert('Sucesso', 'Você entrou no clube!');
         setJoinCode('');
-        fetchClubs();
+        queryClient.invalidateQueries({ queryKey: ['clubs'] });
       } else {
         showAlert('Erro', result.error || 'Erro ao entrar');
       }

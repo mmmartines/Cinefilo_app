@@ -1,23 +1,16 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useState } from 'react';
 import { database } from '../../../services/database';
+import { useQuery } from '@tanstack/react-query';
 
 export function useChats() {
-  const [chatRooms, setChatRooms] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchChatsList = async () => {
-    setIsLoading(true);
-    const userChats = await database.getChats();
-    setChatRooms(userChats);
-    setIsLoading(false);
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchChatsList();
-    }, [])
-  );
+  const { data: chatRooms = [], isLoading } = useQuery({
+    queryKey: ['chats'],
+    queryFn: async () => {
+      const userChats = await database.getChats();
+      return userChats || [];
+    },
+    refetchInterval: 10000,
+  });
 
   return {
     chatRooms,

@@ -1,35 +1,38 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 import { supabase } from '../../../services/supabase';
 import { database } from '../../../services/database';
 import { cache } from '../../../services/cache';
 import { useAlert } from '../../../contexts/AlertContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useFriends() {
   const { showAlert } = useAlert();
+  const queryClient = useQueryClient();
   const [friendTag, setFriendTag] = useState('');
-  const [friendsList, setFriendsList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isAddingFriend, setIsAddingFriend] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOffline, setIsOffline] = useState(false);
 
-  const fetchFriendsList = async () => {
-    try {
+  useEffect(() => {
+    database.getCurrentUser().then(setCurrentUser);
+    NetInfo.fetch().then(state => setIsOffline(!state.isConnected));
+  }, []);
+
+  const { data: friendsList = [], isLoading, refetch: fetchFriendsList } = useQuery({
+    queryKey: ['friends'],
+    queryFn: async () => {
       const state = await NetInfo.fetch();
-      
       if (!state.isConnected) {
         setIsOffline(true);
         const cached = await cache.get('friends');
-        if (cached) setFriendsList(cached);
-        return;
+        return cached || [];
       }
-
       setIsOffline(false);
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) return [];
 
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/friends`, {
@@ -46,24 +49,11 @@ export function useFriends() {
       
       const result = await response.json();
       const fetchedFriends = result.data || [];
-      setFriendsList(fetchedFriends);
       cache.set('friends', fetchedFriends);
-    } catch (e: any) {
-      console.error(e);
-      setIsOffline(true);
-      const cached = await cache.get('friends');
-      if (cached) setFriendsList(cached);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchFriendsList();
-      database.getCurrentUser().then(setCurrentUser);
-    }, [])
-  );
+      return fetchedFriends;
+    },
+    refetchInterval: 10000, // 10s smart polling
+  });
 
   const handleSendFriendRequest = async () => {
     if (friendTag.trim().length !== 10) {
@@ -94,6 +84,7 @@ export function useFriends() {
 
       showAlert('Sucesso', result.message || `Solicitação enviada com sucesso!`);
       setFriendTag('');
+      queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
     } catch (e: any) {
       showAlert('Erro', e.message);
     } finally {
@@ -127,7 +118,7 @@ export function useFriends() {
               
               if (!response.ok) throw new Error('Falha ao remover amigo');
               
-              fetchFriendsList();
+              queryClient.invalidateQueries({ queryKey: ['friends'] });
             } catch (e: any) {
               showAlert('Erro', e.message);
             }
@@ -155,5 +146,6 @@ export function useFriends() {
     handleSendFriendRequest,
     handleRemoveFriend,
     formatRuntime,
+    fetchFriendsList
   };
 }

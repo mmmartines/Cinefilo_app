@@ -1,37 +1,37 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useState, useEffect } from 'react';
 import { database } from '../../../services/database';
 import { useAlert } from '../../../contexts/AlertContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useLists() {
   const { showAlert } = useAlert();
-  const [customLists, setCustomLists] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
 
-  const fetchListsData = async () => {
-    const user = await database.getCurrentUser();
-    if (user) {
-      setCurrentUser(user);
-      const userLists = await database.getCustomLists(user.id);
-      setCustomLists(userLists);
-    }
-  };
+  useEffect(() => {
+    database.getCurrentUser().then(setCurrentUser);
+  }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchListsData();
-    }, [])
-  );
+  const { data: customLists = [], refetch: fetchListsData } = useQuery({
+    queryKey: ['lists', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser) return [];
+      const userLists = await database.getCustomLists(currentUser.id);
+      return userLists || [];
+    },
+    enabled: !!currentUser,
+    refetchInterval: 10000,
+  });
 
   const handleCreateNewList = async () => {
-    if (!newListName.trim()) return;
+    if (!newListName.trim() || !currentUser) return;
     try {
       await database.createCustomList(currentUser.id, newListName.trim());
       setNewListName('');
       setIsCreatingList(false);
-      fetchListsData();
+      queryClient.invalidateQueries({ queryKey: ['lists', currentUser.id] });
     } catch (e) {
       showAlert('Erro', 'Não foi possível criar a lista');
     }
@@ -45,5 +45,6 @@ export function useLists() {
     isCreatingList,
     setIsCreatingList,
     handleCreateNewList,
+    fetchListsData
   };
 }

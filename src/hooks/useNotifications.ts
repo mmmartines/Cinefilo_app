@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../services/supabase';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = async () => {
-    try {
+  const { data: notifications = [], refetch: fetchNotifications } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) return [];
 
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/notifications`, {
@@ -18,17 +19,14 @@ export function useNotifications() {
       
       const result = await response.json();
       if (response.ok) {
-        setNotifications(result.data || []);
-        setUnreadCount((result.data || []).filter((n: any) => !n.read).length);
+        return result.data || [];
       }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+      return [];
+    },
+    refetchInterval: 10000, // 10 seconds smart polling
+  });
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
 
   const markAsRead = async (notificationId?: string) => {
     try {
@@ -36,13 +34,14 @@ export function useNotifications() {
       if (!session) return;
 
       // Otimista
-      if (notificationId) {
-         setNotifications(prev => prev.map(n => n._id === notificationId ? { ...n, read: true } : n));
-         setUnreadCount(prev => Math.max(0, prev - 1));
-      } else {
-         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-         setUnreadCount(0);
-      }
+      queryClient.setQueryData(['notifications'], (oldData: any[]) => {
+        if (!oldData) return [];
+        if (notificationId) {
+           return oldData.map(n => n._id === notificationId ? { ...n, read: true } : n);
+        } else {
+           return oldData.map(n => ({ ...n, read: true }));
+        }
+      });
 
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       await fetch(`${apiUrl}/api/notifications`, {
@@ -53,6 +52,8 @@ export function useNotifications() {
         },
         body: JSON.stringify(notificationId ? { notification_id: notificationId } : {})
       });
+      
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     } catch (e) {
       console.error(e);
     }

@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { supabase } from '../../../services/supabase';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useFriendRequests() {
   const router = useRouter();
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [receivedRequests, setReceivedRequests] = useState<any[]>([]);
-  const [sentRequests, setSentRequests] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'received' | 'sent'>('received');
 
-  const fetchFriendRequests = async () => {
-    try {
+  const { data: requestData, isLoading, refetch: fetchFriendRequests } = useQuery({
+    queryKey: ['friendRequests'],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return router.replace('/login');
+      if (!session) {
+        router.replace('/login');
+        return { received: [], sent: [] };
+      }
 
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
       const response = await fetch(`${apiUrl}/api/friend_requests`, {
@@ -26,32 +28,56 @@ export function useFriendRequests() {
       
       if (response.ok) {
         const result = await response.json();
-        setReceivedRequests(result.data?.received || []);
-        setSentRequests(result.data?.sent || []);
+        return {
+          received: result.data?.received || [],
+          sent: result.data?.sent || []
+        };
       }
-    } catch (error) {
-      console.error('Erro ao buscar solicitações', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return { received: [], sent: [] };
+    },
+    refetchInterval: 10000,
+  });
 
-  useEffect(() => {
-    fetchFriendRequests();
-  }, []);
+  const receivedRequests = requestData?.received || [];
+  const sentRequests = requestData?.sent || [];
 
-  const handleRequestAction = async (requestId: string, action: 'accept' | 'decline' | 'cancel') => {
-    setIsLoading(true);
+  const handleRespondRequest = async (requestId: string, action: 'accept' | 'reject') => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-
+      
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      
-      const method = action === 'accept' ? 'PUT' : 'DELETE';
-      
       const response = await fetch(`${apiUrl}/api/friend_requests`, {
-        method,
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ request_id: requestId, action })
+      });
+      
+      if (response.ok) {
+        // Invalida as queries de requests e friends
+        queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
+        queryClient.invalidateQueries({ queryKey: ['friends'] });
+      } else {
+        const res = await response.json();
+        Alert.alert('Erro', res.error || 'Falha ao responder solicitao');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Ocorreu um erro na comunicao com o servidor.');
+    }
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+      const response = await fetch(`${apiUrl}/api/friend_requests`, {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
@@ -59,17 +85,15 @@ export function useFriendRequests() {
         body: JSON.stringify({ request_id: requestId })
       });
       
-      const result = await response.json();
       if (response.ok) {
-        await fetchFriendRequests();
-        Alert.alert("Sucesso", result.message);
+        queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
       } else {
-        Alert.alert("Erro", result.error || 'Ocorreu um erro.');
-        setIsLoading(false);
+        const res = await response.json();
+        Alert.alert('Erro', res.error || 'Falha ao cancelar solicitao');
       }
-    } catch (e) {
-      Alert.alert("Erro", "Falha de conexão.");
-      setIsLoading(false);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Ocorreu um erro na comunicao com o servidor.');
     }
   };
 
@@ -79,6 +103,8 @@ export function useFriendRequests() {
     sentRequests,
     activeTab,
     setActiveTab,
-    handleRequestAction,
+    handleRespondRequest,
+    handleCancelRequest,
+    fetchFriendRequests
   };
 }

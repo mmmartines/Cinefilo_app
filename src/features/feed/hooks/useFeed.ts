@@ -52,6 +52,7 @@ export function useFeed() {
     queryFn: fetchFeedPage,
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage,
+    refetchInterval: 10000, // Smart polling de 10s
   });
 
   // Flatten infinite query pages into a single array
