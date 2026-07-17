@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,6 +8,8 @@ import { Loading } from '../../components/Loading';
 import { useAlert } from '../../contexts/AlertContext';
 
 export default function ListDetails() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -206,16 +209,16 @@ export default function ListDetails() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 48,
     paddingBottom: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   headerActions: {
     flexDirection: 'row',
@@ -258,7 +261,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -274,7 +277,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
     borderRadius: 12,
   },
   emptyContainer: {
@@ -282,7 +285,7 @@ const styles = StyleSheet.create({
     marginTop: 64,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 16,
   },
   modalOverlay: {
@@ -293,7 +296,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     width: '100%',
     borderRadius: 16,
     padding: 24,
@@ -305,17 +308,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalSubtitle: {
-    color: '#999',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 24,
   },
   modalInput: {
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
     color: '#fff',
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
     marginBottom: 24,
   },
   modalActions: {

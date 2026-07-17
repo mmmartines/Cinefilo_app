@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
@@ -29,6 +30,8 @@ try {
 }
 
 export default function UpcomingScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
@@ -271,27 +274,27 @@ export default function UpcomingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16, gap: 16 },
-  movieCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#333' },
+  movieCard: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.border },
   movieContentRow: { flexDirection: 'row', gap: 12 },
-  poster: { width: 90, height: 135, borderRadius: 8, backgroundColor: '#333' },
+  poster: { width: 90, height: 135, borderRadius: 8, backgroundColor: colors.border },
   movieInfo: { flex: 1 },
   title: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   dateText: { color: '#E50914', fontSize: 13, fontWeight: 'bold', marginBottom: 6 },
-  overview: { color: '#aaa', fontSize: 12, lineHeight: 18 },
-  ticketContainer: { marginTop: 12, padding: 8, backgroundColor: '#111', borderRadius: 8, borderWidth: 1, borderColor: '#333', borderStyle: 'dashed' },
-  ticketLabel: { color: '#999', fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
+  overview: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
+  ticketContainer: { marginTop: 12, padding: 8, backgroundColor: colors.border, borderRadius: 8, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed' },
+  ticketLabel: { color: colors.textSecondary, fontSize: 12, marginBottom: 8, fontWeight: 'bold' },
   ticketWrapper: { position: 'relative', width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' },
   ticketImage: { width: '100%', height: '100%' },
   removeTicketBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12 },
   buttonsRow: { flexDirection: 'row', gap: 8, marginTop: 16 },
-  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#333', paddingVertical: 10, borderRadius: 8 },
+  actionButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.border, paddingVertical: 10, borderRadius: 8 },
   remindButtonActive: { backgroundColor: '#00A859' },
   ticketButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#E50914', paddingVertical: 10, borderRadius: 8 },
   actionButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 13 }

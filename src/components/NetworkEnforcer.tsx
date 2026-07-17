@@ -36,7 +36,7 @@ export function NetworkEnforcer() {
 const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
@@ -49,7 +49,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginBottom: 16,
   },
   subtitle: {
-    color: '#AAA',
+    color: colors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,

@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import { database } from '../services/database';
@@ -10,6 +11,8 @@ interface SyncContextData {
 const SyncContext = createContext<SyncContextData>({} as SyncContextData);
 
 export function SyncProvider({ children }: { children: ReactNode }) {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const [isSyncing, setIsSyncing] = useState(false);
 
   const forceSync = async () => {
@@ -57,7 +60,7 @@ export function useSync() {
   return context;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
@@ -66,12 +69,12 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   box: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     padding: 32,
     borderRadius: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
     width: '80%',
   },
   text: {
@@ -82,7 +85,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtext: {
-    color: '#AAA',
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',

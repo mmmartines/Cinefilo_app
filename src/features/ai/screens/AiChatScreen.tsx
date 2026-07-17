@@ -76,7 +76,7 @@ export function AiChatScreen() {
             <Ionicons name="film-outline" size={16} color={colors.text} />
           </View>
         )}
-        <Text style={styles.messageText}>{item.content}</Text>
+        <Text style={[styles.messageText, { color: isUser ? '#fff' : colors.text }]}>{item.content}</Text>
       </View>
     );
   };
@@ -127,7 +127,7 @@ export function AiChatScreen() {
             onPress={sendMessage}
             disabled={!inputText.trim() || loading}
           >
-            <Ionicons name="send" size={20} color={colors.text} />
+            <Ionicons name="send" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -16,6 +17,8 @@ interface FriendProfileScreenProps {
 }
 
 export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabType>('resumo');
@@ -68,7 +71,7 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
               <Text style={styles.affinityTitle}>Afinidade Cinematográfica</Text>
             </View>
             <View style={styles.affinityBarContainer}>
-              <View style={[styles.affinityBarFill, { width: `${affinity}%`, backgroundColor: affinity > 50 ? '#FF5722' : '#666' }]} />
+              <View style={[styles.affinityBarFill, { width: `${affinity}%`, backgroundColor: affinity > 50 ? '#FF5722' : colors.textSecondary }]} />
             </View>
             <Text style={styles.affinityValue}>{affinity}% de compatibilidade</Text>
           </View>
@@ -138,39 +141,39 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
   errorText: { color: '#fff', fontSize: 16, marginBottom: 16 },
   backButton: { backgroundColor: '#E50914', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   backButtonText: { color: '#fff', fontWeight: 'bold' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#1E1E1E' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: colors.backgroundElement },
   headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
   backIcon: { padding: 8, width: 40, alignItems: 'flex-start' },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderBottomWidth: 1, borderBottomColor: '#333' },
+  tabContainer: { flexDirection: 'row', backgroundColor: colors.backgroundElement, borderBottomWidth: 1, borderBottomColor: colors.border },
   tab: { flex: 1, paddingVertical: 16, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   activeTab: { borderBottomColor: '#E50914' },
-  tabText: { color: '#999', fontSize: 16, fontWeight: 'bold' },
+  tabText: { color: colors.textSecondary, fontSize: 16, fontWeight: 'bold' },
   activeTabText: { color: '#fff' },
   resumoContainer: { flex: 1, padding: 24, gap: 16 },
-  affinityCard: { backgroundColor: '#1E1E1E', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#333', alignItems: 'center', marginBottom: 8 },
+  affinityCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 8 },
   affinityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   affinityTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  affinityBarContainer: { width: '100%', height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
+  affinityBarContainer: { width: '100%', height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   affinityBarFill: { height: '100%', borderRadius: 4 },
-  affinityValue: { color: '#aaa', fontSize: 14, fontWeight: 'bold' },
+  affinityValue: { color: colors.textSecondary, fontSize: 14, fontWeight: 'bold' },
   avatarSection: { alignItems: 'center', marginBottom: 8 },
   avatarImage: { width: 120, height: 120, borderRadius: 60 },
-  avatarPlaceholder: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
-  statCard: { backgroundColor: '#1E1E1E', padding: 24, borderRadius: 16, alignItems: 'center' },
-  tagCard: { backgroundColor: '#1E1E1E', padding: 16, borderRadius: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  avatarPlaceholder: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
+  statCard: { backgroundColor: colors.backgroundElement, padding: 24, borderRadius: 16, alignItems: 'center' },
+  tagCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
   statValue: { color: '#fff', fontSize: 32, fontWeight: 'bold', marginTop: 8 },
-  statLabel: { color: '#999', fontSize: 14, marginTop: 4 },
+  statLabel: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
   tagText: { color: '#E50914', fontSize: 18, fontWeight: 'bold' },
   listContent: { paddingVertical: 8, paddingHorizontal: 12 },
   columnWrapper: { justifyContent: 'flex-start' },
   movieWrapper: { flex: 1, opacity: 0.9 },
-  emptyText: { color: '#666', textAlign: 'center', marginTop: 40, fontSize: 16 },
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: 40, fontSize: 16 },
   matchButton: { backgroundColor: '#E50914', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 16, gap: 8, marginTop: 8 },
   matchButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });

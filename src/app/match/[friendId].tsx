@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
 import { Image } from 'expo-image';
@@ -9,6 +10,8 @@ import { database } from '../../services/database';
 import { useAlert } from '../../contexts/AlertContext';
 
 export default function MatchScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const { friendId, friendName } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -154,10 +157,10 @@ export default function MatchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -182,11 +185,11 @@ const styles = StyleSheet.create({
   card: {
     width: '85%',
     height: '65%',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
     elevation: 10,
     shadowColor: '#000',
     shadowOpacity: 0.3,
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   overview: {
-    color: '#999',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   actions: {
@@ -224,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderWidth: 2,
     elevation: 5,
     shadowColor: '#000',

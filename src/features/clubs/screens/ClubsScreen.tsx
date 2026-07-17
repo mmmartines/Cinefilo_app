@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +9,8 @@ import { useAlert } from '../../../contexts/AlertContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function ClubsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -216,28 +219,28 @@ export function ClubsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   tabContainer: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16 },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#333' },
+  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: colors.border },
   activeTab: { borderBottomColor: '#E50914' },
-  tabText: { color: '#999', fontSize: 16, fontWeight: '600' },
+  tabText: { color: colors.textSecondary, fontSize: 16, fontWeight: '600' },
   activeTabText: { color: '#fff' },
-  actionCard: { backgroundColor: '#1E1E1E', marginHorizontal: 16, borderRadius: 12, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: '#333' },
-  label: { color: '#999', fontSize: 14, marginBottom: 8, fontWeight: '500' },
-  input: { backgroundColor: '#2A2A2A', borderRadius: 8, padding: 12, color: '#fff', fontSize: 16, marginBottom: 16 },
+  actionCard: { backgroundColor: colors.backgroundElement, marginHorizontal: 16, borderRadius: 12, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.border },
+  label: { color: colors.textSecondary, fontSize: 14, marginBottom: 8, fontWeight: '500' },
+  input: { backgroundColor: colors.backgroundElement, borderRadius: 8, padding: 12, color: '#fff', fontSize: 16, marginBottom: 16 },
   primaryButton: { backgroundColor: '#E50914', borderRadius: 8, padding: 14, alignItems: 'center' },
   primaryButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   sectionTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginLeft: 16, marginBottom: 12 },
-  clubCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#333' },
+  clubCard: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   clubHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   clubName: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  clubMembers: { color: '#999', fontSize: 14, marginTop: 4 },
-  codeBadge: { backgroundColor: '#333', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  clubMembers: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
+  codeBadge: { backgroundColor: colors.border, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   codeText: { color: '#fff', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 },
-  clubDesc: { color: '#ccc', fontSize: 14, marginTop: 12 },
-  emptyText: { color: '#666', textAlign: 'center', marginTop: 32, fontSize: 16 }
+  clubDesc: { color: colors.text, fontSize: 14, marginTop: 12 },
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: 32, fontSize: 16 }
 });

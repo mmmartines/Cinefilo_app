@@ -298,7 +298,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                     key={index}
                     style={[
                       styles.emotionChip,
-                      isSelected ? { backgroundColor: `${emotion.color}22`, borderColor: emotion.color } : { borderColor: '#555' }
+                      isSelected ? { backgroundColor: `${emotion.color}22`, borderColor: emotion.color } : { borderColor: colors.border }
                     ]}
                     onPress={() => {
                       if (isSelected) {
@@ -328,7 +328,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                         key={listIdentifier}
                         style={[
                           styles.emotionChip,
-                          isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: '#555' }
+                          isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: colors.border }
                         ]}
                         onPress={() => {
                           if (isSelected) {

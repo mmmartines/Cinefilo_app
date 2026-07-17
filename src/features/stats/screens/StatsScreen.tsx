@@ -62,7 +62,7 @@ export function StatsScreen() {
             <Text style={styles.wrappedBannerSubtitle}>Toque para ver seus destaques!</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={colors.text} />
+        <Ionicons name="chevron-forward" size={24} color="#fff" />
       </TouchableOpacity>
 
       <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }} style={{ backgroundColor: colors.border }}>
@@ -293,8 +293,8 @@ const getStyles = (colors: any) => StyleSheet.create({
   emotionPhrase: { color: '#E50914', fontSize: 16, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 },
   wrappedBanner: { backgroundColor: '#6200EE', margin: 16, marginBottom: 0, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', elevation: 5 },
   wrappedBannerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  wrappedBannerTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
-  wrappedBannerSubtitle: { color: colors.text, fontSize: 12 },
+  wrappedBannerTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  wrappedBannerSubtitle: { color: '#fff', fontSize: 12 },
   badgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center' },
   badgeItem: { alignItems: 'center', width: 100 },
   badgeItemInactive: { opacity: 0.5 },

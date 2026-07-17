@@ -44,7 +44,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
         )}
         <View style={[styles.messageBubble, isMyMessage ? styles.myBubble : styles.otherBubble]}>
           {!isMyMessage && <Text style={styles.senderName}>{item.user_name}</Text>}
-          <Text style={styles.messageText}>{item.content}</Text>
+          <Text style={[styles.messageText, { color: isMyMessage ? '#fff' : colors.text }]}>{item.content}</Text>
           <Text style={styles.timestamp}>
             {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
@@ -100,7 +100,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
           onPress={handleSendMessage}
           disabled={!messageInputText.trim()}
         >
-          <Ionicons name="send" size={20} color={colors.text} />
+          <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

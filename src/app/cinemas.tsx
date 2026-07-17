@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlert } from '../contexts/AlertContext';
 
 export default function CinemasScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
@@ -272,10 +275,10 @@ export default function CinemasScreen() {
             {viewMode === 'map' ? (
               <View style={{ flex: 1, marginTop: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1c23' }}>
                 {mapUnavailable ? (
-                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#1E1E1E' }}>
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: colors.backgroundElement }}>
                     <Ionicons name="map-outline" size={48} color="#E50914" style={{ marginBottom: 16 }} />
                     <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível no Momento</Text>
-                    <Text style={{ color: '#aaa', textAlign: 'center' }}>A cota de uso foi atingida ou não está configurada corretamente.</Text>
+                    <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>A cota de uso foi atingida ou não está configurada corretamente.</Text>
                   </View>
                 ) : (
                   <WebView
@@ -343,10 +346,10 @@ export default function CinemasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -354,7 +357,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   headerTitle: {
     fontSize: 20,
@@ -369,9 +372,9 @@ const styles = StyleSheet.create({
   },
   searchSection: {
     padding: 24,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border,
   },
   gpsBtn: {
     backgroundColor: '#E50914',
@@ -395,10 +398,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
   },
   orText: {
-    color: '#666',
+    color: colors.textSecondary,
     marginHorizontal: 16,
     fontWeight: 'bold',
   },
@@ -408,17 +411,17 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.background,
     height: 50,
     borderRadius: 12,
     paddingHorizontal: 16,
     color: '#fff',
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
   },
   searchBtn: {
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     width: 50,
     height: 50,
     borderRadius: 12,
@@ -440,17 +443,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 10,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#333'
+    borderColor: colors.border
   },
   toggleBtnActive: {
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     borderColor: '#E50914',
   },
   toggleText: {
-    color: '#999',
+    color: colors.textSecondary,
     fontWeight: 'bold'
   },
   toggleTextActive: {
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   cinemaCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 16,
     padding: 16,
     borderLeftWidth: 4,
@@ -478,7 +481,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cinemaAddress: {
-    color: '#999',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 8,
   },
@@ -506,12 +509,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusText: {
-    color: '#999',
+    color: colors.textSecondary,
     marginTop: 16,
     fontSize: 14,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: 40,
     fontSize: 16,

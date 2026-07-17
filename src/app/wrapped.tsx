@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, TouchableWithoutFeedback } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,6 +20,8 @@ const { width } = Dimensions.get('window');
 const SLIDES_COUNT = 3;
 
 export default function WrappedScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const viewRef = useRef<any>(null);
@@ -224,7 +227,7 @@ export default function WrappedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   progressContainer: { position: 'absolute', left: 16, right: 16, flexDirection: 'row', gap: 4, zIndex: 10 },
   progressBarBg: { flex: 1, height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
@@ -243,7 +246,7 @@ const styles = StyleSheet.create({
   statValueAlt: { color: '#FFD700', fontSize: 32, fontWeight: '900', marginTop: 8 },
   statLabelAlt: { color: '#fff', fontSize: 16 },
   movieBox: { alignItems: 'center' },
-  movieLabel: { color: '#ccc', fontSize: 14, textTransform: 'uppercase', letterSpacing: 1 },
+  movieLabel: { color: colors.text, fontSize: 14, textTransform: 'uppercase', letterSpacing: 1 },
   movieTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginTop: 8 },
   footerText: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontWeight: 'bold' },
   actions: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 16, zIndex: 10 },

@@ -1,3 +1,4 @@
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
 import { Image } from 'expo-image';
@@ -8,6 +9,8 @@ import { fetchFilteredMovies } from '../services/api';
 import { AnimatedButton } from '../components/AnimatedButton';
 
 export default function RouletteScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -126,19 +129,19 @@ export default function RouletteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   emptyState: { alignItems: 'center', gap: 24 },
-  emptyText: { color: '#aaa', fontSize: 18, textAlign: 'center' },
-  movieContainer: { width: '100%', alignItems: 'center', backgroundColor: '#1E1E1E', padding: 24, borderRadius: 24, borderWidth: 1, borderColor: '#333' },
+  emptyText: { color: colors.textSecondary, fontSize: 18, textAlign: 'center' },
+  movieContainer: { width: '100%', alignItems: 'center', backgroundColor: colors.backgroundElement, padding: 24, borderRadius: 24, borderWidth: 1, borderColor: colors.border },
   poster: { width: 200, height: 300, borderRadius: 16, marginBottom: 24 },
   movieTitle: { color: '#fff', fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
-  movieOverview: { color: '#999', fontSize: 14, textAlign: 'center', marginBottom: 24 },
-  viewButton: { backgroundColor: '#333', paddingHorizontal: 32, paddingVertical: 12, borderRadius: 8 },
+  movieOverview: { color: colors.textSecondary, fontSize: 14, textAlign: 'center', marginBottom: 24 },
+  viewButton: { backgroundColor: colors.border, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 8 },
   viewButtonText: { color: '#fff', fontWeight: 'bold' },
   footer: { padding: 24, paddingBottom: 40 },
   spinButton: { backgroundColor: '#E50914', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 18, borderRadius: 16, gap: 12 },
