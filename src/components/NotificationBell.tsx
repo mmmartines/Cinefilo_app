@@ -3,8 +3,11 @@ import { View, Text, TouchableOpacity, Modal, StyleSheet, FlatList } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import { useNotifications } from '../hooks/useNotifications';
 import { Image } from 'expo-image';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 export function NotificationBell() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -64,7 +67,7 @@ export function NotificationBell() {
   return (
     <>
       <TouchableOpacity onPress={openModal} style={styles.bellContainer}>
-        <Ionicons name="notifications-outline" size={28} color="#fff" />
+        <Ionicons name="notifications-outline" size={28} color={colors.text} />
         {unreadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
@@ -78,7 +81,7 @@ export function NotificationBell() {
              <View style={styles.modalHeader}>
                <Text style={styles.modalTitle}>Notificações</Text>
                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                 <Ionicons name="close" size={28} color="#fff" />
+                 <Ionicons name="close" size={28} color={colors.text} />
                </TouchableOpacity>
              </View>
              
@@ -96,20 +99,20 @@ export function NotificationBell() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   bellContainer: { position: 'relative', padding: 4, marginRight: 8 },
   badge: { position: 'absolute', top: 0, right: 0, backgroundColor: '#E50914', borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center' },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  badgeText: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
-  modalContainer: { backgroundColor: '#1E1E1E', borderTopLeftRadius: 20, borderTopRightRadius: 20, height: '80%' },
+  modalContainer: { backgroundColor: colors.backgroundElement, borderTopLeftRadius: 20, borderTopRightRadius: 20, height: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#333' },
-  modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
   notificationItem: { flexDirection: 'row', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
   unreadItem: { backgroundColor: '#2a2a2a' },
   avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
   avatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   content: { flex: 1, justifyContent: 'center' },
-  messageText: { color: '#fff', fontSize: 14, flexShrink: 1 },
+  messageText: { color: colors.text, fontSize: 14, flexShrink: 1 },
   timeText: { color: '#888', fontSize: 12 },
   emptyText: { color: '#888', textAlign: 'center', marginTop: 40, fontSize: 16 }
 });

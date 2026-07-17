@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeIn, FadeOut, SlideInUp, SlideOutUp } from 'react-native-reanimated';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 export function NetworkAlert() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const [isConnected, setIsConnected] = useState<boolean | null>(true);
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export function NetworkAlert() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -63,7 +66,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   alertBox: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 24,
     padding: 32,
     alignItems: 'center',
@@ -89,7 +92,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 12,
     textAlign: 'center',
   },

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ViewStyle, StyleSheet, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 interface Props {
   width?: number | string;

@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Modal } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 export function NetworkEnforcer() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export function NetworkEnforcer() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   title: {
-    color: '#FFF',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
     marginTop: 24,

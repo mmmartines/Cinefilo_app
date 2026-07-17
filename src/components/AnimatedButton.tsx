@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Animated, TouchableOpacity, TouchableOpacityProps, StyleProp, ViewStyle } from 'react-native';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 interface AnimatedButtonProps extends TouchableOpacityProps {
   style?: StyleProp<ViewStyle>;

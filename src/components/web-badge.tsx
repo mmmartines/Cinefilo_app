@@ -6,8 +6,11 @@ import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 import { Spacing } from '@/constants/theme';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 export function WebBadge() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const scheme = useColorScheme();
 
   return (
@@ -27,7 +30,7 @@ export function WebBadge() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     padding: Spacing.five,
     alignItems: 'center',

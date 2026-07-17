@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-na
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 interface Movie {
   id: number;
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export function MovieCard({ movie, status }: Props) {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const scale = useSharedValue(1);
 
@@ -55,14 +58,14 @@ export function MovieCard({ movie, status }: Props) {
       
       {status === 'watched' && (
         <View style={styles.watchedTag}>
-          <Ionicons name="checkmark-circle" size={10} color="#fff" />
+          <Ionicons name="checkmark-circle" size={10} color={colors.text} />
           <Text style={styles.watchedText}>Assistido</Text>
         </View>
       )}
 
       {status === 'watchlist' && (
         <View style={[styles.watchedTag, { backgroundColor: 'rgba(229, 9, 20, 0.95)' }]}>
-          <Ionicons name="bookmark" size={10} color="#fff" />
+          <Ionicons name="bookmark" size={10} color={colors.text} />
           <Text style={styles.watchedText}>Quero Ver</Text>
         </View>
       )}
@@ -71,11 +74,11 @@ export function MovieCard({ movie, status }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   card: {
     flex: 1,
     margin: 4,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   watchedText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 10,
     fontWeight: 'bold',
   },

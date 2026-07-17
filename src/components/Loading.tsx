@@ -1,7 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { useAppTheme } from '../contexts/ThemeContext';
 
 export function Loading() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const bounceAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export function Loading() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
