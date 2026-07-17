@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.border,
+    backgroundColor: '#333',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
@@ -203,12 +203,12 @@ const styles = StyleSheet.create({
   },
   modalBox: {
     width: '100%',
-    backgroundColor: colors.backgroundElement,
+    backgroundColor: '#1E1E1E',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#333',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   message: {
-    color: colors.text,
+    color: '#ccc',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 24,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   buttonCancel: {
-    backgroundColor: colors.border,
+    backgroundColor: '#333',
   },
   buttonDestructive: {
     backgroundColor: 'rgba(229, 9, 20, 0.2)',
@@ -257,6 +257,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   buttonTextCancel: {
-    color: colors.text,
+    color: '#ccc',
   },
 });

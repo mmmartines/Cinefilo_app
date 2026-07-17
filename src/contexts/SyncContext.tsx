@@ -1,4 +1,4 @@
-import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useAppTheme } from './ThemeContext';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { View, Text, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import { database } from '../services/database';

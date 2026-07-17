@@ -37,7 +37,7 @@ export function Skeleton({ width = '100%', height = '100%', borderRadius = 8, st
           width: width as any,
           height: height as any,
           borderRadius,
-          backgroundColor: colors.border,
+          backgroundColor: '#333',
         },
         style,
         animatedStyle,
