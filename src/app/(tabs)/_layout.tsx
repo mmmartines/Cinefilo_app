@@ -2,8 +2,10 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet } from 'react-native';
+import { useAppTheme } from '../../contexts/ThemeContext';
 
 export default function TabLayout() {
+  const { isDark, colors } = useAppTheme();
   return (
     <Tabs
       screenOptions={{
@@ -11,13 +13,13 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarStyle: {
           position: 'absolute',
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'rgba(30, 30, 30, 0.85)',
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : (isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)'),
           borderTopWidth: 0,
           elevation: 0,
           height: 60,
         },
         tabBarBackground: () => (
-          <BlurView tint="dark" intensity={80} style={StyleSheet.absoluteFill} />
+          <BlurView tint={isDark ? "dark" : "light"} intensity={80} style={StyleSheet.absoluteFill} />
         ),
         tabBarItemStyle: {
           justifyContent: 'center',
