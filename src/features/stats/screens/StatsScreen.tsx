@@ -266,7 +266,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   rankLabel: { color: colors.textSecondary, fontSize: 14, marginTop: 8, textTransform: 'uppercase', letterSpacing: 2 },
   rankTitle: { color: colors.text, fontSize: 22, fontWeight: 'bold', marginTop: 4, textAlign: 'center' },
   levelBadge: { position: 'absolute', top: 16, right: 16, backgroundColor: '#E50914', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  levelBadgeText: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
+  levelBadgeText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
   xpContainer: { width: '100%', marginTop: 16, alignItems: 'center' },
   xpBarBackground: { width: '100%', height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   xpBarFill: { height: '100%', backgroundColor: '#FFD700', borderRadius: 4 },

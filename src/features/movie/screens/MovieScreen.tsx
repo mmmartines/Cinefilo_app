@@ -544,7 +544,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, width: '100%' },
   modalBtnCancel: { padding: 12 },
   modalBtnSave: { backgroundColor: '#E50914', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { color: colors.text, fontWeight: 'bold' },
+  modalBtnText: { color: '#fff', fontWeight: 'bold' },
   trailerModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 60 : 40 },
   trailerModalContent: { width: '100%', alignItems: 'center' },
   closeTrailerButton: { alignSelf: 'flex-end', marginRight: 16, marginBottom: 16, padding: 8 }

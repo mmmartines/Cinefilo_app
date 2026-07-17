@@ -152,7 +152,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginBottom: 24,
   },
   registerButtonText: {
-    color: colors.text,
+    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },

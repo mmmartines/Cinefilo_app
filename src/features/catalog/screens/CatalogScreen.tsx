@@ -103,7 +103,7 @@ export function CatalogScreen() {
             onChangeText={setSearchYear}
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleManualSearch}>
-            <Ionicons name="search" size={20} color={colors.text} />
+            <Ionicons name="search" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -208,14 +208,14 @@ export function CatalogScreen() {
           style={styles.chatFab}
           onPress={() => router.push('/ai-chat')}
         >
-          <Ionicons name="chatbubble-ellipses" size={28} color={colors.text} />
+          <Ionicons name="chatbubble-ellipses" size={28} color="#fff" />
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.fab}
           onPress={() => router.push('/roulette')}
         >
-          <Ionicons name="dice" size={32} color={colors.text} />
+          <Ionicons name="dice" size={32} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>

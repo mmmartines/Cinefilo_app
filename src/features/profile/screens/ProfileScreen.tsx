@@ -283,7 +283,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   icon: { marginRight: 12 },
   input: { flex: 1, color: colors.text, fontSize: 16 },
   saveButton: { backgroundColor: '#E50914', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  saveButtonText: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
+  saveButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   settingsSection: { marginTop: 16, marginBottom: 16, paddingTop: 24, borderTopWidth: 1, borderTopColor: colors.border },
   settingsTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 16 },
   settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -304,5 +304,5 @@ const getStyles = (colors: any) => StyleSheet.create({
   modalCancelText: { color: colors.text, fontWeight: 'bold' },
   modalDeleteBtn: { flex: 1, height: 48, borderRadius: 8, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' },
   modalDeleteBtnDisabled: { backgroundColor: '#555' },
-  modalDeleteText: { color: colors.text, fontWeight: 'bold' },
+  modalDeleteText: { color: '#fff', fontWeight: 'bold' },
 });
