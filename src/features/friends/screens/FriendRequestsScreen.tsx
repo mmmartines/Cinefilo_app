@@ -5,8 +5,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFriendRequests } from '../hooks/useFriendRequests';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function FriendRequestsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -16,7 +19,7 @@ export function FriendRequestsScreen() {
     sentRequests,
     activeTab,
     setActiveTab,
-    handleRequestAction,
+    handleRespondRequest,
   } = useFriendRequests();
 
   const renderRequestItem = ({ item }: { item: any }) => {
@@ -46,21 +49,21 @@ export function FriendRequestsScreen() {
             <>
               <TouchableOpacity 
                 style={styles.declineBtn} 
-                onPress={() => handleRequestAction(item._id, 'decline')}
+                onPress={() => handleRespondRequest(item._id, 'reject')}
               >
-                <Ionicons name="close" size={20} color="#fff" />
+                <Ionicons name="close" size={20} color={colors.text} />
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.acceptBtn} 
-                onPress={() => handleRequestAction(item._id, 'accept')}
+                onPress={() => handleRespondRequest(item._id, 'accept')}
               >
-                <Ionicons name="checkmark" size={20} color="#fff" />
+                <Ionicons name="checkmark" size={20} color={colors.text} />
               </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity 
               style={styles.cancelBtn} 
-              onPress={() => handleRequestAction(item._id, 'cancel')}
+              onPress={() => handleCancelRequest(item._id)}
             >
               <Text style={styles.cancelBtnText}>Cancelar</Text>
             </TouchableOpacity>
@@ -74,7 +77,7 @@ export function FriendRequestsScreen() {
     <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
+          <Ionicons name="arrow-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Solicitações</Text>
         <View style={{ width: 40 }} />
@@ -121,11 +124,11 @@ export function FriendRequestsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  headerTitle: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
   tabs: { flexDirection: 'row', paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: '#E50914' },
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
   avatar: { width: 48, height: 48, borderRadius: 24 },
   avatarPlaceholder: { backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
   nameContainer: { flex: 1 },
-  userName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  userName: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   userTag: { color: '#999', fontSize: 12 },
   actionsContainer: { flexDirection: 'row', gap: 8 },
   acceptBtn: { backgroundColor: '#4CAF50', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },

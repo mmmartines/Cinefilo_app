@@ -7,8 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { Image } from 'expo-image';
 import { useFriends } from '../hooks/useFriends';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function FriendsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -57,7 +60,7 @@ export function FriendsScreen() {
               {item.name} {item.isMe && <Text style={styles.youBadge}>(Você)</Text>}
             </Text>
             <View style={{ backgroundColor: '#E50914', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-              <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>Nv {estimatedLevel}</Text>
+              <Text style={{ color: colors.text, fontSize: 10, fontWeight: 'bold' }}>Nv {estimatedLevel}</Text>
             </View>
           </View>
           <Text style={styles.statsText}>
@@ -84,7 +87,7 @@ export function FriendsScreen() {
         <Text style={styles.title}>Ranking</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/friend_requests')}>
-            <Ionicons name="mail" size={20} color="#fff" />
+            <Ionicons name="mail" size={20} color={colors.text} />
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.profileIcon, currentUser?.avatar_url ? { backgroundColor: 'transparent', padding: 0 } : {}]}
@@ -93,7 +96,7 @@ export function FriendsScreen() {
             {currentUser?.avatar_url ? (
               <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
             ) : (
-              <Ionicons name="person" size={20} color="#fff" />
+              <Ionicons name="person" size={20} color={colors.text} />
             )}
           </TouchableOpacity>
         </View>
@@ -124,9 +127,9 @@ export function FriendsScreen() {
             disabled={isAddingFriend || friendTag.length === 0}
           >
             {isAddingFriend ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.text} />
             ) : (
-              <Ionicons name="add" size={24} color="#fff" />
+              <Ionicons name="add" size={24} color={colors.text} />
             )}
           </AnimatedButton>
         </View>
@@ -153,8 +156,8 @@ export function FriendsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#1E1E1E' },
   profileIcon: { padding: 8, backgroundColor: '#333', borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   headerAvatar: { width: 40, height: 40, borderRadius: 20 },
@@ -162,10 +165,10 @@ const styles = StyleSheet.create({
   addSection: { padding: 24, paddingBottom: 16 },
   label: { color: '#999', marginBottom: 8, fontSize: 14 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  input: { flex: 1, backgroundColor: '#1E1E1E', height: 56, borderRadius: 12, paddingHorizontal: 16, color: '#fff', fontSize: 16, borderWidth: 1, borderColor: '#333' },
+  input: { flex: 1, backgroundColor: '#1E1E1E', height: 56, borderRadius: 12, paddingHorizontal: 16, color: colors.text, fontSize: 16, borderWidth: 1, borderColor: '#333' },
   addButton: { backgroundColor: '#E50914', width: 56, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   listContainer: { flex: 1, paddingHorizontal: 24 },
-  listTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff', marginBottom: 16 },
+  listTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 16 },
   listContent: { paddingBottom: 100, gap: 12 },
   friendCard: { flexDirection: 'row', backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, alignItems: 'center' },
   myCard: { borderColor: '#E50914', borderWidth: 1, backgroundColor: '#2A1112' },
@@ -174,7 +177,7 @@ const styles = StyleSheet.create({
   friendAvatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
   friendAvatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   friendInfo: { flex: 1 },
-  friendName: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+  friendName: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 4 },
   youBadge: { fontSize: 12, color: '#E50914', fontWeight: 'normal' },
   statsText: { color: '#999', fontSize: 14 },
   removeBtn: { padding: 8 },

@@ -5,8 +5,11 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Skeleton } from '../../../components/Skeleton';
 import { useFeed } from '../hooks/useFeed';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function FeedScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const {
     feedActivities,
     isLoading,
@@ -90,10 +93,10 @@ export function FeedScreen() {
           ) : item.action === 'unlocked_badge' && item.badge ? (
             <View style={[styles.movieContent, { alignItems: 'center', borderColor: item.badge.color || '#333', borderWidth: 1 }]}>
               <View style={[styles.badgeIconContainerFeed, { backgroundColor: item.badge.color ? `${item.badge.color}22` : '#333' }]}>
-                <Ionicons name={item.badge.icon as any} size={32} color={item.badge.color || '#fff'} />
+                <Ionicons name={item.badge.icon as any} size={32} color={item.badge.color || colors.text} />
               </View>
               <View style={styles.movieInfo}>
-                <Text style={[styles.movieTitle, { color: item.badge.color || '#fff' }]}>{item.badge.name}</Text>
+                <Text style={[styles.movieTitle, { color: item.badge.color || colors.text }]}>{item.badge.name}</Text>
                 <Text style={styles.reviewText}>{item.badge.description}</Text>
               </View>
             </View>
@@ -122,7 +125,7 @@ export function FeedScreen() {
                         onPress={() => toggleSpoilerVisibility(item._id)}
                         activeOpacity={0.8}
                       >
-                        <Ionicons name="eye-off" size={24} color="#fff" />
+                        <Ionicons name="eye-off" size={24} color={colors.text} />
                         <Text style={styles.spoilerOverlayText}>Contém Spoiler. Toque para ver.</Text>
                       </TouchableOpacity>
                     )}
@@ -205,7 +208,7 @@ export function FeedScreen() {
           keyExtractor={(item) => item._id}
           renderItem={renderActivityItem}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefreshFeed} tintColor="#fff" />}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefreshFeed} tintColor={colors.text} />}
           ListEmptyComponent={<Text style={styles.emptyText}>Nenhuma atividade recente.</Text>}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
@@ -219,7 +222,7 @@ export function FeedScreen() {
                <View style={styles.modalHeader}>
                  <Text style={styles.modalTitle}>Reações</Text>
                  <TouchableOpacity onPress={() => setModalReactions(null)}>
-                   <Ionicons name="close" size={24} color="#fff" />
+                   <Ionicons name="close" size={24} color={colors.text} />
                  </TouchableOpacity>
                </View>
                <ScrollView style={{flex: 1}}>
@@ -227,7 +230,7 @@ export function FeedScreen() {
                   {modalReactions?.map((r, idx) => (
                     <View key={idx} style={styles.reactionListItem}>
                        <Ionicons name={getReactionIcon(r.type).name as any} size={20} color={getReactionIcon(r.type).color} style={{marginRight: 12}} />
-                       <Text style={{color: '#fff', fontSize: 16}}>{r.user_name}</Text>
+                       <Text style={{color: colors.text, fontSize: 16}}>{r.user_name}</Text>
                     </View>
                   ))}
                </ScrollView>
@@ -238,32 +241,32 @@ export function FeedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
-  headerArea: { paddingTop: 50, backgroundColor: '#121212', borderBottomWidth: 1, borderBottomColor: '#222' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', paddingHorizontal: 16, paddingBottom: 16 },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
+  headerArea: { paddingTop: 50, backgroundColor: colors.border, borderBottomWidth: 1, borderBottomColor: '#222' },
+  title: { fontSize: 24, fontWeight: 'bold', color: colors.text, paddingHorizontal: 16, paddingBottom: 16 },
   tabsContainer: { flexDirection: 'row', paddingHorizontal: 16 },
   tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   activeTab: { borderBottomColor: '#E50914' },
   tabText: { color: '#888', fontWeight: 'bold' },
-  activeTabText: { color: '#fff' },
+  activeTabText: { color: colors.text },
   list: { padding: 16, paddingBottom: 100 },
   timelineItem: { position: 'relative', paddingLeft: 24, marginBottom: 16 },
   timelineLine: { position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: '#333' },
-  timelineDot: { position: 'absolute', left: 4, top: 24, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E50914', borderWidth: 2, borderColor: '#121212' },
+  timelineDot: { position: 'absolute', left: 4, top: 24, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E50914', borderWidth: 2, borderColor: colors.border },
   card: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#333' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   avatar: { width: 40, height: 40, borderRadius: 20 },
   avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
   headerText: { flex: 1, marginLeft: 12 },
-  userName: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  userName: { color: colors.text, fontWeight: 'bold', fontSize: 16 },
   youBadge: { color: '#E50914', fontSize: 12, fontWeight: 'normal' },
   actionText: { color: '#aaa', fontSize: 14 },
   timeAgo: { color: '#666', fontSize: 12 },
   movieContent: { flexDirection: 'row', backgroundColor: '#2a2a2a', borderRadius: 8, padding: 12 },
   moviePoster: { width: 60, height: 90, borderRadius: 4, backgroundColor: '#444' },
   movieInfo: { flex: 1, marginLeft: 12, justifyContent: 'center' },
-  movieTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  movieTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   ratingText: { color: '#FFD700', marginLeft: 4, fontWeight: 'bold' },
   reviewText: { color: '#ccc', fontStyle: 'italic', fontSize: 14 },
@@ -273,16 +276,16 @@ const styles = StyleSheet.create({
   actionCount: { color: '#ccc', marginLeft: 8, fontSize: 14, fontWeight: 'bold' },
   reactionMenu: { position: 'absolute', bottom: 35, left: 0, backgroundColor: '#222', borderRadius: 20, padding: 8, flexDirection: 'row', gap: 12, elevation: 5, borderWidth: 1, borderColor: '#444' },
   reactionCountBadge: { backgroundColor: '#333', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  reactionCountText: { color: '#fff', fontSize: 12 },
+  reactionCountText: { color: colors.text, fontSize: 12 },
   emptyText: { color: '#999', textAlign: 'center', marginTop: 40, fontSize: 16 },
   spoilerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(20,20,20,0.95)', borderRadius: 4, justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 4, padding: 8, zIndex: 10 },
-  spoilerOverlayText: { color: '#fff', fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
+  spoilerOverlayText: { color: colors.text, fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
   offlineBanner: { backgroundColor: '#FFD700', padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   offlineText: { color: '#000', fontWeight: 'bold', fontSize: 12 },
   badgeIconContainerFeed: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: '#1E1E1E', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, minHeight: 300, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#333', paddingBottom: 10 },
-  modalTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  modalTitle: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
   reactionListItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }
 });

@@ -4,8 +4,11 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useChats } from '../hooks/useChats';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function ChatsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const { chatRooms, isLoading } = useChats();
 
@@ -56,17 +59,17 @@ export function ChatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   header: { paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: '#1E1E1E', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#333' },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#E50914' },
   listContent: { padding: 16, gap: 16 },
   chatCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center' },
   moviePoster: { width: 50, height: 75, borderRadius: 8, marginRight: 16 },
   chatInfo: { flex: 1 },
-  movieTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  movieTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   chatSubtitle: { color: '#999', fontSize: 14 },
   emptyContainer: { alignItems: 'center', marginTop: 64 },
-  emptyText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginTop: 16 },
+  emptyText: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginTop: 16 },
   emptySubtext: { color: '#999', marginTop: 8, textAlign: 'center' }
 });

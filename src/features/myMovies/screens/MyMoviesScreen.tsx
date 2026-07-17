@@ -5,8 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMyMovies } from '../hooks/useMyMovies';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function MyMoviesScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -30,7 +33,7 @@ export function MyMoviesScreen() {
             {currentUser?.avatar_url ? (
               <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
             ) : (
-              <Ionicons name="person" size={20} color="#fff" />
+              <Ionicons name="person" size={20} color={colors.text} />
             )}
           </TouchableOpacity>
         </View>
@@ -96,10 +99,10 @@ export function MyMoviesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   filterButtonTextActive: {
-    color: '#fff',
+    color: colors.text,
   },
   headerTitle: {
     fontSize: 22,
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   reviewScore: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 10,
     fontWeight: 'bold',
   }

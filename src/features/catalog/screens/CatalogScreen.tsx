@@ -9,8 +9,11 @@ import { Skeleton } from '../../../components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useCatalog } from '../hooks/useCatalog';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function CatalogScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -54,7 +57,7 @@ export function CatalogScreen() {
           {userAvatarUrl ? (
             <Image source={{ uri: userAvatarUrl }} style={styles.avatarImage} />
           ) : (
-            <Ionicons name="person" size={20} color="#fff" />
+            <Ionicons name="person" size={20} color={colors.text} />
           )}
         </TouchableOpacity>
       </View>
@@ -100,7 +103,7 @@ export function CatalogScreen() {
             onChangeText={setSearchYear}
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleManualSearch}>
-            <Ionicons name="search" size={20} color="#fff" />
+            <Ionicons name="search" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -122,7 +125,7 @@ export function CatalogScreen() {
             style={[styles.genrePill, { backgroundColor: '#FF6600' }]}
             onPress={() => router.push('/upcoming')}
           >
-            <Text style={[styles.genreText, { color: '#fff', fontWeight: 'bold' }]}>📅 Em Breve</Text>
+            <Text style={[styles.genreText, { color: colors.text, fontWeight: 'bold' }]}>📅 Em Breve</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.genrePill}
@@ -154,7 +157,7 @@ export function CatalogScreen() {
         </View>
       ) : moviesList.length === 0 ? (
         <View style={[styles.center, {flex: 1, paddingBottom: 100}]}>
-          <Text style={{color: 'white'}}>Nenhum filme encontrado.</Text>
+          <Text style={{color: colors.text}}>Nenhum filme encontrado.</Text>
         </View>
       ) : (
         <FlatList
@@ -182,7 +185,7 @@ export function CatalogScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>✨ Recomendação IA</Text>
               <TouchableOpacity onPress={() => setIsAiModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#fff" />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={styles.modalScrollContent}>
@@ -205,24 +208,24 @@ export function CatalogScreen() {
           style={styles.chatFab}
           onPress={() => router.push('/ai-chat')}
         >
-          <Ionicons name="chatbubble-ellipses" size={28} color="#fff" />
+          <Ionicons name="chatbubble-ellipses" size={28} color={colors.text} />
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.fab}
           onPress={() => router.push('/roulette')}
         >
-          <Ionicons name="dice" size={32} color="#fff" />
+          <Ionicons name="dice" size={32} color={colors.text} />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
   },
   listContent: {
     paddingTop: 8,
@@ -278,16 +281,16 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    backgroundColor: '#121212',
-    color: '#fff',
+    backgroundColor: colors.border,
+    color: colors.text,
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 40,
   },
   yearInput: {
     width: 60,
-    backgroundColor: '#121212',
-    color: '#fff',
+    backgroundColor: colors.border,
+    color: colors.text,
     borderRadius: 8,
     paddingHorizontal: 8,
     height: 40,
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   genreTextActive: {
-    color: '#fff',
+    color: colors.text,
     fontWeight: 'bold',
   },
   modalOverlay: {
@@ -343,7 +346,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
   },
   modalTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -352,7 +355,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   aiText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     lineHeight: 24,
   },
@@ -410,7 +413,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   challengeText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: 'bold',
   }

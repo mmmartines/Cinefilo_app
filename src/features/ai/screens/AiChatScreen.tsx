@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 interface Message {
   id: string;
@@ -13,6 +14,8 @@ interface Message {
 }
 
 export function AiChatScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
@@ -70,7 +73,7 @@ export function AiChatScreen() {
       <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.botBubble]}>
         {!isUser && (
           <View style={styles.botIcon}>
-            <Ionicons name="film-outline" size={16} color="#fff" />
+            <Ionicons name="film-outline" size={16} color={colors.text} />
           </View>
         )}
         <Text style={styles.messageText}>{item.content}</Text>
@@ -82,7 +85,7 @@ export function AiChatScreen() {
     <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
+          <Ionicons name="arrow-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cinemateca IA</Text>
         <View style={{ width: 40 }} />
@@ -124,7 +127,7 @@ export function AiChatScreen() {
             onPress={sendMessage}
             disabled={!inputText.trim() || loading}
           >
-            <Ionicons name="send" size={20} color="#fff" />
+            <Ionicons name="send" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -132,8 +135,8 @@ export function AiChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
   backButton: { padding: 8 },
   headerTitle: { color: '#E50914', fontSize: 18, fontWeight: 'bold' },
@@ -143,11 +146,11 @@ const styles = StyleSheet.create({
   userBubble: { backgroundColor: '#E50914', alignSelf: 'flex-end', borderBottomRightRadius: 4 },
   botBubble: { backgroundColor: '#2A2A2A', alignSelf: 'flex-start', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#333', flexDirection: 'row', gap: 8 },
   botIcon: { backgroundColor: '#1E1E1E', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 2 },
-  messageText: { color: '#fff', fontSize: 15, lineHeight: 22, flexShrink: 1 },
+  messageText: { color: colors.text, fontSize: 15, lineHeight: 22, flexShrink: 1 },
   loadingContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 8 },
   loadingText: { color: '#999', fontSize: 13, fontStyle: 'italic' },
   inputContainer: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: '#333', gap: 12 },
-  input: { flex: 1, minHeight: 48, maxHeight: 100, backgroundColor: '#121212', borderRadius: 24, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: '#333' },
+  input: { flex: 1, minHeight: 48, maxHeight: 100, backgroundColor: colors.border, borderRadius: 24, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: '#333' },
   sendButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' },
   sendButtonDisabled: { backgroundColor: '#333' }
 });

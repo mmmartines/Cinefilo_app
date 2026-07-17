@@ -8,11 +8,11 @@ type ThemeMode = 'light' | 'dark' | 'system';
 interface ThemeContextData {
   themeMode: ThemeMode;
   isDark: boolean;
-  colors: typeof Colors.light;
+  colors: any;
   setThemeMode: (mode: ThemeMode) => void;
 }
 
-const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
+const ThemeContext = createContext<ThemeContextData>({ themeMode: 'system', isDark: true, colors: Colors.dark, setThemeMode: () => {} });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = useColorScheme();

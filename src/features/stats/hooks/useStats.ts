@@ -142,7 +142,7 @@ export function useStats() {
     const userLists = await database.getCustomLists(currentUser.id);
     let friendsCount = 0;
     try {
-      const { data: { session } } = await database.supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
         const response = await fetch(`${apiUrl}/api/friends`, {

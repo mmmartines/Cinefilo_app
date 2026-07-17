@@ -10,8 +10,11 @@ import { Image } from 'expo-image';
 import { MotiView } from 'moti';
 import { useStats } from '../hooks/useStats';
 import { useAlert } from '../../../contexts/AlertContext';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function StatsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
@@ -39,14 +42,14 @@ export function StatsScreen() {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity style={styles.shareButton} onPress={handleShareStats}>
-          <Ionicons name="share-social" size={20} color="#fff" />
+          <Ionicons name="share-social" size={20} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Estatísticas</Text>
         <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/profile')}>
           {userAvatarUrl ? (
             <Image source={{ uri: userAvatarUrl }} style={styles.avatarImage} />
           ) : (
-            <Ionicons name="person" size={20} color="#fff" />
+            <Ionicons name="person" size={20} color={colors.text} />
           )}
         </TouchableOpacity>
       </View>
@@ -59,10 +62,10 @@ export function StatsScreen() {
             <Text style={styles.wrappedBannerSubtitle}>Toque para ver seus destaques!</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={24} color="#fff" />
+        <Ionicons name="chevron-forward" size={24} color={colors.text} />
       </TouchableOpacity>
 
-      <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }} style={{ backgroundColor: '#121212' }}>
+      <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }} style={{ backgroundColor: colors.border }}>
         <View style={styles.gamificationCard}>
           <View style={styles.levelBadge}>
             <Text style={styles.levelBadgeText}>Nível {currentLevel}</Text>
@@ -252,8 +255,8 @@ export function StatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: '#1E1E1E' },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#E50914', textAlign: 'center' },
   shareButton: { padding: 8, backgroundColor: '#333', borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
@@ -261,41 +264,41 @@ const styles = StyleSheet.create({
   avatarImage: { width: 40, height: 40 },
   gamificationCard: { alignItems: 'center', backgroundColor: '#1E1E1E', margin: 16, padding: 24, borderRadius: 16, borderWidth: 1, borderColor: '#333' },
   rankLabel: { color: '#999', fontSize: 14, marginTop: 8, textTransform: 'uppercase', letterSpacing: 2 },
-  rankTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginTop: 4, textAlign: 'center' },
+  rankTitle: { color: colors.text, fontSize: 22, fontWeight: 'bold', marginTop: 4, textAlign: 'center' },
   levelBadge: { position: 'absolute', top: 16, right: 16, backgroundColor: '#E50914', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  levelBadgeText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  levelBadgeText: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
   xpContainer: { width: '100%', marginTop: 16, alignItems: 'center' },
   xpBarBackground: { width: '100%', height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   xpBarFill: { height: '100%', backgroundColor: '#FFD700', borderRadius: 4 },
   xpText: { color: '#ccc', fontSize: 12, fontWeight: 'bold' },
   statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 16 },
   statBox: { flex: 1, backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, alignItems: 'center' },
-  statValue: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 8 },
+  statValue: { color: colors.text, fontSize: 20, fontWeight: 'bold', marginTop: 8 },
   statLabel: { color: '#999', fontSize: 12, marginTop: 4 },
   podiumSection: { marginHorizontal: 16, marginTop: 16, padding: 16, backgroundColor: '#1E1E1E', borderRadius: 16 },
-  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
+  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   podiumContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', minHeight: 200, gap: 12 },
   podiumItem: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
   podiumBar: { width: '100%', borderTopLeftRadius: 8, borderTopRightRadius: 8, justifyContent: 'center', alignItems: 'center' },
   podiumPosition: { color: '#000', fontWeight: 'bold', fontSize: 20 },
   podiumCount: { color: '#ccc', fontWeight: 'bold', marginBottom: 8, fontSize: 16 },
-  podiumName: { color: '#fff', fontSize: 11, marginTop: 8, textAlign: 'center', minHeight: 32 },
+  podiumName: { color: colors.text, fontSize: 11, marginTop: 8, textAlign: 'center', minHeight: 32 },
   emptyText: { color: '#666', textAlign: 'center', fontStyle: 'italic' },
   radarContainer: { alignItems: 'center', justifyContent: 'center' },
   topEmotionsContainer: { marginTop: 24, alignItems: 'center', width: '100%' },
   topEmotionsTitle: { color: '#999', fontSize: 14, fontWeight: 'bold', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 },
   topEmotionsRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 16 },
   topEmotionBadge: { backgroundColor: '#333', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: '#444' },
-  topEmotionBadgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  topEmotionBadgeText: { color: colors.text, fontSize: 12, fontWeight: 'bold' },
   emotionPhrase: { color: '#E50914', fontSize: 16, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 },
   wrappedBanner: { backgroundColor: '#6200EE', margin: 16, marginBottom: 0, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', elevation: 5 },
   wrappedBannerContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  wrappedBannerTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  wrappedBannerTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   wrappedBannerSubtitle: { color: '#ccc', fontSize: 12 },
   badgesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center' },
   badgeItem: { alignItems: 'center', width: 100 },
   badgeItemInactive: { opacity: 0.5 },
   badgeIconContainer: { width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255, 215, 0, 0.2)', borderWidth: 2, borderColor: '#FFD700', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   badgeIconInactive: { backgroundColor: '#222', borderColor: '#444' },
-  badgeName: { color: '#fff', fontSize: 12, fontWeight: 'bold', textAlign: 'center' }
+  badgeName: { color: colors.text, fontSize: 12, fontWeight: 'bold', textAlign: 'center' }
 });

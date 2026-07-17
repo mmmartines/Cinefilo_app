@@ -9,12 +9,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { MotiView } from 'moti';
 import { useMovieDetails } from '../hooks/useMovieDetails';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 interface MovieScreenProps {
   movieId: string;
 }
 
 export function MovieScreen({ movieId }: MovieScreenProps) {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   
   const {
@@ -82,7 +85,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={28} color="#fff" />
+        <Ionicons name="arrow-back" size={28} color={colors.text} />
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
@@ -99,7 +102,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
               transition={300}
             />
             <LinearGradient
-              colors={['transparent', 'rgba(18,18,18,0.8)', '#121212']}
+              colors={['transparent', 'rgba(18,18,18,0.8)', colors.border]}
               style={styles.gradientOverlay}
             />
           </View>
@@ -126,7 +129,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
         >
           {trailerVideoKey && (
             <TouchableOpacity style={styles.trailerButton} onPress={() => setIsTrailerVisible(true)}>
-              <Ionicons name="play-circle" size={24} color="#fff" />
+              <Ionicons name="play-circle" size={24} color={colors.text} />
               <Text style={styles.trailerButtonText}>Assistir Trailer</Text>
             </TouchableOpacity>
           )}
@@ -144,7 +147,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                     const em = EMOTIONS.find(e => e.label === emotionLabel);
                     return (
                       <View key={index} style={[styles.tagBadge, { backgroundColor: em ? `${em.color}22` : '#333', borderColor: em?.color || '#666', borderWidth: 1 }]}>
-                        <Text style={[styles.tagTextBadge, { color: em?.color || '#fff' }]}>{emotionLabel}</Text>
+                        <Text style={[styles.tagTextBadge, { color: em?.color || colors.text }]}>{emotionLabel}</Text>
                       </View>
                     );
                   })}
@@ -193,7 +196,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
               style={[styles.actionButton, styles.flex1, isMovieWatched && styles.actionButtonWatched]}
               onPress={() => setIsRatingModalVisible(true)}
             >
-              <Ionicons name={isMovieWatched ? "checkmark-circle" : "add-circle-outline"} size={20} color="#fff" />
+              <Ionicons name={isMovieWatched ? "checkmark-circle" : "add-circle-outline"} size={20} color={colors.text} />
               <Text style={styles.actionButtonText}>
                 {isMovieWatched ? 'Já Assisti' : 'Já Assisti'}
               </Text>
@@ -205,7 +208,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                 onPress={isMovieInWatchlist ? handleRemoveMovieData : handleAddMovieToWatchlist}
               >
                 <Ionicons name={isMovieInWatchlist ? "bookmark" : "bookmark-outline"} size={20} color={isMovieInWatchlist ? "#fff" : "#E50914"} />
-                <Text style={[styles.actionButtonText, isMovieInWatchlist ? {color: '#fff'} : {color: '#E50914'}]}>
+                <Text style={[styles.actionButtonText, isMovieInWatchlist ? {color: colors.text} : {color: '#E50914'}]}>
                   {isMovieInWatchlist ? 'Salvo' : 'Quero Ver'}
                 </Text>
               </TouchableOpacity>
@@ -216,7 +219,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
             style={styles.chatButton}
             onPress={() => setIsChatModalVisible(true)}
           >
-            <Ionicons name="chatbubbles" size={24} color="#fff" />
+            <Ionicons name="chatbubbles" size={24} color={colors.text} />
             <Text style={styles.chatButtonText}>Discutir com Amigos</Text>
           </TouchableOpacity>
 
@@ -361,7 +364,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                 style={[styles.spoilerCheckbox, hasMovieSpoiler && styles.spoilerCheckboxActive]}
                 onPress={() => setHasMovieSpoiler(!hasMovieSpoiler)}
               >
-                {hasMovieSpoiler && <Ionicons name="checkmark" size={16} color="#fff" />}
+                {hasMovieSpoiler && <Ionicons name="checkmark" size={16} color={colors.text} />}
               </TouchableOpacity>
             </View>
 
@@ -413,7 +416,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                       }}
                     >
                       <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
-                        {isSelected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                        {isSelected && <Ionicons name="checkmark" size={14} color={colors.text} />}
                       </View>
                       <Text style={[styles.friendSelectName, isSelected && { color: '#E50914' }]}>{friend.name}</Text>
                     </TouchableOpacity>
@@ -428,7 +431,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalBtnSave} onPress={handleCreateMovieChatGroup} disabled={isCreatingChatGroup}>
                 {isCreatingChatGroup ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={colors.text} />
                 ) : (
                   <Text style={styles.modalBtnText}>Criar Chat</Text>
                 )}
@@ -442,7 +445,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
         <View style={styles.trailerModalOverlay}>
           <View style={styles.trailerModalContent}>
             <TouchableOpacity style={styles.closeTrailerButton} onPress={() => setIsTrailerVisible(false)}>
-              <Ionicons name="close" size={28} color="#fff" />
+              <Ionicons name="close" size={28} color={colors.text} />
             </TouchableOpacity>
             {Platform.OS === 'web' ? (
                <iframe 
@@ -467,8 +470,8 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212' },
+const getStyles = (colors: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.border },
   headerInfo: { padding: 24 },
   subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   year: { color: '#ccc' },
@@ -478,18 +481,18 @@ const styles = StyleSheet.create({
   backdrop: { width: '100%', height: 350 },
   gradientOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 150 },
   content: { padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   certBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  certText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
-  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
+  certText: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   overview: { color: '#ccc', fontSize: 16, lineHeight: 24 },
   trailerButton: { backgroundColor: '#333', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 8, marginBottom: 24 },
-  trailerButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  trailerButtonText: { color: colors.text, fontWeight: 'bold', fontSize: 16 },
   providersSection: { marginBottom: 24 },
   providersRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   providerLogo: { width: 48, height: 48, borderRadius: 8 },
   userReviewCard: { backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#E50914' },
-  userReviewTitle: { color: '#fff', fontWeight: 'bold', marginBottom: 8 },
+  userReviewTitle: { color: colors.text, fontWeight: 'bold', marginBottom: 8 },
   starsRowReview: { flexDirection: 'row', gap: 4, marginBottom: 8 },
   userReviewText: { color: '#ccc', fontStyle: 'italic' },
   buttonsRow: { flexDirection: 'row', gap: 12 },
@@ -498,50 +501,50 @@ const styles = StyleSheet.create({
   actionButtonWatched: { backgroundColor: '#00A859' },
   actionButtonWatchlist: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E50914' },
   actionButtonWatchlistActive: { backgroundColor: '#333', borderWidth: 1, borderColor: '#333' },
-  actionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  actionButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   chatButton: { backgroundColor: '#333', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderRadius: 12, marginTop: 16 },
-  chatButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  chatButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   carouselSection: { marginTop: 32 },
   carouselContainer: { gap: 16, paddingRight: 24 },
   actorCard: { width: 100 },
   actorImage: { width: 100, height: 150, borderRadius: 8, marginBottom: 8 },
-  actorName: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  actorName: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
   actorRole: { color: '#999', fontSize: 10 },
   recCard: { width: 120 },
   recImage: { width: 120, height: 180, borderRadius: 8 },
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: { backgroundColor: '#1E1E1E', width: '90%', borderRadius: 16, padding: 24, alignItems: 'center' },
-  modalTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold', marginBottom: 24 },
+  modalTitle: { color: colors.text, fontSize: 22, fontWeight: 'bold', marginBottom: 24 },
   starsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  reviewInput: { backgroundColor: '#121212', width: '100%', color: '#fff', borderRadius: 8, padding: 16, height: 100, textAlignVertical: 'top', marginBottom: 16 },
+  reviewInput: { backgroundColor: colors.border, width: '100%', color: colors.text, borderRadius: 8, padding: 16, height: 100, textAlignVertical: 'top', marginBottom: 16 },
   spoilerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', backgroundColor: '#2A2A2A', padding: 12, borderRadius: 8, marginBottom: 24 },
-  spoilerLabel: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  spoilerLabel: { color: colors.text, fontSize: 14, fontWeight: 'bold' },
   spoilerCheckbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#666', alignItems: 'center', justifyContent: 'center' },
   spoilerCheckboxActive: { backgroundColor: '#E50914', borderColor: '#E50914' },
   modalButtons: { flexDirection: 'row', gap: 16, width: '100%' },
   modalCancel: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#333', alignItems: 'center' },
-  modalCancelText: { color: '#fff', fontWeight: 'bold' },
+  modalCancelText: { color: colors.text, fontWeight: 'bold' },
   modalRemove: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#222', alignItems: 'center', borderWidth: 1, borderColor: '#E50914' },
   modalRemoveText: { color: '#E50914', fontWeight: 'bold' },
   modalSave: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#E50914', alignItems: 'center' },
-  modalSaveText: { color: '#fff', fontWeight: 'bold' },
-  modalSubtitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12, alignSelf: 'flex-start' },
+  modalSaveText: { color: colors.text, fontWeight: 'bold' },
+  modalSubtitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 12, alignSelf: 'flex-start' },
   emotionsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
   emotionChip: { borderWidth: 1, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12 },
   emotionChipText: { fontSize: 12, fontWeight: 'bold' },
   tagsContainerReview: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   tagBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 },
-  tagTextBadge: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  modalInput: { backgroundColor: '#121212', color: '#fff', borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#333', marginBottom: 24, width: '100%' },
+  tagTextBadge: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
+  modalInput: { backgroundColor: colors.border, color: colors.text, borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#333', marginBottom: 24, width: '100%' },
   friendSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' },
   friendSelectRowActive: { backgroundColor: 'rgba(229, 9, 20, 0.05)' },
   checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#666', marginRight: 12, alignItems: 'center', justifyContent: 'center' },
   checkboxActive: { backgroundColor: '#E50914', borderColor: '#E50914' },
-  friendSelectName: { color: '#fff', fontSize: 16 },
+  friendSelectName: { color: colors.text, fontSize: 16 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, width: '100%' },
   modalBtnCancel: { padding: 12 },
   modalBtnSave: { backgroundColor: '#E50914', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  modalBtnText: { color: '#fff', fontWeight: 'bold' },
+  modalBtnText: { color: colors.text, fontWeight: 'bold' },
   trailerModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', paddingTop: Platform.OS === 'android' ? 60 : 40 },
   trailerModalContent: { width: '100%', alignItems: 'center' },
   closeTrailerButton: { alignSelf: 'flex-end', marginRight: 16, marginBottom: 16, padding: 8 }

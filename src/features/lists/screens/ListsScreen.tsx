@@ -7,8 +7,11 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { useLists } from '../hooks/useLists';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function ListsScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -73,7 +76,7 @@ export function ListsScreen() {
             {currentUser?.avatar_url ? (
               <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
             ) : (
-              <Ionicons name="person" size={20} color="#fff" />
+              <Ionicons name="person" size={20} color={colors.text} />
             )}
           </TouchableOpacity>
         </View>
@@ -100,7 +103,7 @@ export function ListsScreen() {
           </View>
         ) : (
           <AnimatedButton style={styles.btnCreate} onPress={() => setIsCreatingList(true)}>
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Ionicons name="add-circle-outline" size={20} color={colors.text} />
             <Text style={styles.btnCreateText}>Criar Nova Lista</Text>
           </AnimatedButton>
         )}
@@ -138,10 +141,10 @@ export function ListsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -184,7 +187,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnCreateText: {
-    color: '#fff',
+    color: colors.text,
     fontWeight: 'bold',
   },
   createForm: {
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: '#1E1E1E',
-    color: '#fff',
+    color: colors.text,
     borderRadius: 8,
     paddingHorizontal: 16,
   },
@@ -233,7 +236,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   listTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },

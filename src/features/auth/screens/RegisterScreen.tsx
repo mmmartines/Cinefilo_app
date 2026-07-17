@@ -5,8 +5,11 @@ import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { useRegisterForm } from '../hooks/useRegisterForm';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function RegisterScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const {
     name,
@@ -99,10 +102,10 @@ export function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
     padding: 24,
     justifyContent: 'center',
   },
@@ -113,7 +116,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
@@ -137,7 +140,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
   },
   registerButton: {
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   registerButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.text,
   },
   socialButtonText: {
     color: '#000',
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   footerText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 12,
     marginTop: 4,
   },

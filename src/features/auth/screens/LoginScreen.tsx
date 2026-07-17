@@ -4,8 +4,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { useLoginForm } from '../hooks/useLoginForm';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 
 export function LoginScreen() {
+  const { colors } = useAppTheme();
+  const styles = getStyles(colors);
   const router = useRouter();
   const {
     email,
@@ -74,7 +77,7 @@ export function LoginScreen() {
       </View>
 
       <View style={styles.socialContainer}>
-        <TouchableOpacity style={[styles.socialButton, { backgroundColor: '#fff', opacity: isLoading ? 0.7 : 1 }]} disabled={isLoading} onPress={() => handleSocialLogin('google')}>
+        <TouchableOpacity style={[styles.socialButton, { backgroundColor: colors.text, opacity: isLoading ? 0.7 : 1 }]} disabled={isLoading} onPress={() => handleSocialLogin('google')}>
           {isLoading ? <ActivityIndicator color="#000" /> : <FontAwesome5 name="google" color="#DB4437" size={20} />}
           <Text style={[styles.socialButtonText, { color: '#000' }]}>{isLoading ? 'Entrando...' : 'Continuar com Google'}</Text>
         </TouchableOpacity>
@@ -88,10 +91,10 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.border,
     padding: 24,
     justifyContent: 'center',
   },
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
   },
   loginButton: {
@@ -139,7 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   loginButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -177,7 +180,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   socialButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 12,
@@ -188,7 +191,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   footerText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 12,
     marginTop: 4,
   },
