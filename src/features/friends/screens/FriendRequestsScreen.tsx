@@ -35,7 +35,7 @@ export function FriendRequestsScreen() {
             <Image source={{ uri: avatar }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Ionicons name="person" size={24} color="#666" />
+              <Ionicons name="person" size={24} color={colors.textSecondary} />
             </View>
           )}
           <View style={styles.nameContainer}>
@@ -129,25 +129,25 @@ const getStyles = (colors: any) => StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
   headerTitle: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
-  tabs: { flexDirection: 'row', paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
+  tabs: { flexDirection: 'row', paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: '#E50914' },
-  tabText: { color: '#999', fontWeight: 'bold' },
+  tabText: { color: colors.textSecondary, fontWeight: 'bold' },
   activeTabText: { color: '#E50914' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   listContent: { padding: 16, gap: 16 },
   emptyContainer: { alignItems: 'center', marginTop: 64, gap: 16 },
-  emptyText: { color: '#666', fontSize: 16 },
-  requestCard: { backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#333' },
+  emptyText: { color: colors.textSecondary, fontSize: 16 },
+  requestCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colors.border },
   userInfo: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: { width: 48, height: 48, borderRadius: 24 },
-  avatarPlaceholder: { backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  avatarPlaceholder: { backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   nameContainer: { flex: 1 },
   userName: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
-  userTag: { color: '#999', fontSize: 12 },
+  userTag: { color: colors.textSecondary, fontSize: 12 },
   actionsContainer: { flexDirection: 'row', gap: 8 },
   acceptBtn: { backgroundColor: '#4CAF50', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  declineBtn: { backgroundColor: '#333', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  cancelBtn: { backgroundColor: '#333', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  cancelBtnText: { color: '#ccc', fontWeight: 'bold' }
+  declineBtn: { backgroundColor: colors.border, width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  cancelBtn: { backgroundColor: colors.border, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  cancelBtnText: { color: colors.text, fontWeight: 'bold' }
 });

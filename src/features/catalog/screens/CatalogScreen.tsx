@@ -192,7 +192,7 @@ export function CatalogScreen() {
               {isAiLoading ? (
                 <View style={{ padding: 40, alignItems: 'center' }}>
                   <ActivityIndicator size="large" color="#6200EE" />
-                  <Text style={{ color: '#ccc', marginTop: 16 }}>Analisando seu gosto cinematográfico...</Text>
+                  <Text style={{ color: colors.text, marginTop: 16 }}>Analisando seu gosto cinematográfico...</Text>
                 </View>
               ) : (
                 <Text style={styles.aiText}>{aiRecommendationText}</Text>
@@ -233,7 +233,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   headerTitle: {
     fontSize: 22,
@@ -243,7 +243,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   profileIcon: {
     padding: 8,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -272,7 +272,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   filterContainer: {
     paddingHorizontal: 16,
     paddingBottom: 8,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   searchRow: {
     flexDirection: 'row',
@@ -311,14 +311,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     marginRight: 8,
   },
   genrePillActive: {
     backgroundColor: '#E50914',
   },
   genreText: {
-    color: '#ccc',
+    color: colors.text,
     fontSize: 12,
   },
   genreTextActive: {
@@ -332,10 +332,10 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
     maxHeight: '80%',
   },
   modalHeader: {
@@ -343,7 +343,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border,
   },
   modalTitle: {
     color: colors.text,

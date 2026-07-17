@@ -137,20 +137,20 @@ export function AiChatScreen() {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   backButton: { padding: 8 },
   headerTitle: { color: '#E50914', fontSize: 18, fontWeight: 'bold' },
   chatContainer: { flex: 1 },
   listContent: { padding: 16, gap: 16 },
   messageBubble: { maxWidth: '85%', padding: 12, borderRadius: 16 },
   userBubble: { backgroundColor: '#E50914', alignSelf: 'flex-end', borderBottomRightRadius: 4 },
-  botBubble: { backgroundColor: '#2A2A2A', alignSelf: 'flex-start', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#333', flexDirection: 'row', gap: 8 },
-  botIcon: { backgroundColor: '#1E1E1E', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 2 },
+  botBubble: { backgroundColor: colors.backgroundElement, alignSelf: 'flex-start', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', gap: 8 },
+  botIcon: { backgroundColor: colors.backgroundElement, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginTop: 2 },
   messageText: { color: colors.text, fontSize: 15, lineHeight: 22, flexShrink: 1 },
   loadingContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingBottom: 16, gap: 8 },
-  loadingText: { color: '#999', fontSize: 13, fontStyle: 'italic' },
-  inputContainer: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: '#333', gap: 12 },
-  input: { flex: 1, minHeight: 48, maxHeight: 100, backgroundColor: colors.border, borderRadius: 24, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: '#333' },
+  loadingText: { color: colors.textSecondary, fontSize: 13, fontStyle: 'italic' },
+  inputContainer: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingTop: 12, backgroundColor: colors.backgroundElement, borderTopWidth: 1, borderTopColor: colors.border, gap: 12 },
+  input: { flex: 1, minHeight: 48, maxHeight: 100, backgroundColor: colors.border, borderRadius: 24, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, color: colors.text, fontSize: 15, borderWidth: 1, borderColor: colors.border },
   sendButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' },
-  sendButtonDisabled: { backgroundColor: '#333' }
+  sendButtonDisabled: { backgroundColor: colors.border }
 });

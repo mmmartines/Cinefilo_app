@@ -78,7 +78,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: colors.border,
   },
   iconContainer: {
     width: 100,
@@ -98,7 +98,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: '#999',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },

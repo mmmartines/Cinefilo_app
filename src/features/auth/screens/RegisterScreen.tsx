@@ -32,7 +32,7 @@ export function RegisterScreen() {
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
-          <Ionicons name="person" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="person" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
             style={styles.input}
             placeholder="Nome completo"
@@ -43,7 +43,7 @@ export function RegisterScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="mail" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="mail" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
             style={styles.input}
             placeholder="E-mail"
@@ -56,7 +56,7 @@ export function RegisterScreen() {
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="lock-closed" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
             style={styles.input}
             placeholder="Senha"
@@ -121,7 +121,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
+    color: colors.textSecondary,
   },
   form: {
     width: '100%',
@@ -129,7 +129,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 16,
@@ -157,7 +157,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   backText: {
-    color: '#999',
+    color: colors.textSecondary,
     textAlign: 'center',
     fontSize: 15,
   },
@@ -173,10 +173,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    color: '#666',
+    color: colors.textSecondary,
     paddingHorizontal: 16,
   },
   socialButton: {

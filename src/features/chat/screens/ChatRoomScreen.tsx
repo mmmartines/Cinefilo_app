@@ -37,7 +37,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
               <Image source={{ uri: item.user_avatar }} style={styles.messageAvatar} />
             ) : (
               <View style={styles.messageAvatarPlaceholder}>
-                <Ionicons name="person" size={16} color="#666" />
+                <Ionicons name="person" size={16} color={colors.textSecondary} />
               </View>
             )}
           </View>
@@ -109,7 +109,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: '#1E1E1E', borderBottomWidth: 1, borderBottomColor: '#333' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: colors.backgroundElement, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 8 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -119,15 +119,15 @@ const getStyles = (colors: any) => StyleSheet.create({
   otherMessageRow: { justifyContent: 'flex-start' },
   messageAvatarContainer: { marginRight: 8 },
   messageAvatar: { width: 32, height: 32, borderRadius: 16 },
-  messageAvatarPlaceholder: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  messageAvatarPlaceholder: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   messageBubble: { maxWidth: '75%', padding: 12, borderRadius: 16 },
   myBubble: { backgroundColor: '#E50914', borderBottomRightRadius: 4 },
-  otherBubble: { backgroundColor: '#333', borderBottomLeftRadius: 4 },
-  senderName: { color: '#aaa', fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
+  otherBubble: { backgroundColor: colors.border, borderBottomLeftRadius: 4 },
+  senderName: { color: colors.textSecondary, fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
   messageText: { color: colors.text, fontSize: 16 },
   timestamp: { color: 'rgba(255,255,255,0.5)', fontSize: 10, alignSelf: 'flex-end', marginTop: 4 },
-  inputContainer: { flexDirection: 'row', padding: 16, backgroundColor: '#1E1E1E', borderTopWidth: 1, borderTopColor: '#333', alignItems: 'flex-end', gap: 12 },
-  input: { flex: 1, backgroundColor: colors.border, color: colors.text, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, maxHeight: 100, borderWidth: 1, borderColor: '#333' },
+  inputContainer: { flexDirection: 'row', padding: 16, backgroundColor: colors.backgroundElement, borderTopWidth: 1, borderTopColor: colors.border, alignItems: 'flex-end', gap: 12 },
+  input: { flex: 1, backgroundColor: colors.border, color: colors.text, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, maxHeight: 100, borderWidth: 1, borderColor: colors.border },
   sendBtn: { backgroundColor: '#E50914', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 2 },
-  emptyText: { color: '#666', textAlign: 'center', marginTop: 40 }
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: 40 }
 });

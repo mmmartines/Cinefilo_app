@@ -56,11 +56,11 @@ export function ProfileScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meu Perfil</Text>
         <TouchableOpacity onPress={handleUserLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" color="#fff" size={24} />
+          <Ionicons name="log-out-outline" color={colors.text} size={24} />
         </TouchableOpacity>
       </View>
 
@@ -71,14 +71,14 @@ export function ProfileScreen() {
               <Image source={{ uri: userAvatarUrl }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={40} color="#666" />
+                <Ionicons name="person" size={40} color={colors.textSecondary} />
               </View>
             )}
-            <View style={[styles.editAvatarBadge, userProvider === 'google' && { backgroundColor: '#fff' }]}>
+            <View style={[styles.editAvatarBadge, userProvider === 'google' && { backgroundColor: colors.text }]}>
               {userProvider === 'google' ? (
                 <Ionicons name="logo-google" size={14} color="#DB4437" />
               ) : (
-                <Ionicons name="camera" size={14} color="#fff" />
+                <Ionicons name="camera" size={14} color={colors.text} />
               )}
             </View>
           </TouchableOpacity>
@@ -106,9 +106,9 @@ export function ProfileScreen() {
       <View style={styles.form}>
         <Text style={styles.label}>E-mail (Não pode ser alterado)</Text>
         <View style={[styles.inputContainer, styles.disabledInput]}>
-          <Ionicons name="mail" color="#666" size={20} style={styles.icon} />
+          <Ionicons name="mail" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
-            style={[styles.input, { color: '#666' }]}
+            style={[styles.input, { color: colors.textSecondary }]}
             value={userProfile.email}
             editable={false}
           />
@@ -116,7 +116,7 @@ export function ProfileScreen() {
 
         <Text style={styles.label}>Nome Completo</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="person" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="person" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
             style={styles.input}
             value={userName}
@@ -126,12 +126,12 @@ export function ProfileScreen() {
 
         <Text style={styles.label}>Data de Nascimento</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="calendar" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="calendar" color={colors.textSecondary} size={20} style={styles.icon} />
           <TouchableOpacity 
             style={{ flex: 1, justifyContent: 'center' }} 
             onPress={() => setIsDatePickerVisible(true)}
           >
-            <Text style={{ color: userBirthdate ? '#fff' : '#666', fontSize: 16 }}>
+            <Text style={{ color: userBirthdate ? colors.text : colors.textSecondary, fontSize: 16 }}>
               {userBirthdate || "Data de Nascimento"}
             </Text>
           </TouchableOpacity>
@@ -149,7 +149,7 @@ export function ProfileScreen() {
 
         <Text style={styles.label}>Senha</Text>
         <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed" color="#999" size={20} style={styles.icon} />
+          <Ionicons name="lock-closed" color={colors.textSecondary} size={20} style={styles.icon} />
           <TextInput
             style={styles.input}
             value={userPassword}
@@ -193,8 +193,8 @@ export function ProfileScreen() {
             <Switch
               value={isNotificationsEnabled}
               onValueChange={handleToggleNotifications}
-              trackColor={{ false: '#333', true: '#E50914' }}
-              thumbColor={'#fff'}
+              trackColor={{ false: colors.border, true: '#E50914' }}
+              thumbColor={colors.text}
             />
           </View>
         </View>
@@ -206,7 +206,7 @@ export function ProfileScreen() {
             onPress={() => setIsDeleteModalVisible(true)}
             disabled={isProfileLoading}
           >
-            <Ionicons name="trash-outline" size={20} color="#fff" />
+            <Ionicons name="trash-outline" size={20} color={colors.text} />
             <Text style={styles.deleteButtonText}>Deletar Minha Conta</Text>
           </TouchableOpacity>
         </View>
@@ -267,40 +267,40 @@ const getStyles = (colors: any) => StyleSheet.create({
   backButton: { padding: 8 },
   logoutButton: { padding: 8 },
   tagSection: { paddingHorizontal: 24, marginBottom: 24 },
-  tagBox: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: '#333' },
+  tagBox: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: colors.border },
   avatarContainer: { alignItems: 'center', marginBottom: 24 },
   avatarWrapper: { width: 100, height: 100, borderRadius: 50, position: 'relative' },
   avatarImage: { width: 100, height: 100, borderRadius: 50 },
-  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  avatarPlaceholder: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   editAvatarBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#E50914', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#121212' },
-  tagLabel: { color: '#999', fontSize: 14, marginBottom: 4 },
+  tagLabel: { color: colors.textSecondary, fontSize: 14, marginBottom: 4 },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
   tagText: { color: '#E50914', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 },
   form: { paddingHorizontal: 24 },
-  label: { color: '#999', marginBottom: 8, fontSize: 14 },
+  label: { color: colors.textSecondary, marginBottom: 8, fontSize: 14 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.backgroundElement, borderRadius: 12, marginBottom: 20, paddingHorizontal: 16, height: 56 },
-  disabledInput: { backgroundColor: '#111', borderColor: '#333', borderWidth: 1 },
+  disabledInput: { backgroundColor: '#111', borderColor: colors.border, borderWidth: 1 },
   icon: { marginRight: 12 },
   input: { flex: 1, color: colors.text, fontSize: 16 },
   saveButton: { backgroundColor: '#E50914', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   saveButtonText: { color: colors.text, fontSize: 18, fontWeight: 'bold' },
-  settingsSection: { marginTop: 16, marginBottom: 16, paddingTop: 24, borderTopWidth: 1, borderTopColor: '#333' },
+  settingsSection: { marginTop: 16, marginBottom: 16, paddingTop: 24, borderTopWidth: 1, borderTopColor: colors.border },
   settingsTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 16 },
   settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   settingLabel: { color: colors.text, fontSize: 16 },
-  settingSubLabel: { color: '#999', fontSize: 12, marginTop: 4 },
-  dangerZone: { marginTop: 24, paddingTop: 24, borderTopWidth: 1, borderTopColor: '#333', marginBottom: 40 },
+  settingSubLabel: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  dangerZone: { marginTop: 24, paddingTop: 24, borderTopWidth: 1, borderTopColor: colors.border, marginBottom: 40 },
   dangerTitle: { color: '#E50914', fontSize: 16, fontWeight: 'bold', marginBottom: 16 },
   deleteButton: { flexDirection: 'row', backgroundColor: 'rgba(229, 9, 20, 0.2)', borderWidth: 1, borderColor: '#E50914', height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', gap: 12 },
   deleteButtonText: { color: '#E50914', fontSize: 16, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-  modalContent: { backgroundColor: colors.backgroundElement, borderRadius: 16, padding: 24, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: '#333' },
+  modalContent: { backgroundColor: colors.backgroundElement, borderRadius: 16, padding: 24, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   modalTitle: { color: '#E50914', fontSize: 24, fontWeight: 'bold', marginTop: 16, marginBottom: 8 },
   modalText: { color: colors.textSecondary, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
   modalLabel: { color: colors.text, alignSelf: 'flex-start', marginBottom: 8, fontWeight: 'bold' },
-  modalInput: { backgroundColor: '#111', borderWidth: 1, borderColor: '#333', color: colors.text, width: '100%', height: 48, borderRadius: 8, paddingHorizontal: 16, marginBottom: 24, textAlign: 'center', fontSize: 16 },
+  modalInput: { backgroundColor: '#111', borderWidth: 1, borderColor: colors.border, color: colors.text, width: '100%', height: 48, borderRadius: 8, paddingHorizontal: 16, marginBottom: 24, textAlign: 'center', fontSize: 16 },
   modalButtons: { flexDirection: 'row', gap: 12, width: '100%' },
-  modalCancelBtn: { flex: 1, height: 48, borderRadius: 8, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  modalCancelBtn: { flex: 1, height: 48, borderRadius: 8, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   modalCancelText: { color: colors.text, fontWeight: 'bold' },
   modalDeleteBtn: { flex: 1, height: 48, borderRadius: 8, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' },
   modalDeleteBtnDisabled: { backgroundColor: '#555' },

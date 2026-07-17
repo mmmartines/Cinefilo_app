@@ -48,7 +48,7 @@ export function NotificationBell() {
             <Image source={{ uri: item.actor_avatar }} style={styles.avatar} />
          ) : (
             <View style={styles.avatarPlaceholder}>
-               <Ionicons name="person" size={24} color="#666" />
+               <Ionicons name="person" size={24} color={colors.textSecondary} />
             </View>
          )}
          <View style={styles.content}>
@@ -105,14 +105,14 @@ const getStyles = (colors: any) => StyleSheet.create({
   badgeText: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
   modalContainer: { backgroundColor: colors.backgroundElement, borderTopLeftRadius: 20, borderTopRightRadius: 20, height: '80%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#333' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
-  notificationItem: { flexDirection: 'row', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' },
-  unreadItem: { backgroundColor: '#2a2a2a' },
+  notificationItem: { flexDirection: 'row', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.backgroundElement },
+  unreadItem: { backgroundColor: colors.backgroundElement },
   avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },
-  avatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  avatarPlaceholder: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   content: { flex: 1, justifyContent: 'center' },
   messageText: { color: colors.text, fontSize: 14, flexShrink: 1 },
-  timeText: { color: '#888', fontSize: 12 },
-  emptyText: { color: '#888', textAlign: 'center', marginTop: 40, fontSize: 16 }
+  timeText: { color: colors.textSecondary, fontSize: 12 },
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: 40, fontSize: 16 }
 });

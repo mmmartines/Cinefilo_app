@@ -110,11 +110,11 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   profileIcon: {
     padding: 8,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -136,14 +136,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     alignItems: 'center',
   },
   filterButtonActive: {
     backgroundColor: '#E50914',
   },
   filterButtonText: {
-    color: '#999',
+    color: colors.textSecondary,
     fontWeight: 'bold',
   },
   filterButtonTextActive: {
@@ -162,7 +162,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: 24,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 16,
     textAlign: 'center',
@@ -178,7 +178,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   card: {
     flex: 1,
     margin: 4,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
     overflow: 'hidden',
   },

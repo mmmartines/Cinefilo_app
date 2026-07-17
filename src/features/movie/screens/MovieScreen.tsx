@@ -146,7 +146,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                   {selectedMovieEmotions.map((emotionLabel, index) => {
                     const em = EMOTIONS.find(e => e.label === emotionLabel);
                     return (
-                      <View key={index} style={[styles.tagBadge, { backgroundColor: em ? `${em.color}22` : '#333', borderColor: em?.color || '#666', borderWidth: 1 }]}>
+                      <View key={index} style={[styles.tagBadge, { backgroundColor: em ? `${em.color}22` : colors.border, borderColor: em?.color || colors.textSecondary, borderWidth: 1 }]}>
                         <Text style={[styles.tagTextBadge, { color: em?.color || colors.text }]}>{emotionLabel}</Text>
                       </View>
                     );
@@ -181,7 +181,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                         contentFit="cover"
                         transition={200}
                       />
-                      <Text style={{ color: '#aaa', fontSize: 10, maxWidth: 60, textAlign: 'center' }} numberOfLines={1}>
+                      <Text style={{ color: colors.textSecondary, fontSize: 10, maxWidth: 60, textAlign: 'center' }} numberOfLines={1}>
                         {provider.provider_name}
                       </Text>
                     </View>
@@ -399,7 +399,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
             
             <ScrollView style={{ width: '100%', maxHeight: 200, marginBottom: 24 }}>
               {friendsList.length === 0 ? (
-                <Text style={{ color: '#999', textAlign: 'center', marginTop: 16 }}>Nenhum amigo encontrado.</Text>
+                <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 16 }}>Nenhum amigo encontrado.</Text>
               ) : (
                 friendsList.map(friend => {
                   const isSelected = selectedFriends.some(f => f.id === friend.id);
@@ -474,9 +474,9 @@ const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
   headerInfo: { padding: 24 },
   subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  year: { color: '#ccc' },
-  separator: { color: '#ccc' },
-  runtime: { color: '#ccc' },
+  year: { color: colors.text },
+  separator: { color: colors.text },
+  runtime: { color: colors.text },
   backButton: { position: 'absolute', top: 48, left: 16, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 20 },
   backdrop: { width: '100%', height: 350 },
   gradientOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 150 },
@@ -485,46 +485,46 @@ const getStyles = (colors: any) => StyleSheet.create({
   certBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
   certText: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
-  overview: { color: '#ccc', fontSize: 16, lineHeight: 24 },
-  trailerButton: { backgroundColor: '#333', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 8, marginBottom: 24 },
+  overview: { color: colors.text, fontSize: 16, lineHeight: 24 },
+  trailerButton: { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 8, marginBottom: 24 },
   trailerButtonText: { color: colors.text, fontWeight: 'bold', fontSize: 16 },
   providersSection: { marginBottom: 24 },
   providersRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   providerLogo: { width: 48, height: 48, borderRadius: 8 },
-  userReviewCard: { backgroundColor: '#1E1E1E', padding: 16, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#E50914' },
+  userReviewCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 12, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#E50914' },
   userReviewTitle: { color: colors.text, fontWeight: 'bold', marginBottom: 8 },
   starsRowReview: { flexDirection: 'row', gap: 4, marginBottom: 8 },
-  userReviewText: { color: '#ccc', fontStyle: 'italic' },
+  userReviewText: { color: colors.text, fontStyle: 'italic' },
   buttonsRow: { flexDirection: 'row', gap: 12 },
   flex1: { flex: 1 },
   actionButton: { backgroundColor: '#E50914', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14, borderRadius: 12 },
   actionButtonWatched: { backgroundColor: '#00A859' },
   actionButtonWatchlist: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E50914' },
-  actionButtonWatchlistActive: { backgroundColor: '#333', borderWidth: 1, borderColor: '#333' },
+  actionButtonWatchlistActive: { backgroundColor: colors.border, borderWidth: 1, borderColor: colors.border },
   actionButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
-  chatButton: { backgroundColor: '#333', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderRadius: 12, marginTop: 16 },
+  chatButton: { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderRadius: 12, marginTop: 16 },
   chatButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   carouselSection: { marginTop: 32 },
   carouselContainer: { gap: 16, paddingRight: 24 },
   actorCard: { width: 100 },
   actorImage: { width: 100, height: 150, borderRadius: 8, marginBottom: 8 },
   actorName: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
-  actorRole: { color: '#999', fontSize: 10 },
+  actorRole: { color: colors.textSecondary, fontSize: 10 },
   recCard: { width: 120 },
   recImage: { width: 120, height: 180, borderRadius: 8 },
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent: { backgroundColor: '#1E1E1E', width: '90%', borderRadius: 16, padding: 24, alignItems: 'center' },
+  modalContent: { backgroundColor: colors.backgroundElement, width: '90%', borderRadius: 16, padding: 24, alignItems: 'center' },
   modalTitle: { color: colors.text, fontSize: 22, fontWeight: 'bold', marginBottom: 24 },
   starsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   reviewInput: { backgroundColor: colors.border, width: '100%', color: colors.text, borderRadius: 8, padding: 16, height: 100, textAlignVertical: 'top', marginBottom: 16 },
-  spoilerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', backgroundColor: '#2A2A2A', padding: 12, borderRadius: 8, marginBottom: 24 },
+  spoilerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', backgroundColor: colors.backgroundElement, padding: 12, borderRadius: 8, marginBottom: 24 },
   spoilerLabel: { color: colors.text, fontSize: 14, fontWeight: 'bold' },
-  spoilerCheckbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: '#666', alignItems: 'center', justifyContent: 'center' },
+  spoilerCheckbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: colors.textSecondary, alignItems: 'center', justifyContent: 'center' },
   spoilerCheckboxActive: { backgroundColor: '#E50914', borderColor: '#E50914' },
   modalButtons: { flexDirection: 'row', gap: 16, width: '100%' },
-  modalCancel: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#333', alignItems: 'center' },
+  modalCancel: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: colors.border, alignItems: 'center' },
   modalCancelText: { color: colors.text, fontWeight: 'bold' },
-  modalRemove: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#222', alignItems: 'center', borderWidth: 1, borderColor: '#E50914' },
+  modalRemove: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: colors.border, alignItems: 'center', borderWidth: 1, borderColor: '#E50914' },
   modalRemoveText: { color: '#E50914', fontWeight: 'bold' },
   modalSave: { flex: 1, padding: 16, borderRadius: 8, backgroundColor: '#E50914', alignItems: 'center' },
   modalSaveText: { color: colors.text, fontWeight: 'bold' },
@@ -535,10 +535,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   tagsContainerReview: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   tagBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 },
   tagTextBadge: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
-  modalInput: { backgroundColor: colors.border, color: colors.text, borderRadius: 8, padding: 16, borderWidth: 1, borderColor: '#333', marginBottom: 24, width: '100%' },
-  friendSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' },
+  modalInput: { backgroundColor: colors.border, color: colors.text, borderRadius: 8, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 24, width: '100%' },
+  friendSelectRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   friendSelectRowActive: { backgroundColor: 'rgba(229, 9, 20, 0.05)' },
-  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#666', marginRight: 12, alignItems: 'center', justifyContent: 'center' },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: colors.textSecondary, marginRight: 12, alignItems: 'center', justifyContent: 'center' },
   checkboxActive: { backgroundColor: '#E50914', borderColor: '#E50914' },
   friendSelectName: { color: colors.text, fontSize: 16 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16, width: '100%' },

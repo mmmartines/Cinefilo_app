@@ -35,13 +35,13 @@ export function FeedScreen() {
       case 'love': return { name: 'heart', color: '#E50914' };
       case 'funny': return { name: 'happy', color: '#F5C518' };
       case 'sad': return { name: 'sad', color: '#3498db' };
-      default: return { name: 'thumbs-up-outline', color: '#ccc' };
+      default: return { name: 'thumbs-up-outline', color: colors.text };
     }
   };
 
   const renderActivityItem = ({ item }: { item: any }) => {
     const myReaction = currentUser && item.reactions?.find((r: any) => r.user_id === currentUser.id);
-    const reactionProps = myReaction ? getReactionIcon(myReaction.type) : { name: 'thumbs-up-outline', color: '#ccc' };
+    const reactionProps = myReaction ? getReactionIcon(myReaction.type) : { name: 'thumbs-up-outline', color: colors.text };
 
     let actionText = '';
     if (item.action === 'watched') actionText = 'assistiu ao filme';
@@ -63,7 +63,7 @@ export function FeedScreen() {
               <Image source={{ uri: item.user_avatar }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={20} color="#666" />
+                <Ionicons name="person" size={20} color={colors.textSecondary} />
               </View>
             )}
             <View style={styles.headerText}>
@@ -91,8 +91,8 @@ export function FeedScreen() {
               </View>
             </View>
           ) : item.action === 'unlocked_badge' && item.badge ? (
-            <View style={[styles.movieContent, { alignItems: 'center', borderColor: item.badge.color || '#333', borderWidth: 1 }]}>
-              <View style={[styles.badgeIconContainerFeed, { backgroundColor: item.badge.color ? `${item.badge.color}22` : '#333' }]}>
+            <View style={[styles.movieContent, { alignItems: 'center', borderColor: item.badge.color || colors.border, borderWidth: 1 }]}>
+              <View style={[styles.badgeIconContainerFeed, { backgroundColor: item.badge.color ? `${item.badge.color}22` : colors.border }]}>
                 <Ionicons name={item.badge.icon as any} size={32} color={item.badge.color || colors.text} />
               </View>
               <View style={styles.movieInfo}>
@@ -226,7 +226,7 @@ export function FeedScreen() {
                  </TouchableOpacity>
                </View>
                <ScrollView style={{flex: 1}}>
-                  {modalReactions && modalReactions.length === 0 && <Text style={{color: '#999', textAlign: 'center', marginTop: 20}}>Nenhuma reação ainda.</Text>}
+                  {modalReactions && modalReactions.length === 0 && <Text style={{color: colors.textSecondary, textAlign: 'center', marginTop: 20}}>Nenhuma reação ainda.</Text>}
                   {modalReactions?.map((r, idx) => (
                     <View key={idx} style={styles.reactionListItem}>
                        <Ionicons name={getReactionIcon(r.type).name as any} size={20} color={getReactionIcon(r.type).color} style={{marginRight: 12}} />
@@ -243,49 +243,49 @@ export function FeedScreen() {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  headerArea: { paddingTop: 50, backgroundColor: colors.border, borderBottomWidth: 1, borderBottomColor: '#222' },
+  headerArea: { paddingTop: 50, backgroundColor: colors.border, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { fontSize: 24, fontWeight: 'bold', color: colors.text, paddingHorizontal: 16, paddingBottom: 16 },
   tabsContainer: { flexDirection: 'row', paddingHorizontal: 16 },
   tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   activeTab: { borderBottomColor: '#E50914' },
-  tabText: { color: '#888', fontWeight: 'bold' },
+  tabText: { color: colors.textSecondary, fontWeight: 'bold' },
   activeTabText: { color: colors.text },
   list: { padding: 16, paddingBottom: 100 },
   timelineItem: { position: 'relative', paddingLeft: 24, marginBottom: 16 },
-  timelineLine: { position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: '#333' },
+  timelineLine: { position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: colors.border },
   timelineDot: { position: 'absolute', left: 4, top: 24, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E50914', borderWidth: 2, borderColor: colors.border },
-  card: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#333' },
+  card: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.border },
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   avatar: { width: 40, height: 40, borderRadius: 20 },
-  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   headerText: { flex: 1, marginLeft: 12 },
   userName: { color: colors.text, fontWeight: 'bold', fontSize: 16 },
   youBadge: { color: '#E50914', fontSize: 12, fontWeight: 'normal' },
-  actionText: { color: '#aaa', fontSize: 14 },
-  timeAgo: { color: '#666', fontSize: 12 },
-  movieContent: { flexDirection: 'row', backgroundColor: '#2a2a2a', borderRadius: 8, padding: 12 },
-  moviePoster: { width: 60, height: 90, borderRadius: 4, backgroundColor: '#444' },
+  actionText: { color: colors.textSecondary, fontSize: 14 },
+  timeAgo: { color: colors.textSecondary, fontSize: 12 },
+  movieContent: { flexDirection: 'row', backgroundColor: colors.backgroundElement, borderRadius: 8, padding: 12 },
+  moviePoster: { width: 60, height: 90, borderRadius: 4, backgroundColor: colors.border },
   movieInfo: { flex: 1, marginLeft: 12, justifyContent: 'center' },
   movieTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
   ratingText: { color: '#FFD700', marginLeft: 4, fontWeight: 'bold' },
-  reviewText: { color: '#ccc', fontStyle: 'italic', fontSize: 14 },
-  cardFooter: { flexDirection: 'row', marginTop: 12, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 12, justifyContent: 'space-between', alignItems: 'center' },
+  reviewText: { color: colors.text, fontStyle: 'italic', fontSize: 14 },
+  cardFooter: { flexDirection: 'row', marginTop: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, justifyContent: 'space-between', alignItems: 'center' },
   reactionWrapper: { position: 'relative' },
   actionButton: { flexDirection: 'row', alignItems: 'center' },
-  actionCount: { color: '#ccc', marginLeft: 8, fontSize: 14, fontWeight: 'bold' },
-  reactionMenu: { position: 'absolute', bottom: 35, left: 0, backgroundColor: '#222', borderRadius: 20, padding: 8, flexDirection: 'row', gap: 12, elevation: 5, borderWidth: 1, borderColor: '#444' },
-  reactionCountBadge: { backgroundColor: '#333', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  actionCount: { color: colors.text, marginLeft: 8, fontSize: 14, fontWeight: 'bold' },
+  reactionMenu: { position: 'absolute', bottom: 35, left: 0, backgroundColor: colors.border, borderRadius: 20, padding: 8, flexDirection: 'row', gap: 12, elevation: 5, borderWidth: 1, borderColor: colors.border },
+  reactionCountBadge: { backgroundColor: colors.border, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   reactionCountText: { color: colors.text, fontSize: 12 },
-  emptyText: { color: '#999', textAlign: 'center', marginTop: 40, fontSize: 16 },
+  emptyText: { color: colors.textSecondary, textAlign: 'center', marginTop: 40, fontSize: 16 },
   spoilerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(20,20,20,0.95)', borderRadius: 4, justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 4, padding: 8, zIndex: 10 },
   spoilerOverlayText: { color: colors.text, fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
   offlineBanner: { backgroundColor: '#FFD700', padding: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   offlineText: { color: '#000', fontWeight: 'bold', fontSize: 12 },
   badgeIconContainerFeed: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#1E1E1E', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, minHeight: 300, maxHeight: '80%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#333', paddingBottom: 10 },
+  modalContent: { backgroundColor: colors.backgroundElement, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, minHeight: 300, maxHeight: '80%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 10 },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
-  reactionListItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2a2a2a' }
+  reactionListItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.backgroundElement }
 });

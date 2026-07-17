@@ -152,11 +152,11 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
   },
   profileIcon: {
     padding: 8,
-    backgroundColor: '#333',
+    backgroundColor: colors.border,
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -196,7 +196,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     color: colors.text,
     borderRadius: 8,
     paddingHorizontal: 16,
@@ -209,14 +209,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
   },
   btnSave: {
     justifyContent: 'center',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     borderRadius: 8,
   },
   listsContainer: {
@@ -225,7 +225,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: 16,
   },
   listCard: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.backgroundElement,
     padding: 16,
     borderRadius: 12,
   },
@@ -241,12 +241,12 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   listOwner: {
-    color: '#999',
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
   },
   listCount: {
-    color: '#999',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   sectionTitle: {
@@ -263,7 +263,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginRight: 8,
   },
   emptyListText: {
-    color: '#666',
+    color: colors.textSecondary,
     fontStyle: 'italic',
   },
   center: {
@@ -271,7 +271,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginTop: 48,
   },
   emptyText: {
-    color: '#666',
+    color: colors.textSecondary,
     marginTop: 16,
   }
 });

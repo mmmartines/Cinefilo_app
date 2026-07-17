@@ -29,7 +29,7 @@ export function ChatsScreen() {
           <Text style={styles.movieTitle} numberOfLines={1}>{item.movie_title}</Text>
           <Text style={styles.chatSubtitle}>Tocar para abrir o bate-papo</Text>
         </View>
-        <Ionicons name="chevron-forward" size={24} color="#666" />
+        <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
       </TouchableOpacity>
     );
   };
@@ -61,15 +61,15 @@ export function ChatsScreen() {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  header: { paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: '#1E1E1E', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#333' },
+  header: { paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: colors.backgroundElement, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#E50914' },
   listContent: { padding: 16, gap: 16 },
-  chatCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center' },
+  chatCard: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center' },
   moviePoster: { width: 50, height: 75, borderRadius: 8, marginRight: 16 },
   chatInfo: { flex: 1 },
   movieTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
-  chatSubtitle: { color: '#999', fontSize: 14 },
+  chatSubtitle: { color: colors.textSecondary, fontSize: 14 },
   emptyContainer: { alignItems: 'center', marginTop: 64 },
   emptyText: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginTop: 16 },
-  emptySubtext: { color: '#999', marginTop: 8, textAlign: 'center' }
+  emptySubtext: { color: colors.textSecondary, marginTop: 8, textAlign: 'center' }
 });
