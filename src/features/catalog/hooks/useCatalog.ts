@@ -8,13 +8,11 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 export function useCatalog() {
   const [watchedStatus, setWatchedStatus] = useState<Record<number, 'watched' | 'watchlist'>>({});
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
-  const [currentChallenge, setCurrentChallenge] = useState<any>(null);
-  const [isChallengeCompleted, setIsChallengeCompleted] = useState(false);
-
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [searchYear, setSearchYear] = useState('');
-  const [selectedGenreId, setSelectedGenreId] = useState<number | null>(null);
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
 
   const [isAiModalVisible, setIsAiModalVisible] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -41,8 +39,8 @@ export function useCatalog() {
     hasNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['movies', debouncedSearchQuery, selectedGenreId, searchYear],
-    queryFn: ({ pageParam = 1 }) => fetchFilteredMovies(pageParam, debouncedSearchQuery, selectedGenreId, searchYear),
+    queryKey: ['movies', debouncedSearchQuery, selectedGenres, searchYear],
+    queryFn: ({ pageParam = 1 }) => fetchFilteredMovies(pageParam, debouncedSearchQuery, selectedGenres, searchYear),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       // TMDB returns empty array if no more pages or if > 500
@@ -60,12 +58,7 @@ export function useCatalog() {
         if (user) {
           if (user.avatar_url) setUserAvatarUrl(user.avatar_url);
           
-          const challenge = database.getWeeklyChallenge();
-          setCurrentChallenge(challenge);
-          const completed = await database.isWeeklyChallengeCompleted(user.id, challenge.weekId);
-          setIsChallengeCompleted(completed);
-          
-          const watchedList = await database.getWatchedMovies(user.id);
+                    const watchedList = await database.getWatchedMovies(user.id);
           const statuses: Record<number, 'watched' | 'watchlist'> = {};
           watchedList.forEach((w: any) => {
             statuses[w.movieId] = w.status || 'watched';
@@ -142,14 +135,12 @@ export function useCatalog() {
     watchedStatus,
     genresList,
     userAvatarUrl,
-    currentChallenge,
-    isChallengeCompleted,
-    searchQuery,
+        searchQuery,
     setSearchQuery,
     searchYear,
     setSearchYear,
-    selectedGenreId,
-    setSelectedGenreId,
+    selectedGenres,
+    setSelectedGenres,
     isAiModalVisible,
     setIsAiModalVisible,
     isAiLoading,

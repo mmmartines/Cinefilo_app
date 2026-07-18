@@ -66,22 +66,9 @@ export function ListsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-        <View style={{ width: 40 }} />
-        <Text style={styles.headerTitle}>Minhas Listas</Text>
-          <TouchableOpacity 
-            style={[styles.profileIcon, currentUser?.avatar_url && { padding: 0 }]} 
-            onPress={() => router.push('/profile')}
-          >
-            {currentUser?.avatar_url ? (
-              <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
-            ) : (
-              <Ionicons name="person" size={20} color={colors.text} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-      <View style={styles.createSection}>
+      
+  
+        <View style={styles.createSection}>
         {isCreatingList ? (
           <View style={styles.createForm}>
             <TextInput
@@ -103,7 +90,7 @@ export function ListsScreen() {
           </View>
         ) : (
           <AnimatedButton style={styles.btnCreate} onPress={() => setIsCreatingList(true)}>
-            <Ionicons name="add-circle-outline" size={20} color={colors.text} />
+            <Ionicons name="add-circle-outline" size={20} color="#fff" />
             <Text style={styles.btnCreateText}>Criar Nova Lista</Text>
           </AnimatedButton>
         )}
@@ -187,7 +174,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: 8,
   },
   btnCreateText: {
-    color: colors.text,
+    color: '#fff',
     fontWeight: 'bold',
   },
   createForm: {

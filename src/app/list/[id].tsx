@@ -113,13 +113,13 @@ export default function ListDetails() {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{list.name}</Text>
         <View style={styles.headerActions}>
           {list.owner_id === user?.id && (
             <TouchableOpacity style={styles.shareBtn} onPress={() => setShareModalVisible(true)}>
-              <Ionicons name="share-social-outline" size={24} color="#fff" />
+              <Ionicons name="share-social-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           )}
           {list.owner_id === user?.id && (
@@ -246,7 +246,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
   },
   listContent: {
     padding: 12,
@@ -302,7 +302,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: 24,
   },
   modalTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -314,7 +314,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   modalInput: {
     backgroundColor: colors.background,
-    color: '#fff',
+    color: colors.text,
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,

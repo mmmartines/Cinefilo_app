@@ -277,13 +277,30 @@ export const database = {
       const notifsStr = await AsyncStorage.getItem('notifications_enabled');
       const challengesStr = await AsyncStorage.getItem(`@cinefilo_challenges_${userId}`);
       const bonusXpStr = await AsyncStorage.getItem(`@cinefilo_bonus_xp_${userId}`);
+      const listsStr = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+      const userLists = listsStr ? JSON.parse(listsStr) : [];
+      
+      let friendsCount = 0;
+      try {
+        const friendsRes = await fetch(`${API_URL}/api/friends`, { headers: { 'Authorization': `Bearer ${session.access_token}` } });
+        if (friendsRes.ok) {
+           const result = await friendsRes.json();
+           friendsCount = (result.data || []).length;
+        }
+      } catch (e) {}
+
+      const bonusXp = bonusXpStr ? parseInt(bonusXpStr) : 0;
+      const calculatedXp = (total_movies * 10) + (userLists.length * 50) + (friendsCount * 20) + bonusXp;
+      const calculatedLevel = Math.floor(calculatedXp / 100) + 1;
 
       const payload: any = {
         total_movies,
         total_minutes,
         watched_movies: watchedList,
         completed_challenges: challengesStr ? JSON.parse(challengesStr) : [],
-        bonus_xp: bonusXpStr ? parseInt(bonusXpStr) : 0
+        bonus_xp: bonusXp,
+        level: calculatedLevel,
+        xp: calculatedXp
       };
 
       if (avatarUrl && !avatarUrl.startsWith('file://')) payload.avatar_url = avatarUrl;

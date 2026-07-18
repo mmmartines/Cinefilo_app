@@ -16,7 +16,13 @@ export function useFriends() {
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
-    database.getCurrentUser().then(setCurrentUser);
+    database.getCurrentUser().then(user => {
+      setCurrentUser(user);
+      if (user) {
+        // Força sincronização ao entrar no Ranking para atualizar XP/Level
+        database.syncStatsToCloud(user.id).catch(console.error);
+      }
+    });
     NetInfo.fetch().then(state => setIsOffline(!state.isConnected));
   }, []);
 

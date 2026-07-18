@@ -100,7 +100,7 @@ export default function MatchScreen() {
     <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
+          <Ionicons name="arrow-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Match com {friendName || 'Amigo'}</Text>
         <View style={{ width: 40 }} />
@@ -173,7 +173,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     padding: 8,
   },
   headerTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -206,7 +206,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -247,7 +247,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 18,
     marginTop: 16,
     marginBottom: 24,

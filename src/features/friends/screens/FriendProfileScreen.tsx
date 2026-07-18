@@ -42,7 +42,7 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
         <TouchableOpacity style={styles.backIcon} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{friend.name}</Text>
         <View style={{ width: 40 }} />
@@ -65,6 +65,16 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
 
       {activeTab === 'resumo' ? (
         <View style={styles.resumoContainer}>
+          <View style={styles.avatarSection}>
+            {friend.avatar_url ? (
+              <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={48} color="#666" />
+              </View>
+            )}
+          </View>
+
           <View style={styles.affinityCard}>
             <View style={styles.affinityHeader}>
               <Ionicons name="flame" size={24} color={affinity > 50 ? "#FF5722" : "#666"} />
@@ -74,16 +84,6 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
               <View style={[styles.affinityBarFill, { width: `${affinity}%`, backgroundColor: affinity > 50 ? '#FF5722' : colors.textSecondary }]} />
             </View>
             <Text style={styles.affinityValue}>{affinity}% de compatibilidade</Text>
-          </View>
-
-          <View style={styles.avatarSection}>
-            {friend.avatar_url ? (
-              <Image source={{ uri: friend.avatar_url }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={48} color="#666" />
-              </View>
-            )}
           </View>
 
           <View style={styles.statCard}>
@@ -144,21 +144,21 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
-  errorText: { color: '#fff', fontSize: 16, marginBottom: 16 },
+  errorText: { color: colors.text, fontSize: 16, marginBottom: 16 },
   backButton: { backgroundColor: '#E50914', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
   backButtonText: { color: '#fff', fontWeight: 'bold' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: colors.backgroundElement },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, textAlign: 'center' },
   backIcon: { padding: 8, width: 40, alignItems: 'flex-start' },
   tabContainer: { flexDirection: 'row', backgroundColor: colors.backgroundElement, borderBottomWidth: 1, borderBottomColor: colors.border },
   tab: { flex: 1, paddingVertical: 16, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   activeTab: { borderBottomColor: '#E50914' },
   tabText: { color: colors.textSecondary, fontSize: 16, fontWeight: 'bold' },
-  activeTabText: { color: '#fff' },
+  activeTabText: { color: colors.text },
   resumoContainer: { flex: 1, padding: 24, gap: 16 },
   affinityCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, borderWidth: 1, borderColor: colors.border, alignItems: 'center', marginBottom: 8 },
   affinityHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  affinityTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  affinityTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   affinityBarContainer: { width: '100%', height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   affinityBarFill: { height: '100%', borderRadius: 4 },
   affinityValue: { color: colors.textSecondary, fontSize: 14, fontWeight: 'bold' },
@@ -167,7 +167,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   avatarPlaceholder: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   statCard: { backgroundColor: colors.backgroundElement, padding: 24, borderRadius: 16, alignItems: 'center' },
   tagCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  statValue: { color: '#fff', fontSize: 32, fontWeight: 'bold', marginTop: 8 },
+  statValue: { color: colors.text, fontSize: 32, fontWeight: 'bold', marginTop: 8 },
   statLabel: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
   tagText: { color: '#E50914', fontSize: 18, fontWeight: 'bold' },
   listContent: { paddingVertical: 8, paddingHorizontal: 12 },

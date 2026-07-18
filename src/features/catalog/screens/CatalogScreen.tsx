@@ -1,12 +1,15 @@
 import { NotificationBell } from '../../../components/NotificationBell';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TextInput, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GlobalHeader } from '../../../components/GlobalHeader';
 import { MovieCard } from '../../../components/MovieCard';
 import { Loading } from '../../../components/Loading';
 import { Skeleton } from '../../../components/Skeleton';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { UpcomingTab } from './UpcomingTab';
+import { CinemasTab } from './CinemasTab';
 import { Image } from 'expo-image';
 import { useCatalog } from '../hooks/useCatalog';
 import { useAppTheme } from '../../../contexts/ThemeContext';
@@ -16,6 +19,17 @@ export function CatalogScreen() {
   const styles = getStyles(colors);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const [activeTab, setActiveTab] = useState<'catalog' | 'upcoming' | 'cinemas'>('catalog');
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
+  const toggleGenre = (id: number) => {
+    if (selectedGenres.includes(id)) {
+      setSelectedGenres(selectedGenres.filter(g => g !== id));
+    } else {
+      setSelectedGenres([...selectedGenres, id]);
+    }
+  };
   
   const {
     moviesList,
@@ -28,15 +42,13 @@ export function CatalogScreen() {
     setSearchQuery,
     searchYear,
     setSearchYear,
-    selectedGenreId,
-    setSelectedGenreId,
+    selectedGenres,
+    setSelectedGenres,
     isAiModalVisible,
     setIsAiModalVisible,
     isAiLoading,
     aiRecommendationText,
-    currentChallenge,
-    isChallengeCompleted,
-    handleManualSearch,
+        handleManualSearch,
     handleLoadMoreMovies,
     fetchAiRecommendation,
     formatMoviesGrid,
@@ -46,105 +58,45 @@ export function CatalogScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-        <View style={{ width: 40 }} />
-        <Text style={styles.headerTitle}>Cinelândia 🍿</Text>
-        <NotificationBell />
-        <TouchableOpacity 
-          style={styles.profileIcon} 
-          onPress={() => router.push('/profile')}
-        >
-          {userAvatarUrl ? (
-            <Image source={{ uri: userAvatarUrl }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={20} color={colors.text} />
-          )}
+      <GlobalHeader title="Cinelândia 🍿" />
+
+      
+      {/* Top Tabs */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity style={[styles.tabBtn, activeTab === 'catalog' && styles.tabBtnActive]} onPress={() => setActiveTab('catalog')}>
+          <Text style={[styles.tabBtnText, activeTab === 'catalog' && styles.tabBtnTextActive]}>Catálogo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, activeTab === 'upcoming' && styles.tabBtnActive]} onPress={() => setActiveTab('upcoming')}>
+          <Text style={[styles.tabBtnText, activeTab === 'upcoming' && styles.tabBtnTextActive]}>Em Breve</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, activeTab === 'cinemas' && styles.tabBtnActive]} onPress={() => setActiveTab('cinemas')}>
+          <Text style={[styles.tabBtnText, activeTab === 'cinemas' && styles.tabBtnTextActive]}>Cinemas</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.filterContainer}>
-        {/* Desafio Semanal */}
-        {currentChallenge && (
-          <View style={[styles.challengeBanner, isChallengeCompleted && { borderColor: '#4CAF50', backgroundColor: 'rgba(76, 175, 80, 0.1)' }]}>
-            <View style={styles.challengeHeader}>
-              <Ionicons name={isChallengeCompleted ? "checkmark-circle" : "star"} size={16} color={isChallengeCompleted ? "#4CAF50" : "#FFD700"} />
-              <Text style={[styles.challengeTitle, isChallengeCompleted && { color: '#4CAF50' }]}>
-                {isChallengeCompleted ? "Desafio Concluído!" : "Desafio da Semana"}
-              </Text>
+      {activeTab === 'catalog' ? (
+        <>
+          <View style={styles.filterContainer}>
+            <View style={styles.searchRow}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Nome do filme..."
+                placeholderTextColor="#666"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onSubmitEditing={handleManualSearch}
+              />
+              <TouchableOpacity style={styles.filterIconBtn} onPress={() => setIsFilterModalVisible(true)}>
+                <Ionicons name="options" size={24} color={colors.text} />
+                {selectedGenres.length > 0 && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{selectedGenres.length}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
-            <Text style={styles.challengeText}>
-              {isChallengeCompleted ? "Você garantiu seu XP bônus!" : currentChallenge.desc}
-            </Text>
-            {!isChallengeCompleted && (
-              <Text style={{ color: '#FFD700', fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
-                Recompensa: +{currentChallenge.xp} XP
-              </Text>
-            )}
           </View>
-        )}
 
-        {/* Busca por Nome e Ano */}
-        <View style={styles.searchRow}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Nome do filme..."
-            placeholderTextColor="#666"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleManualSearch}
-          />
-          <TextInput
-            style={styles.yearInput}
-            placeholder="Ano"
-            placeholderTextColor="#666"
-            keyboardType="numeric"
-            maxLength={4}
-            value={searchYear}
-            onChangeText={setSearchYear}
-          />
-          <TouchableOpacity style={styles.searchButton} onPress={handleManualSearch}>
-            <Ionicons name="search" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Categorias (Gêneros) */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
-          <TouchableOpacity 
-            style={[styles.genrePill, selectedGenreId === null && styles.genrePillActive]}
-            onPress={() => setSelectedGenreId(null)}
-          >
-            <Text style={[styles.genreText, selectedGenreId === null && styles.genreTextActive]}>Todos</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.genrePill, selectedGenreId === -1 && styles.genrePillActive]}
-            onPress={() => setSelectedGenreId(-1)}
-          >
-            <Text style={[styles.genreText, selectedGenreId === -1 && styles.genreTextActive]}>🔥 Em Cartaz</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.genrePill, { backgroundColor: '#FF6600' }]}
-            onPress={() => router.push('/upcoming')}
-          >
-            <Text style={[styles.genreText, { color: colors.text, fontWeight: 'bold' }]}>📅 Em Breve</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.genrePill}
-            onPress={() => router.push('/cinemas')}
-          >
-            <Text style={styles.genreText}>📍 Cinemas Próximos</Text>
-          </TouchableOpacity>
-
-          {genresList.map((g) => (
-            <TouchableOpacity 
-              key={g.id}
-              style={[styles.genrePill, selectedGenreId === g.id && styles.genrePillActive]}
-              onPress={() => setSelectedGenreId(g.id)}
-            >
-              <Text style={[styles.genreText, selectedGenreId === g.id && styles.genreTextActive]}>{g.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
       
       {isLoading ? (
         <View style={styles.listContent}>
@@ -177,6 +129,52 @@ export function CatalogScreen() {
           ListFooterComponent={isLoadingMore ? <Loading /> : null}
         />
       )}
+      </>
+      ) : activeTab === 'upcoming' ? (
+        <UpcomingTab />
+      ) : (
+        <CinemasTab />
+      )}
+
+      
+      {/* Modal de Filtro (Gêneros) */}
+      <Modal visible={isFilterModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtrar Categorias</Text>
+              <TouchableOpacity onPress={() => setIsFilterModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.modalScrollContent}>
+               <Text style={{color: colors.textSecondary, marginBottom: 16}}>Selecione uma ou mais categorias (Busca "OU"):</Text>
+               <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
+                 {genresList.map((g) => {
+                   const isSelected = selectedGenres.includes(g.id);
+                   return (
+                     <TouchableOpacity 
+                       key={g.id} 
+                       style={[styles.genreGridPill, isSelected && {backgroundColor: '#E50914', borderColor: '#E50914'}]}
+                       onPress={() => toggleGenre(g.id)}
+                     >
+                       <Text style={[styles.genreGridText, isSelected && {color: '#fff', fontWeight: 'bold'}]}>{g.name}</Text>
+                     </TouchableOpacity>
+                   );
+                 })}
+               </View>
+            </ScrollView>
+            <View style={{padding: 16, borderTopWidth: 1, borderTopColor: colors.border}}>
+               <TouchableOpacity 
+                  style={{backgroundColor: '#E50914', padding: 16, borderRadius: 8, alignItems: 'center'}}
+                  onPress={() => setIsFilterModalVisible(false)}
+               >
+                 <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Aplicar Filtros</Text>
+               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal de IA */}
       <Modal visible={isAiModalVisible} transparent animationType="slide">
@@ -208,7 +206,7 @@ export function CatalogScreen() {
           style={styles.chatFab}
           onPress={() => router.push('/ai-chat')}
         >
-          <Ionicons name="chatbubble-ellipses" size={28} color="#fff" />
+          <MaterialCommunityIcons name="robot-outline" size={28} color="#fff" />
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -223,6 +221,65 @@ export function CatalogScreen() {
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabBtnActive: {
+    borderBottomColor: '#E50914',
+  },
+  tabBtnText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tabBtnTextActive: {
+    color: colors.text,
+  },
+  filterIconBtn: {
+    width: 44,
+    height: 44,
+    backgroundColor: colors.border,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#E50914',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  genreGridPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  genreGridText: {
+    color: colors.text,
+    fontSize: 14,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.border,
@@ -270,14 +327,16 @@ const getStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'flex-start',
   },
   filterContainer: {
+    paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 4,
     backgroundColor: colors.backgroundElement,
   },
   searchRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 0,
   },
   searchInput: {
     flex: 1,
@@ -287,23 +346,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 12,
     height: 40,
   },
-  yearInput: {
-    width: 60,
-    backgroundColor: colors.border,
-    color: colors.text,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    height: 40,
-    textAlign: 'center',
-  },
-  searchButton: {
-    backgroundColor: '#E50914',
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   genreScroll: {
     flexDirection: 'row',
   },
@@ -322,7 +365,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
   },
   genreTextActive: {
-    color: colors.text,
+    color: '#fff',
     fontWeight: 'bold',
   },
   modalOverlay: {
@@ -370,7 +413,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#6200EE',
+    backgroundColor: '#00BFA5', // Teal para a IA
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -391,30 +434,5 @@ const getStyles = (colors: any) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 3 },
-  },
-  challengeBanner: {
-    backgroundColor: 'rgba(229, 9, 20, 0.1)',
-    borderWidth: 1,
-    borderColor: '#E50914',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  challengeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  challengeTitle: {
-    color: '#FFD700',
-    fontSize: 12,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  challengeText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: 'bold',
   }
 });

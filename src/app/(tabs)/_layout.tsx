@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View, Text } from 'react-native';
 import { useAppTheme } from '../../contexts/ThemeContext';
+import { useNotificationBadges } from '../../contexts/NotificationBadgeContext';
 
 export default function TabLayout() {
   const { isDark, colors } = useAppTheme();
+  const { unreadFeedCount, unreadChatsCount, pendingFriendRequestsCount } = useNotificationBadges();
   return (
     <Tabs
       screenOptions={{
@@ -30,15 +32,6 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="feed"
-        options={{
-          title: 'Feed',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="newspaper" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="index"
         options={{
           title: 'Catálogo',
@@ -48,50 +41,81 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="my-movies"
+        name="library"
         options={{
-          title: 'Meus Filmes',
+          title: 'Coleção',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="star" size={size} color={color} />
+            <Ionicons name="library" size={28} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="chats"
+        name="social"
         options={{
-          title: 'Chats',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
-          ),
+          title: 'Comunidade',
+          tabBarIcon: ({ color, size }) => {
+            const hasNotifications = unreadFeedCount + unreadChatsCount + pendingFriendRequestsCount > 0;
+            return (
+              <View>
+                <Ionicons name="people" size={28} color={color} />
+                {hasNotifications && (
+                  <View style={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -4,
+                    width: 10,
+                    height: 10,
+                    borderRadius: 5,
+                    backgroundColor: '#E50914',
+                    borderWidth: 2,
+                    borderColor: isDark ? '#1e1e1e' : '#fff'
+                  }} />
+                )}
+              </View>
+            );
+          },
         }}
       />
       <Tabs.Screen
         name="stats"
         options={{
-          title: 'Estatísticas',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="stats-chart" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="lists"
-        options={{
-          title: 'Listas',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="list" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="friends"
-        options={{
-          title: 'Amigos',
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="people" size={28} color={color} />
+          title: 'Jornada do Herói',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="trophy" size={28} color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  badgeDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#E50914',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: '#E50914',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  }
+});

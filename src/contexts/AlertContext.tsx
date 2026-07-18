@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAppTheme } from './ThemeContext';
 
 type AlertButton = {
   text: string;
@@ -15,15 +16,16 @@ type AlertOptions = {
 };
 
 interface AlertContextData {
-  showAlert: (title: string, message?: string, buttons?: AlertButton[]) => void;
+  showAlert: (title: string, message?: string, buttons?: AlertButton[], icon?: string) => void;
   showToast: (message: string, icon?: string, color?: string) => void;
 }
 
 const AlertContext = createContext<AlertContextData>({} as AlertContextData);
 
 export const AlertProvider = ({ children }: { children: ReactNode }) => {
+  const { colors } = useAppTheme();
   const [visible, setVisible] = useState(false);
-  const [options, setOptions] = useState<AlertOptions | null>(null);
+  const [options, setOptions] = useState<AlertOptions & { icon?: string } | null>(null);
 
   // Toast States
   const [toastVisible, setToastVisible] = useState(false);
@@ -32,11 +34,12 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
   const [fadeAnim] = useState(new Animated.Value(0));
 
-  const showAlert = (title: string, message?: string, buttons?: AlertButton[]) => {
+  const showAlert = (title: string, message?: string, buttons?: AlertButton[], icon?: string) => {
     setOptions({
       title,
       message,
-      buttons: buttons || [{ text: 'OK', onPress: () => closeAlert() }],
+      buttons: buttons || [{ text: 'Fechar', onPress: () => closeAlert() }],
+      icon,
     });
     setVisible(true);
     Animated.timing(fadeAnim, {
@@ -112,20 +115,20 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
       <Modal visible={visible} transparent={true} animationType="none">
         <View style={styles.overlay}>
-          <Animated.View style={[styles.modalBox, { opacity: fadeAnim, transform: [{ scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }]}>
+          <Animated.View style={[styles.modalBox, { backgroundColor: colors.backgroundElement, borderColor: colors.border }, { opacity: fadeAnim, transform: [{ scale: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] }]}>
             {options && (
               <>
                 <Ionicons 
-                  name={getIconName(options.title) as any} 
+                  name={options.icon || getIconName(options.title) as any} 
                   size={48} 
-                  color={getIconColor(options.title)} 
+                  color={options.icon ? '#FFD700' : getIconColor(options.title)} 
                   style={{ marginBottom: 16 }}
                 />
                 
-                <Text style={styles.title}>{options.title}</Text>
+                <Text style={[styles.title, { color: colors.text }]}>{options.title}</Text>
                 
                 {options.message && (
-                  <Text style={styles.message}>{options.message}</Text>
+                  <Text style={[styles.message, { color: colors.textSecondary }]}>{options.message}</Text>
                 )}
                 
                 <View style={styles.buttonRow}>

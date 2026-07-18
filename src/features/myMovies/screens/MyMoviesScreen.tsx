@@ -23,22 +23,9 @@ export function MyMoviesScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-        <View style={{ width: 40 }} />
-        <Text style={styles.headerTitle}>Meus Filmes</Text>
-          <TouchableOpacity 
-            style={[styles.profileIcon, currentUser?.avatar_url && { padding: 0 }]} 
-            onPress={() => router.push('/profile')}
-          >
-            {currentUser?.avatar_url ? (
-              <Image source={{ uri: currentUser.avatar_url }} style={styles.avatarImage} />
-            ) : (
-              <Ionicons name="person" size={20} color={colors.text} />
-            )}
-          </TouchableOpacity>
-        </View>
       
-      <View style={styles.filterRow}>
+        
+        <View style={styles.filterRow}>
         <TouchableOpacity 
           style={[styles.filterButton, currentFilter === 'watched' && styles.filterButtonActive]}
           onPress={() => setCurrentFilter('watched')}
@@ -147,7 +134,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   filterButtonTextActive: {
-    color: colors.text,
+    color: '#fff',
   },
   headerTitle: {
     fontSize: 22,
@@ -202,7 +189,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderRadius: 12,
   },
   reviewScore: {
-    color: colors.text,
+    color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
   }

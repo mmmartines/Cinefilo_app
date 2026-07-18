@@ -24,47 +24,36 @@ export const getGenres = async () => {
   }
 };
 
-export const fetchFilteredMovies = async (page: number = 1, query: string = '', genreId: number | null = null, year: string = '') => {
+export const fetchFilteredMovies = async (page: number = 1, query: string = '', genreIds: number[] = [], year: string = '') => {
   try {
     let endpoint = '/movie/popular';
     let params: any = { language: 'pt-BR', page };
 
     if (query.trim() !== '') {
-      // Usar a rota de busca
+      // Busca por nome
       endpoint = '/search/movie';
       params.query = query;
-      if (year) {
-        params.primary_release_year = year;
-      }
+      if (year) params.primary_release_year = year;
 
       const response = await api.get(endpoint, { params });
       let results = response.data.results;
 
-      // Filtro local por gênero, já que a API de search não aceita with_genres
-      if (genreId) {
-        results = results.filter((movie: any) => movie.genre_ids.includes(genreId));
+      if (genreIds.length > 0) {
+        // Filtragem local se tiver busca + generos (agora com lógica OU)
+        results = results.filter((movie: any) => movie.genre_ids.some((id: number) => genreIds.includes(id)));
       }
       return results;
 
-    } else if (genreId === -1) {
-      // Filmes em cartaz
-      endpoint = '/movie/now_playing';
-      if (year) params.primary_release_year = year;
-      
-      const response = await api.get(endpoint, { params });
-      return response.data.results;
-
-    } else if (genreId || year) {
-      // Usar a rota de descoberta
+    } else if (genreIds.length > 0 || year) {
+      // Rota de descoberta
       endpoint = '/discover/movie';
-      if (genreId && genreId !== -1) params.with_genres = genreId;
+      if (genreIds.length > 0) params.with_genres = genreIds.join('|'); // Lógica OU
       if (year) params.primary_release_year = year;
 
       const response = await api.get(endpoint, { params });
       return response.data.results;
-
     } else {
-      // Nem query, nem genre, nem year: retorna populares
+      // Populares
       const response = await api.get(endpoint, { params });
       return response.data.results;
     }

@@ -8,10 +8,12 @@ import { AnimatedButton } from '../../../components/AnimatedButton';
 import { Image } from 'expo-image';
 import { useFriends } from '../hooks/useFriends';
 import { useAppTheme } from '../../../contexts/ThemeContext';
+import { useNotificationBadges } from '../../../contexts/NotificationBadgeContext';
 
 export function FriendsScreen() {
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
+  const { pendingFriendRequestsCount } = useNotificationBadges();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
@@ -33,8 +35,8 @@ export function FriendsScreen() {
     const rankColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
     const rankColor = isTop3 ? rankColors[item.rank - 1] : colors.textSecondary;
 
-    const estimatedXp = (item.total_movies || 0) * 10;
-    const estimatedLevel = Math.floor(estimatedXp / 100) + 1;
+    const estimatedXp = item.xp || ((item.total_movies || 0) * 10);
+    const estimatedLevel = item.level || Math.floor(estimatedXp / 100) + 1;
 
     return (
       <TouchableOpacity 
@@ -60,7 +62,7 @@ export function FriendsScreen() {
               {item.name} {item.isMe && <Text style={styles.youBadge}>(Você)</Text>}
             </Text>
             <View style={{ backgroundColor: '#E50914', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-              <Text style={{ color: colors.text, fontSize: 10, fontWeight: 'bold' }}>Nv {estimatedLevel}</Text>
+              <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>Nv {estimatedLevel}</Text>
             </View>
           </View>
           <Text style={styles.statsText}>
@@ -82,27 +84,8 @@ export function FriendsScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
-        <View style={{ width: 40 }} />
-        <Text style={styles.title}>Ranking</Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/friend_requests')}>
-            <Ionicons name="mail" size={20} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.profileIcon, currentUser?.avatar_url ? { backgroundColor: 'transparent', padding: 0 } : {}]}
-            onPress={() => router.push('/profile')}
-          >
-            {currentUser?.avatar_url ? (
-              <Image source={{ uri: currentUser.avatar_url }} style={styles.headerAvatar} />
-            ) : (
-              <Ionicons name="person" size={20} color={colors.text} />
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {isOffline && (
+  
+        {isOffline && (
         <View style={styles.offlineBanner}>
           <Ionicons name="cloud-offline" size={16} color="#000" />
           <Text style={styles.offlineText}>Modo Offline</Text>
@@ -127,9 +110,9 @@ export function FriendsScreen() {
             disabled={isAddingFriend || friendTag.length === 0}
           >
             {isAddingFriend ? (
-              <ActivityIndicator size="small" color={colors.text} />
+              <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="add" size={24} color={colors.text} />
+              <Ionicons name="add" size={24} color="#fff" />
             )}
           </AnimatedButton>
         </View>
@@ -158,9 +141,7 @@ export function FriendsScreen() {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16, backgroundColor: colors.backgroundElement },
   profileIcon: { padding: 8, backgroundColor: colors.border, borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  headerAvatar: { width: 40, height: 40, borderRadius: 20 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#E50914', textAlign: 'center' },
   addSection: { padding: 24, paddingBottom: 16 },
   label: { color: colors.textSecondary, marginBottom: 8, fontSize: 14 },
@@ -171,7 +152,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   listTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 16 },
   listContent: { paddingBottom: 100, gap: 12 },
   friendCard: { flexDirection: 'row', backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 12, alignItems: 'center' },
-  myCard: { borderColor: '#E50914', borderWidth: 1, backgroundColor: '#2A1112' },
+  myCard: { borderColor: '#E50914', borderWidth: 2 },
   rankContainer: { width: 32, justifyContent: 'center', alignItems: 'center', marginRight: 8 },
   rankText: { fontSize: 20, fontWeight: 'bold' },
   friendAvatar: { width: 48, height: 48, borderRadius: 24, marginRight: 12 },

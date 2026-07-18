@@ -16,7 +16,7 @@ const ThemeContext = createContext<ThemeContextData>({ themeMode: 'system', isDa
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

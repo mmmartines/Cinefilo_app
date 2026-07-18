@@ -1,7 +1,12 @@
 export default ({ config }) => {
   return {
     ...config,
+    plugins: [
+      ...(config.plugins || []),
+      "@sentry/react-native"
+    ],
     android: {
+      googleServicesFile: "./google-services.json",
       ...config.android,
       config: {
         ...config.android?.config,

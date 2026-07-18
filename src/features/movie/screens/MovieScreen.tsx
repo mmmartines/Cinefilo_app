@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Platform, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
   const router = useRouter();
+  const { width } = useWindowDimensions();
   
   const {
     movieData,
@@ -196,7 +197,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
               style={[styles.actionButton, styles.flex1, isMovieWatched && styles.actionButtonWatched]}
               onPress={() => setIsRatingModalVisible(true)}
             >
-              <Ionicons name={isMovieWatched ? "checkmark-circle" : "add-circle-outline"} size={20} color={colors.text} />
+              <Ionicons name={isMovieWatched ? "checkmark-circle" : "add-circle-outline"} size={20} color="#fff" />
               <Text style={styles.actionButtonText}>
                 {isMovieWatched ? 'Já Assisti' : 'Já Assisti'}
               </Text>
@@ -207,7 +208,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                 style={[styles.actionButton, styles.flex1, isMovieInWatchlist ? styles.actionButtonWatchlistActive : styles.actionButtonWatchlist]}
                 onPress={isMovieInWatchlist ? handleRemoveMovieData : handleAddMovieToWatchlist}
               >
-                <Ionicons name={isMovieInWatchlist ? "bookmark" : "bookmark-outline"} size={20} color={isMovieInWatchlist ? "#fff" : "#E50914"} />
+                <Ionicons name={isMovieInWatchlist ? "bookmark" : "bookmark-outline"} size={20} color={isMovieInWatchlist ? colors.text : "#E50914"} />
                 <Text style={[styles.actionButtonText, isMovieInWatchlist ? {color: colors.text} : {color: '#E50914'}]}>
                   {isMovieInWatchlist ? 'Salvo' : 'Quero Ver'}
                 </Text>
@@ -445,12 +446,12 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
         <View style={styles.trailerModalOverlay}>
           <View style={styles.trailerModalContent}>
             <TouchableOpacity style={styles.closeTrailerButton} onPress={() => setIsTrailerVisible(false)}>
-              <Ionicons name="close" size={28} color={colors.text} />
+              <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
             {Platform.OS === 'web' ? (
                <iframe 
                  width="100%" 
-                 height="250" 
+                 style={{ aspectRatio: 16/9, maxWidth: 800 }} 
                  src={`https://www.youtube.com/embed/${trailerVideoKey}?autoplay=1`} 
                  frameBorder="0" 
                  allow="autoplay; encrypted-media" 
@@ -458,7 +459,8 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                />
             ) : (
                <YoutubeIframe
-                 height={250}
+                 height={Math.round((width - 32) * 9 / 16)}
+                 width={width - 32}
                  play={true}
                  videoId={trailerVideoKey || ''}
                />
@@ -471,7 +473,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.border },
+  container: { flex: 1, backgroundColor: colors.background },
   headerInfo: { padding: 24 },
   subtitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   year: { color: colors.text },
@@ -483,10 +485,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   content: { padding: 24 },
   title: { fontSize: 28, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   certBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
-  certText: { color: colors.text, fontWeight: 'bold', fontSize: 12 },
+  certText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
   sectionTitle: { fontSize: 20, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
-  overview: { color: colors.text, fontSize: 16, lineHeight: 24 },
-  trailerButton: { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 8, marginBottom: 24 },
+  overview: { color: colors.text, fontSize: 16, lineHeight: 24, marginBottom: 24 },
+  trailerButton: { backgroundColor: colors.backgroundElement, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 8, marginBottom: 24 },
   trailerButtonText: { color: colors.text, fontWeight: 'bold', fontSize: 16 },
   providersSection: { marginBottom: 24 },
   providersRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
@@ -501,8 +503,8 @@ const getStyles = (colors: any) => StyleSheet.create({
   actionButtonWatched: { backgroundColor: '#00A859' },
   actionButtonWatchlist: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E50914' },
   actionButtonWatchlistActive: { backgroundColor: colors.border, borderWidth: 1, borderColor: colors.border },
-  actionButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
-  chatButton: { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderRadius: 12, marginTop: 16 },
+  actionButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  chatButton: { backgroundColor: colors.backgroundElement, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderRadius: 12, marginTop: 16 },
   chatButtonText: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
   carouselSection: { marginTop: 32 },
   carouselContainer: { gap: 16, paddingRight: 24 },

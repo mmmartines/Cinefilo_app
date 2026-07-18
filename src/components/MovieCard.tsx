@@ -11,6 +11,7 @@ interface Movie {
   title: string;
   poster_path: string;
   vote_average: number;
+  release_date?: string;
 }
 
 interface Props {
@@ -23,6 +24,18 @@ export function MovieCard({ movie, status }: Props) {
   const styles = getStyles(colors);
   const router = useRouter();
   const scale = useSharedValue(1);
+
+  let isNowPlaying = false;
+  if (movie.release_date) {
+    const release = new Date(movie.release_date);
+    const now = new Date();
+    const diffTime = now.getTime() - release.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    if (diffDays >= 0 && diffDays <= 45) {
+      isNowPlaying = true;
+    }
+  }
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -47,28 +60,35 @@ export function MovieCard({ movie, status }: Props) {
     >
       <Animated.View style={[styles.card, animatedStyle]}>
         <View style={styles.posterContainer}>
-        <Image
-          source={{ uri: `https://image.tmdb.org/t/p/w200${movie.poster_path}` }}
-          style={styles.poster}
-          contentFit="cover"
-          transition={200}
-        />
-        {status && <View style={styles.overlay} />}
-      </View>
-      
-      {status === 'watched' && (
-        <View style={styles.watchedTag}>
-          <Ionicons name="checkmark-circle" size={10} color={colors.text} />
-          <Text style={styles.watchedText}>Assistido</Text>
+          <Image
+            source={{ uri: `https://image.tmdb.org/t/p/w200${movie.poster_path}` }}
+            style={styles.poster}
+            contentFit="cover"
+            transition={200}
+          />
+          {status && <View style={styles.overlay} />}
         </View>
-      )}
+        
+        {isNowPlaying && !status && (
+          <View style={styles.nowPlayingTag}>
+            <Ionicons name="film" size={10} color="#fff" />
+            <Text style={styles.nowPlayingText}>Em Cartaz</Text>
+          </View>
+        )}
+        
+        {status === 'watched' && (
+          <View style={styles.watchedTag}>
+            <Ionicons name="checkmark-circle" size={10} color="#fff" />
+            <Text style={styles.watchedText}>Assistido</Text>
+          </View>
+        )}
 
-      {status === 'watchlist' && (
-        <View style={[styles.watchedTag, { backgroundColor: 'rgba(229, 9, 20, 0.95)' }]}>
-          <Ionicons name="bookmark" size={10} color={colors.text} />
-          <Text style={styles.watchedText}>Quero Ver</Text>
-        </View>
-      )}
+        {status === 'watchlist' && (
+          <View style={[styles.watchedTag, { backgroundColor: 'rgba(229, 9, 20, 0.95)' }]}>
+            <Ionicons name="bookmark" size={10} color="#fff" />
+            <Text style={styles.watchedText}>Quero Ver</Text>
+          </View>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -113,7 +133,24 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: 4,
   },
   watchedText: {
-    color: colors.text,
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  nowPlayingTag: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(229, 9, 20, 0.95)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  nowPlayingText: {
+    color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
   },

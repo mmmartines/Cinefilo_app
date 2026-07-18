@@ -1,13 +1,13 @@
-import { useAppTheme } from '../contexts/ThemeContext';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getUpcomingMovies } from '../services/api';
+import { getUpcomingMovies } from '../../../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAlert } from '../contexts/AlertContext';
+import { useAlert } from '../../../contexts/AlertContext';
 import * as ImagePicker from 'expo-image-picker';
 
 let Notifications: any = null;
@@ -29,7 +29,7 @@ try {
   // Ignora se estiver no Expo Go
 }
 
-export default function UpcomingScreen() {
+export function UpcomingTab() {
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
   const router = useRouter();
@@ -231,8 +231,8 @@ export default function UpcomingScreen() {
             style={[styles.actionButton, isRemembered && styles.remindButtonActive]}
             onPress={() => scheduleReminder(item)}
           >
-            <Ionicons name={isRemembered ? "notifications" : "notifications-outline"} size={18} color="#fff" />
-            <Text style={styles.actionButtonText}>
+            <Ionicons name={isRemembered ? "notifications" : "notifications-outline"} size={18} color={isRemembered ? "#fff" : colors.text} />
+            <Text style={[styles.actionButtonText, !isRemembered && { color: colors.text }]}>
               {isRemembered ? 'Lembrete Ativo' : 'Me Lembrar'}
             </Text>
           </TouchableOpacity>
@@ -249,14 +249,7 @@ export default function UpcomingScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 16) }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Lançamentos & Ingressos</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -278,14 +271,14 @@ const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 16 },
   backButton: { padding: 8 },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  headerTitle: { color: colors.text, fontSize: 20, fontWeight: 'bold' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 16, gap: 16 },
+  listContent: { padding: 16, paddingBottom: 100, gap: 16 },
   movieCard: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.border },
   movieContentRow: { flexDirection: 'row', gap: 12 },
   poster: { width: 90, height: 135, borderRadius: 8, backgroundColor: colors.border },
   movieInfo: { flex: 1 },
-  title: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  title: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
   dateText: { color: '#E50914', fontSize: 13, fontWeight: 'bold', marginBottom: 6 },
   overview: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
   ticketContainer: { marginTop: 12, padding: 8, backgroundColor: colors.border, borderRadius: 8, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed' },

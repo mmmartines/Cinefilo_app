@@ -5,12 +5,13 @@ import { supabase } from '../../../services/supabase';
 import { database } from '../../../services/database';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export function useFeed() {
+export function useFeed(initialTab: 'me' | 'social' = 'social') {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'me' | 'social'>('social');
+  const [activeTab, setActiveTab] = useState<'me' | 'social'>(initialTab);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [revealedSpoilers, setRevealedSpoilers] = useState<string[]>([]);
   const [isOffline, setIsOffline] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   // Focus effect to update offline state and current user
   useFocusEffect(
@@ -64,8 +65,10 @@ export function useFeed() {
     }
   };
 
-  const handleRefreshFeed = () => {
-    refetch();
+  const handleRefreshFeed = async () => {
+    setIsManualRefreshing(true);
+    await refetch();
+    setIsManualRefreshing(false);
   };
 
   const loadMore = () => {
@@ -147,7 +150,7 @@ export function useFeed() {
   return {
     feedActivities,
     isLoading: isLoading && isFetching && !isFetchingNextPage, // Initial loading state
-    isRefreshing: isFetching && !isFetchingNextPage && !isLoading,
+    isRefreshing: isManualRefreshing,
     isLoadingMore: isFetchingNextPage,
     hasMore: !!hasNextPage,
     activeTab,

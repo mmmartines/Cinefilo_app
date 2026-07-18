@@ -1,4 +1,4 @@
-import { NotificationBell } from '../../../components/NotificationBell';
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
@@ -7,7 +7,7 @@ import { Skeleton } from '../../../components/Skeleton';
 import { useFeed } from '../hooks/useFeed';
 import { useAppTheme } from '../../../contexts/ThemeContext';
 
-export function FeedScreen() {
+export function FeedScreen({ tab = 'social' }: { tab?: 'social' | 'me' }) {
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
   const {
@@ -24,7 +24,7 @@ export function FeedScreen() {
     loadMore,
     handleReaction,
     toggleSpoilerVisibility,
-  } = useFeed();
+  } = useFeed(tab);
 
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [modalReactions, setModalReactions] = useState<any[] | null>(null);
@@ -171,25 +171,8 @@ export function FeedScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerArea}>
-        <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingRight: 16}}>
-          <Text style={styles.title}>Feed de Atividades</Text>
-          <NotificationBell />
+        
         </View>
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'social' && styles.activeTab]} 
-            onPress={() => changeTab('social')}
-          >
-            <Text style={[styles.tabText, activeTab === 'social' && styles.activeTabText]}>Social</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'me' && styles.activeTab]} 
-            onPress={() => changeTab('me')}
-          >
-            <Text style={[styles.tabText, activeTab === 'me' && styles.activeTabText]}>Meu Feed</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {isOffline && (
         <View style={styles.offlineBanner}>
@@ -243,7 +226,7 @@ export function FeedScreen() {
 
 const getStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.border },
-  headerArea: { paddingTop: 50, backgroundColor: colors.border, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerArea: { backgroundColor: colors.border, borderBottomWidth: 1, borderBottomColor: colors.border },
   title: { fontSize: 24, fontWeight: 'bold', color: colors.text, paddingHorizontal: 16, paddingBottom: 16 },
   tabsContainer: { flexDirection: 'row', paddingHorizontal: 16 },
   tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
@@ -251,7 +234,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   tabText: { color: colors.textSecondary, fontWeight: 'bold' },
   activeTabText: { color: colors.text },
   list: { padding: 16, paddingBottom: 100 },
-  timelineItem: { position: 'relative', paddingLeft: 24, marginBottom: 16 },
+  timelineItem: { marginBottom: 16 },
   timelineLine: { position: 'absolute', left: 8, top: 0, bottom: 0, width: 2, backgroundColor: colors.border },
   timelineDot: { position: 'absolute', left: 4, top: 24, width: 10, height: 10, borderRadius: 5, backgroundColor: '#E50914', borderWidth: 2, borderColor: colors.border },
   card: { backgroundColor: colors.backgroundElement, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: colors.border },

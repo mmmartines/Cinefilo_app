@@ -1,4 +1,4 @@
-import { useAppTheme } from '../contexts/ThemeContext';
+import { useAppTheme } from '../../../contexts/ThemeContext';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, TextInput, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -6,9 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAlert } from '../contexts/AlertContext';
+import { useAlert } from '../../../contexts/AlertContext';
 
-export default function CinemasScreen() {
+export function CinemasTab() {
   const { colors } = useAppTheme();
   const styles = getStyles(colors);
   const router = useRouter();
@@ -19,8 +19,12 @@ export default function CinemasScreen() {
   const [loading, setLoading] = useState(false);
   const [searchCity, setSearchCity] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('map');
   const [mapUnavailable, setMapUnavailable] = useState(false);
+
+  useEffect(() => {
+    handleUseGPS();
+  }, []);
 
   const [mapRegion, setMapRegion] = useState({
     latitude: -14.235,
@@ -214,27 +218,10 @@ export default function CinemasScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backIcon} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cinemas Próximos</Text>
-        <View style={{width: 40}} />
-      </View>
+      
 
       <View style={styles.searchSection}>
-        <TouchableOpacity style={styles.gpsBtn} onPress={handleUseGPS} disabled={loading}>
-          <Ionicons name="location" size={20} color="#fff" />
-          <Text style={styles.gpsBtnText}>Usar Minha Localização GPS</Text>
-        </TouchableOpacity>
-
-        <View style={styles.orDivider}>
-          <View style={styles.line} />
-          <Text style={styles.orText}>OU</Text>
-          <View style={styles.line} />
-        </View>
-
-        <View style={styles.inputContainer}>
+          <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Buscar por nome da Cidade..."
@@ -248,8 +235,11 @@ export default function CinemasScreen() {
             onPress={() => fetchCinemasByCity(searchCity)}
             disabled={loading}
           >
-            <Ionicons name="search" size={20} color="#fff" />
-          </TouchableOpacity>
+            <Ionicons name="search" size={20} color={colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.gpsBtnSquare} onPress={handleUseGPS} disabled={loading}>
+              <Ionicons name="location" size={20} color="#fff" />
+            </TouchableOpacity>
         </View>
       </View>
 
@@ -262,27 +252,27 @@ export default function CinemasScreen() {
         ) : (
           <>
             <View style={styles.viewToggleRow}>
-              <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}>
-                <Ionicons name="list" size={16} color={viewMode === 'list' ? "#fff" : "#999"} style={{marginRight: 6}} />
-                <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>Lista</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setViewMode('map')} style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}>
-                <Ionicons name="map" size={16} color={viewMode === 'map' ? "#fff" : "#999"} style={{marginRight: 6}} />
-                <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Mapa</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity onPress={() => setViewMode('map')} style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}>
+                  <Ionicons name="map" size={16} color={viewMode === 'map' ? '#fff' : "#999"} style={{marginRight: 6}} />
+                  <Text style={[styles.toggleText, viewMode === 'map' && styles.toggleTextActive]}>Mapa</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}>
+                  <Ionicons name="list" size={16} color={viewMode === 'list' ? '#fff' : "#999"} style={{marginRight: 6}} />
+                  <Text style={[styles.toggleText, viewMode === 'list' && styles.toggleTextActive]}>Lista</Text>
+                </TouchableOpacity>
+              </View>
 
             {viewMode === 'map' ? (
-              <View style={{ flex: 1, marginTop: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1a1c23' }}>
+              <View style={{ flex: 1, marginTop: 16, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.backgroundElement }}>
                 {mapUnavailable ? (
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: colors.backgroundElement }}>
                     <Ionicons name="map-outline" size={48} color="#E50914" style={{ marginBottom: 16 }} />
-                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível no Momento</Text>
+                    <Text style={{ color: colors.text, fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>Mapa Indisponível no Momento</Text>
                     <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>A cota de uso foi atingida ou não está configurada corretamente.</Text>
                   </View>
                 ) : (
                   <WebView
-                    style={{ flex: 1, backgroundColor: '#1a1c23' }}
+                    style={{ flex: 1, backgroundColor: colors.backgroundElement }}
                     originWhitelist={['*']}
                     source={{
                       html: `
@@ -351,60 +341,27 @@ const getStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    backgroundColor: colors.backgroundElement,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  backIcon: {
-    padding: 8,
-    width: 40,
-    alignItems: 'flex-start',
-  },
+  
+  
+  
   searchSection: {
-    padding: 24,
+      padding: 16,
     backgroundColor: colors.backgroundElement,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  gpsBtn: {
-    backgroundColor: '#E50914',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  gpsBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  orDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  orText: {
-    color: colors.textSecondary,
-    marginHorizontal: 16,
-    fontWeight: 'bold',
-  },
+  gpsBtnSquare: {
+      backgroundColor: '#E50914',
+      width: 50,
+      height: 50,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  
+  
+  
+  
   inputContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -415,9 +372,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     height: 50,
     borderRadius: 12,
     paddingHorizontal: 16,
-    color: '#fff',
-    fontSize: 16,
-    borderWidth: 1,
+    color: colors.text, fontSize: 16, borderWidth: 1,
     borderColor: colors.border,
   },
   searchBtn: {
@@ -449,16 +404,14 @@ const getStyles = (colors: any) => StyleSheet.create({
     borderColor: colors.border
   },
   toggleBtnActive: {
-    backgroundColor: colors.border,
-    borderColor: '#E50914',
-  },
+      backgroundColor: '#E50914',
+      borderColor: '#E50914',
+    },
   toggleText: {
     color: colors.textSecondary,
     fontWeight: 'bold'
   },
-  toggleTextActive: {
-    color: '#fff'
-  },
+  toggleTextActive: { color: '#fff' },
   listContent: {
     padding: 16,
     paddingBottom: 40,
@@ -474,8 +427,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   cinemaInfo: {
     marginBottom: 16,
   },
-  cinemaName: {
-    color: '#fff',
+  cinemaName: { color: colors.text,
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
@@ -499,7 +451,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     gap: 6,
   },
   actionText: {
-    color: '#fff',
+      color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
   },

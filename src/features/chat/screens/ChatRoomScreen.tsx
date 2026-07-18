@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useChatRoom } from '../hooks/useChatRoom';
 import { useAppTheme } from '../../../contexts/ThemeContext';
+import { supabase } from '../../../services/supabase';
+import { useNotificationBadges } from '../../../contexts/NotificationBadgeContext';
 
 interface ChatRoomScreenProps {
   chatId: string;
@@ -23,6 +25,26 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
     currentUser,
     handleSendMessage,
   } = useChatRoom(chatId);
+  
+  const { refetchBadges, markChatAsRead } = useNotificationBadges() as any;
+
+  React.useEffect(() => {
+    async function markAsRead() {
+      const lastMessage = chatMessages.length > 0 ? chatMessages[chatMessages.length - 1] : null;
+      if (!lastMessage) return;
+      
+      const date = new Date(lastMessage.created_at);
+      date.setSeconds(date.getSeconds() + 1);
+      const readTime = date.toISOString();
+      
+      if (markChatAsRead) {
+        await markChatAsRead(chatId, readTime);
+      }
+    }
+    if (chatMessages.length > 0) {
+      markAsRead();
+    }
+  }, [chatId, chatMessages.length]);
   
   const messagesListRef = useRef<FlatList>(null);
 
@@ -45,7 +67,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
         <View style={[styles.messageBubble, isMyMessage ? styles.myBubble : styles.otherBubble]}>
           {!isMyMessage && <Text style={styles.senderName}>{item.user_name}</Text>}
           <Text style={[styles.messageText, { color: isMyMessage ? '#fff' : colors.text }]}>{item.content}</Text>
-          <Text style={styles.timestamp}>
+          <Text style={[styles.timestamp, { color: isMyMessage ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>
             {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </View>
@@ -72,6 +94,10 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
         </View>
       ) : (
         <FlatList
+          initialNumToRender={15}
+          windowSize={5}
+          maxToRenderPerBatch={10}
+          removeClippedSubviews={true}
           ref={messagesListRef}
           data={chatMessages}
           keyExtractor={(item) => item.id}
@@ -108,7 +134,7 @@ export function ChatRoomScreen({ chatId }: ChatRoomScreenProps) {
 }
 
 const getStyles = (colors: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.border },
+  container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 48, paddingBottom: 16, backgroundColor: colors.backgroundElement, borderBottomWidth: 1, borderBottomColor: colors.border },
   backBtn: { padding: 8 },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: colors.text },
@@ -122,10 +148,10 @@ const getStyles = (colors: any) => StyleSheet.create({
   messageAvatarPlaceholder: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' },
   messageBubble: { maxWidth: '75%', padding: 12, borderRadius: 16 },
   myBubble: { backgroundColor: '#E50914', borderBottomRightRadius: 4 },
-  otherBubble: { backgroundColor: colors.border, borderBottomLeftRadius: 4 },
+  otherBubble: { backgroundColor: colors.backgroundElement, borderBottomLeftRadius: 4 },
   senderName: { color: colors.textSecondary, fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
   messageText: { color: colors.text, fontSize: 16 },
-  timestamp: { color: 'rgba(255,255,255,0.5)', fontSize: 10, alignSelf: 'flex-end', marginTop: 4 },
+  timestamp: { fontSize: 10, alignSelf: 'flex-end', marginTop: 4 },
   inputContainer: { flexDirection: 'row', padding: 16, backgroundColor: colors.backgroundElement, borderTopWidth: 1, borderTopColor: colors.border, alignItems: 'flex-end', gap: 12 },
   input: { flex: 1, backgroundColor: colors.border, color: colors.text, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 12, maxHeight: 100, borderWidth: 1, borderColor: colors.border },
   sendBtn: { backgroundColor: '#E50914', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 2 },

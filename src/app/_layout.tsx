@@ -7,6 +7,7 @@ import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-rout
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { database } from '../services/database';
+
 import { supabase } from '../services/supabase';
 import { NetworkAlert } from '../components/NetworkAlert';
 import { NetworkEnforcer } from '../components/NetworkEnforcer';
@@ -15,11 +16,19 @@ import { Platform } from 'react-native';
 import { registerForPushNotificationsAsync } from '../services/notifications';
 import { AlertProvider } from '../contexts/AlertContext';
 import { SyncProvider, useSync } from '../contexts/SyncContext';
+import { NotificationBadgeProvider } from '../contexts/NotificationBadgeContext';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { initTelemetry, posthogConfig } from '../utils/telemetry';
+import { PostHogProvider } from 'posthog-react-native';
+import * as Sentry from '@sentry/react-native';
+
+initTelemetry();
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,6 +63,7 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
   const router = useRouter();
   const { forceSync } = useSync();
   const navigationState = useRootNavigationState();
+  const { expoPushToken } = usePushNotifications();
 
   const hasSynced = useRef(false);
 
@@ -63,21 +73,23 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
     if (isAuthenticated === null) return;
     if (!navigationState?.key) return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
+    // Use a small timeout to let the router settle before checking segments
+    setTimeout(() => {
+      const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
 
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/login');
-      hasSynced.current = false;
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/');
-    } else if (isAuthenticated && !inAuthGroup) {
-      // Assim que autentica e não está nas telas de login, força o sync APENAS 1 VEZ
-      if (!hasSynced.current) {
-        hasSynced.current = true;
-        forceSync();
+      if (!isAuthenticated && !inAuthGroup) {
+        router.replace('/login');
+        hasSynced.current = false;
+      } else if (isAuthenticated && inAuthGroup) {
+        router.replace('/');
+      } else if (isAuthenticated && !inAuthGroup) {
+        if (!hasSynced.current) {
+          hasSynced.current = true;
+          forceSync();
+        }
       }
-    }
-  }, [isAuthenticated, segments, navigationState?.key]);
+    }, 100);
+  }, [isAuthenticated]); // Removido 'segments' para não re-disparar a cada mudança de tela!
 
   if (isAuthenticated === null || !fontsLoaded) {
     return null;
@@ -196,7 +208,11 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AppThemeProvider><AlertProvider>
           <SyncProvider>
-            <AppContent isAuthenticated={isAuthenticated} fontsLoaded={fontsLoaded} segments={segments} />
+            <NotificationBadgeProvider>
+              <PostHogProvider apiKey={posthogConfig.apiKey} options={posthogConfig.options}>
+                <AppContent isAuthenticated={isAuthenticated} fontsLoaded={fontsLoaded} segments={segments} />
+              </PostHogProvider>
+            </NotificationBadgeProvider>
           </SyncProvider>
         </AlertProvider></AppThemeProvider>
       </ThemeProvider>

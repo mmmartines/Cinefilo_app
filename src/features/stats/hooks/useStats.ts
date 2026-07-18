@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { database } from '../../../services/database';
+import { supabase } from '../../../services/supabase';
 import { calculateBadges, Badge } from '../../../utils/badges';
 
 const GENRE_ADJECTIVES: Record<string, string> = {
@@ -49,6 +50,8 @@ export function useStats() {
   const [emotionPhrase, setEmotionPhrase] = useState('');
   const [gamificationTitle, setGamificationTitle] = useState('Analisando...');
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [currentChallenge, setCurrentChallenge] = useState<any>(null);
+  const [isChallengeCompleted, setIsChallengeCompleted] = useState(false);
   
   const [currentXp, setCurrentXp] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -61,6 +64,11 @@ export function useStats() {
     const currentUser = await database.getCurrentUser();
     if (!currentUser) return;
     setUserAvatarUrl(currentUser.avatar_url || null);
+
+    const challenge = database.getWeeklyChallenge();
+    setCurrentChallenge(challenge);
+    const completed = await database.isWeeklyChallengeCompleted(currentUser.id, challenge.weekId);
+    setIsChallengeCompleted(completed);
 
     const fullList = await database.getWatchedMovies(currentUser.id);
     const watchedList = fullList.filter((m: any) => m.status === 'watched' || !m.status);
@@ -252,5 +260,7 @@ export function useStats() {
     viewShotRef,
     handleShareStats,
     formattedWatchTime,
+    currentChallenge,
+    isChallengeCompleted,
   };
 }
