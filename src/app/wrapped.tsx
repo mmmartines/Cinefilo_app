@@ -218,8 +218,8 @@ export default function WrappedScreen() {
 
         {currentSlide === 2 && (
           <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-            <Ionicons name="share-social" size={24} color="#fff" />
-            <Text style={styles.shareText}>Compartilhar</Text>
+            <Ionicons name="share-social" size={32} color="#fff" />
+            
           </TouchableOpacity>
         )}
       </View>
@@ -251,6 +251,6 @@ const getStyles = (colors: any) => StyleSheet.create({
   footerText: { color: 'rgba(255,255,255,0.5)', textAlign: 'center', fontWeight: 'bold' },
   actions: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 16, zIndex: 10 },
   closeBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1DB954', paddingHorizontal: 24, height: 56, borderRadius: 28 },
+  shareBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#1DB954', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#1DB954', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8 },
   shareText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });
