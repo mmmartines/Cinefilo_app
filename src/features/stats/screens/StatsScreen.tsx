@@ -58,14 +58,11 @@ export function StatsScreen() {
   const highlightColor = isRankLight ? '#990000' : '#FFD700';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
+    <View style={styles.container}>
+    <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
       <GlobalHeader 
           title="Jornada do Herói" 
-          rightComponent={
-            <TouchableOpacity style={styles.shareButton} onPress={handleShareStats}>
-              <Ionicons name="share-social" size={20} color={colors.text} />
-            </TouchableOpacity>
-          }        />
+                  />
   
       
             <TouchableOpacity onPress={() => router.push('/wrapped')}>
@@ -307,6 +304,11 @@ export function StatsScreen() {
       </View>
       </ViewShot>
     </ScrollView>
+
+      <TouchableOpacity style={styles.fab} onPress={handleShareStats}>
+        <Ionicons name="share-social" size={32} color="#fff" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -342,6 +344,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   shareButton: { padding: 8, backgroundColor: colors.border, borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
   profileIcon: { padding: 8, backgroundColor: colors.border, borderRadius: 20, width: 40, height: 40, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 40, height: 40 },
+  fab: { position: 'absolute', bottom: 100, right: 24, width: 64, height: 64, borderRadius: 32, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#E50914', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8 },
   gamificationCard: { alignItems: 'center', margin: 16, padding: 24, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
   rankLabel: { color: colors.textSecondary, fontSize: 14, marginTop: 8, textTransform: 'uppercase', letterSpacing: 2 },
   rankTitle: { color: colors.text, fontSize: 22, fontWeight: 'bold', marginTop: 4, textAlign: 'center' },
