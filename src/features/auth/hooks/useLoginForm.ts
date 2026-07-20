@@ -56,7 +56,7 @@ export function useLoginForm() {
           tag: tag,
           provider: 'email'
         });
-        setTimeout(() => router.replace('/'), 100);
+        // setTimeout(() => router.replace('/'), 100); // Removido para evitar conflito com o AppContent de _layout.tsx
       }
 
     } catch (e: any) {
@@ -169,7 +169,7 @@ export function useLoginForm() {
             showAlert('Aviso', 'O login retornou status: ' + res.type);
           }
         }
-        setTimeout(() => router.replace('/'), 100);
+        // setTimeout(() => router.replace('/'), 100); // Removido para evitar conflito com o AppContent de _layout.tsx
       }
     } catch (e: any) {
       showAlert('Erro', e.message || 'Falha no login social.');
