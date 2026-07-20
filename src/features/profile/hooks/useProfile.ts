@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { database } from '../../../services/database';
 import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
@@ -7,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 
 export function useProfile() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { showAlert } = useAlert();
   
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -144,6 +146,7 @@ export function useProfile() {
 
   const handleUserLogout = async () => {
     await database.logout();
+    queryClient.clear();
     router.replace('/login');
   };
 
