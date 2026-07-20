@@ -49,6 +49,15 @@ const asyncStoragePersister = createAsyncStoragePersister({
 import { useFonts } from 'expo-font';
 import { Inter_400Regular, Inter_700Bold, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { Text, TextInput } from 'react-native';
+// ==========================================
+// Silenciando logs do console em todo o App
+// ==========================================
+if (true) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+}
+
 
 // @ts-ignore
 if (Text.defaultProps == null) Text.defaultProps = {};
