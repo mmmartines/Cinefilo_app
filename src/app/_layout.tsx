@@ -26,8 +26,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { initTelemetry, posthogConfig } from '../utils/telemetry';
 import { PostHogProvider } from 'posthog-react-native';
-import * as Sentry from '@sentry/react-native';
-
 initTelemetry();
 
 SplashScreen.preventAutoHideAsync();
