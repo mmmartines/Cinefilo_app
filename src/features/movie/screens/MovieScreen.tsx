@@ -28,6 +28,8 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
     isMovieInWatchlist,
     isRatingModalVisible,
     setIsRatingModalVisible,
+    isListModalVisible,
+    setIsListModalVisible,
     movieRating,
     setMovieRating,
     movieReview,
@@ -50,6 +52,7 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
     trailerVideoKey,
     EMOTIONS,
     handleSaveMovieRating,
+    handleSaveToLists,
     handleAddMovieToWatchlist,
     handleRemoveMovieData,
     handleCreateMovieChatGroup,
@@ -148,7 +151,17 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                     const em = EMOTIONS.find(e => e.label === emotionLabel);
                     return (
                       <View key={index} style={[styles.tagBadge, { backgroundColor: em ? `${em.color}22` : colors.border, borderColor: em?.color || colors.textSecondary, borderWidth: 1 }]}>
-                        <Text style={[styles.tagTextBadge, { color: em?.color || colors.text }]}>{emotionLabel}</Text>
+                        {(() => {
+                          const parts = emotionLabel.split(' ');
+                          const emoji = parts[0];
+                          const text = parts.slice(1).join(' ');
+                          return (
+                            <Text style={[styles.tagTextBadge, { color: em?.color || colors.text }]}>
+                              <Text style={{ fontWeight: 'normal' }}>{emoji} </Text>
+                              <Text>{text}</Text>
+                            </Text>
+                          );
+                        })()}
                       </View>
                     );
                   })}
@@ -215,6 +228,16 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
               </TouchableOpacity>
             )}
           </View>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: colors.backgroundElement, borderWidth: 1, borderColor: colors.border, marginTop: 12 }]}
+            onPress={() => setIsListModalVisible(true)}
+          >
+            <Ionicons name="list" size={20} color={colors.text} />
+            <Text style={[styles.actionButtonText, { color: colors.text }]}>
+              Adicionar a uma Lista
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.chatButton}
@@ -294,6 +317,12 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
             <View style={styles.emotionsContainer}>
               {EMOTIONS.map((emotion, index) => {
                 const isSelected = selectedMovieEmotions.includes(emotion.label);
+                
+                // Extrai o emoji e o texto corretamente, lidando com possíveis espaços especiais
+                const match = emotion.label.match(/^(\S+)\s+(.+)$/);
+                const emoji = match ? match[1] : emotion.label.charAt(0);
+                const text = match ? match[2] : emotion.label.slice(1).trim();
+
                 return (
                   <TouchableOpacity
                     key={index}
@@ -309,45 +338,16 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
                       }
                     }}
                   >
-                    <Text style={[styles.emotionChipText, isSelected ? { color: emotion.color } : { color: '#bbb' }]}>
-                      {emotion.label}
-                    </Text>
+                    <Text style={{ fontSize: 14 }}>{emoji}</Text>
+                    {!!text && (
+                      <Text style={[styles.emotionChipText, { color: isSelected ? emotion.color : colors.textSecondary }]}>
+                        {text}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
-
-            {userCustomLists.length > 0 && (
-              <>
-                <Text style={styles.modalSubtitle}>Adicionar às Listas</Text>
-                <View style={styles.emotionsContainer}>
-                  {userCustomLists.map((list) => {
-                    const listIdentifier = list._id || list.id;
-                    const isSelected = selectedCustomLists.includes(listIdentifier);
-                    return (
-                      <TouchableOpacity
-                        key={listIdentifier}
-                        style={[
-                          styles.emotionChip,
-                          isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: colors.border }
-                        ]}
-                        onPress={() => {
-                          if (isSelected) {
-                            setSelectedCustomLists(prev => prev.filter(id => id !== listIdentifier));
-                          } else {
-                            setSelectedCustomLists(prev => [...prev, listIdentifier]);
-                          }
-                        }}
-                      >
-                        <Text style={[styles.emotionChipText, isSelected ? { color: '#E50914' } : { color: '#bbb' }]}>
-                          {list.name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </>
-            )}
 
             <TextInput
               style={styles.reviewInput}
@@ -467,6 +467,65 @@ export function MovieScreen({ movieId }: MovieScreenProps) {
             )}
           </View>
         </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isListModalVisible}
+        onRequestClose={() => setIsListModalVisible(false)}
+      >
+        <BlurView intensity={80} tint="dark" style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Adicionar às Listas</Text>
+            
+            {userCustomLists.length === 0 ? (
+              <Text style={{ color: colors.textSecondary, marginBottom: 24, textAlign: 'center' }}>
+                Você ainda não possui listas personalizadas. Crie uma na aba "Biblioteca".
+              </Text>
+            ) : (
+              <ScrollView style={{ width: '100%', maxHeight: 300, marginBottom: 24 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {userCustomLists.map((list) => {
+                    const listIdentifier = list._id || list.id;
+                    const isSelected = selectedCustomLists.includes(listIdentifier);
+                    return (
+                      <TouchableOpacity
+                        key={listIdentifier}
+                        style={[
+                          styles.emotionChip,
+                          isSelected ? { backgroundColor: 'rgba(229, 9, 20, 0.15)', borderColor: '#E50914' } : { borderColor: colors.border }
+                        ]}
+                        onPress={() => {
+                          if (isSelected) {
+                            setSelectedCustomLists(prev => prev.filter(id => id !== listIdentifier));
+                          } else {
+                            setSelectedCustomLists(prev => [...prev, listIdentifier]);
+                          }
+                        }}
+                      >
+                        <Text style={[styles.emotionChipText, isSelected ? { color: '#E50914' } : { color: '#bbb' }]}>
+                          {list.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            )}
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setIsListModalVisible(false)}>
+                <Text style={styles.modalCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              {userCustomLists.length > 0 && (
+                <TouchableOpacity style={styles.modalSave} onPress={handleSaveToLists}>
+                  <Text style={styles.modalSaveText}>Salvar</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </BlurView>
       </Modal>
     </View>
   );

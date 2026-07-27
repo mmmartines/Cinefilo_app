@@ -32,16 +32,16 @@ export function SettingsScreen() {
     setDeleteConfirmationText,
     userAvatarUrl,
     isNotificationsEnabled,
-    birthdateDate,
-    isDatePickerVisible,
-    setIsDatePickerVisible,
-    handleChangeDate,
     handlePickImage,
     handleToggleNotifications,
     handleSaveProfile,
     handleDeleteUserAccount,
     handleUserLogout,
     userProvider,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
   } = useProfile();
 
   if (!userProfile) {
@@ -107,39 +107,52 @@ export function SettingsScreen() {
           />
         </View>
 
-        <Text style={styles.label}>Data de Nascimento</Text>
-        <View style={styles.inputContainer}>
-          <Ionicons name="calendar" color={colors.textSecondary} size={20} style={styles.icon} />
-          <TouchableOpacity 
-            style={{ flex: 1, justifyContent: 'center' }} 
-            onPress={() => setIsDatePickerVisible(true)}
-          >
-            <Text style={{ color: userBirthdate ? colors.text : colors.textSecondary, fontSize: 16 }}>
-              {userBirthdate || "Data de Nascimento"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {userProvider !== 'google' && (
+          <>
+            <Text style={styles.label}>Senha Atual</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed" color={colors.textSecondary} size={20} style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                value={userPassword}
+                onChangeText={setUserPassword}
+                secureTextEntry
+                placeholder="Sua senha atual"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
 
-        {isDatePickerVisible && (
-          <DateTimePicker
-            value={birthdateDate}
-            mode="date"
-            display="default"
-            onChange={handleChangeDate}
-            maximumDate={new Date()}
-          />
+            <Text style={styles.label}>Nova Senha</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" color={colors.textSecondary} size={20} style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                placeholder="Deixe em branco para não alterar"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
+
+            {newPassword.length > 0 && (
+              <>
+                <Text style={styles.label}>Confirmar Nova Senha</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" color={colors.textSecondary} size={20} style={styles.icon} />
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    placeholder="Repita a nova senha"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                </View>
+              </>
+            )}
+          </>
         )}
-
-        <Text style={styles.label}>Senha</Text>
-        <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed" color={colors.textSecondary} size={20} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            value={userPassword}
-            onChangeText={setUserPassword}
-            secureTextEntry
-          />
-        </View>
 
         <TouchableOpacity 
           style={styles.saveButton} 
@@ -170,7 +183,24 @@ export function SettingsScreen() {
               <Picker.Item label="Escuro" value="dark" />
             </Picker>
           </View>
-          <Text style={styles.settingsTitle}>Configurações Adicionais</Text>
+          
+          <TouchableOpacity style={[styles.settingRow, { marginTop: 16 }]} onPress={() => router.push('/preferences')}>
+            <View>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Preferências de Conteúdo</Text>
+              <Text style={[styles.settingSubLabel, { color: colors.textSecondary }]}>Gêneros e Onde Assistir</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
+          </TouchableOpacity>
+          
+          <Text style={[styles.settingsTitle, { marginTop: 24 }]}>Configurações Adicionais</Text>
+          <View style={styles.tagSection}>
+            <View style={styles.tagBox}>
+              <Text style={styles.tagLabel}>Seu @nickname</Text>
+              <View style={styles.tagRow}>
+                <Text style={styles.tagText}>@{userProfile?.nickname || userProfile?.tag}</Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.settingRow}>
             <View>
               <Text style={styles.settingLabel}>Notificações Push</Text>

@@ -30,6 +30,7 @@ export function LoginScreen() {
     isLoading,
     handleLogin,
     handleSocialLogin,
+    handleResetPassword,
   } = useLoginForm();
 
   return (
@@ -75,6 +76,10 @@ export function LoginScreen() {
                 onChangeText={setPassword}
               />
             </View>
+
+            <TouchableOpacity style={styles.forgotPasswordWrap} onPress={handleResetPassword}>
+              <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
+            </TouchableOpacity>
 
             <AnimatedButton 
               style={styles.loginButton} 
@@ -180,25 +185,10 @@ const styles = StyleSheet.create({
   icon: {
     marginRight: 12,
   },
-  input: {
-    flex: 1,
-    color: darkTheme.text,
-    fontSize: 16,
-  },
-  loginButton: {
-    backgroundColor: darkTheme.primary,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-    shadowColor: darkTheme.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+  input: { flex: 1, color: darkTheme.text, fontSize: 16 },
+  forgotPasswordWrap: { alignSelf: 'flex-end', marginBottom: 24, marginTop: -8 },
+  forgotPasswordText: { color: darkTheme.textSecondary, fontSize: 14 },
+  loginButton: { backgroundColor: darkTheme.primary, height: 56, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 24, shadowColor: darkTheme.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   loginButtonText: {
     color: '#fff',
     fontSize: 18,

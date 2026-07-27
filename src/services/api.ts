@@ -24,7 +24,20 @@ export const getGenres = async () => {
   }
 };
 
-export const fetchFilteredMovies = async (page: number = 1, query: string = '', genreIds: number[] = [], year: string = '') => {
+export const getWatchProviders = async () => {
+  try {
+    const response = await api.get('/watch/providers/movie', {
+      params: { language: 'pt-BR', watch_region: 'BR' }
+    });
+    return response.data.results;
+  } catch (error) {
+    console.error('Erro ao buscar provedores de streaming:', error);
+    return [];
+  }
+};
+
+
+export const fetchFilteredMovies = async (page: number = 1, query: string = '', genreIds: number[] = [], year: string = '', watchProvidersIds: number[] = []) => {
   try {
     let endpoint = '/movie/popular';
     let params: any = { language: 'pt-BR', page };
@@ -44,11 +57,15 @@ export const fetchFilteredMovies = async (page: number = 1, query: string = '', 
       }
       return results;
 
-    } else if (genreIds.length > 0 || year) {
+    } else if (genreIds.length > 0 || year || watchProvidersIds.length > 0) {
       // Rota de descoberta
       endpoint = '/discover/movie';
       if (genreIds.length > 0) params.with_genres = genreIds.join('|'); // Lógica OU
       if (year) params.primary_release_year = year;
+      if (watchProvidersIds.length > 0) {
+        params.with_watch_providers = watchProvidersIds.join('|');
+        params.watch_region = 'BR';
+      }
 
       const response = await api.get(endpoint, { params });
       return response.data.results;

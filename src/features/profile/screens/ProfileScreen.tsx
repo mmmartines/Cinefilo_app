@@ -110,16 +110,16 @@ export function ProfileScreen() {
           <TouchableOpacity 
             style={styles.tagCard}
             onPress={async () => {
-              if (userProfile?.tag) {
-                await Clipboard.setStringAsync(userProfile.tag);
-                showAlert('Copiado!', 'Tag copiada para a área de transferência.');
+              if (userProfile?.nickname || userProfile?.tag) {
+                await Clipboard.setStringAsync(`@${userProfile.nickname || userProfile.tag}`);
+                showAlert('Copiado!', 'Apelido copiado para a área de transferência.');
               }
             }}
           >
-            <Text style={styles.statLabel}>Sua #Tag de Amizade:</Text>
+            <Text style={styles.statLabel}>Seu @apelido:</Text>
             <View style={styles.tagRow}>
-              <Text style={styles.tagText}>{userProfile?.tag || 'GERANDO...'}</Text>
-              <Ionicons name="copy-outline" size={20} color="#E50914" />
+              <Text style={styles.tagText}>@{userProfile?.nickname || userProfile?.tag || '...'}</Text>
+              <Ionicons name="copy-outline" size={20} color={colors.textSecondary} />
             </View>
           </TouchableOpacity>
         </View>

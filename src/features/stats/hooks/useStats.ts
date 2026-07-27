@@ -65,7 +65,7 @@ export function useStats() {
     if (!currentUser) return;
     setUserAvatarUrl(currentUser.avatar_url || null);
 
-    const challenge = database.getWeeklyChallenge();
+    const challenge = await database.getWeeklyChallenge(currentUser.id);
     setCurrentChallenge(challenge);
     const completed = await database.isWeeklyChallengeCompleted(currentUser.id, challenge.weekId);
     setIsChallengeCompleted(completed);

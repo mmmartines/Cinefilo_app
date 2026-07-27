@@ -25,7 +25,7 @@ export function FriendRequestsScreen() {
   const renderRequestItem = ({ item }: { item: any }) => {
     const isReceived = activeTab === 'received';
     const name = isReceived ? item.sender_name : item.receiver_name;
-    const tag = isReceived ? item.sender_tag : item.receiver_tag;
+    const tag = isReceived ? (item.sender_nickname || item.sender_tag) : (item.receiver_nickname || item.receiver_tag);
     const avatar = isReceived ? item.sender_avatar : item.receiver_avatar;
 
     return (
@@ -40,7 +40,7 @@ export function FriendRequestsScreen() {
           )}
           <View style={styles.nameContainer}>
             <Text style={styles.userName}>{name}</Text>
-            <Text style={styles.userTag}>#{tag}</Text>
+            <Text style={styles.userTag}>@{tag}</Text>
           </View>
         </View>
 

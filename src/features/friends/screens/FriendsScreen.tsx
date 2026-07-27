@@ -1,7 +1,7 @@
 import { NotificationBell } from '../../../components/NotificationBell';
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter, Link } from 'expo-router';
+import { useRouter, Link, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '../../../components/AnimatedButton';
@@ -18,8 +18,8 @@ export function FriendsScreen() {
   const insets = useSafeAreaInsets();
   
   const {
-    friendTag,
-    setFriendTag,
+    friendNickname,
+    setFriendNickname,
     friendsList,
     isLoading,
     isAddingFriend,
@@ -28,7 +28,14 @@ export function FriendsScreen() {
     handleSendFriendRequest,
     handleRemoveFriend,
     formatRuntime,
+    fetchFriendsList,
   } = useFriends();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchFriendsList();
+    }, [fetchFriendsList])
+  );
 
   const renderFriendItem = ({ item }: { item: any }) => {
     const isTop3 = item.rank <= 3;
@@ -82,7 +89,7 @@ export function FriendsScreen() {
   return (
     <KeyboardAvoidingView 
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
     >
   
         {isOffline && (
@@ -93,21 +100,21 @@ export function FriendsScreen() {
       )}
 
       <View style={styles.addSection}>
-        <Text style={styles.label}>Adicionar Amigo por #Tag</Text>
+        <Text style={styles.label}>Adicionar Amigo por @apelido</Text>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Ex: X7K9LM2Q1P"
+            placeholder="Ex: joao.silva"
             placeholderTextColor="#666"
-            value={friendTag}
-            onChangeText={(t) => setFriendTag(t.toUpperCase())}
-            maxLength={10}
-            autoCapitalize="characters"
+            value={friendNickname}
+            onChangeText={(t) => setFriendNickname(t.toLowerCase())}
+            maxLength={20}
+            autoCapitalize="none"
           />
           <AnimatedButton 
             style={styles.addButton} 
             onPress={handleSendFriendRequest}
-            disabled={isAddingFriend || friendTag.length === 0}
+            disabled={isAddingFriend || friendNickname.length < 3}
           >
             {isAddingFriend ? (
               <ActivityIndicator size="small" color="#fff" />

@@ -30,6 +30,14 @@ export function CatalogScreen() {
       setSelectedGenres([...selectedGenres, id]);
     }
   };
+
+  const toggleProvider = (id: number) => {
+    if (selectedProviders.includes(id)) {
+      setSelectedProviders(selectedProviders.filter(p => p !== id));
+    } else {
+      setSelectedProviders([...selectedProviders, id]);
+    }
+  };
   
   const {
     moviesList,
@@ -37,6 +45,7 @@ export function CatalogScreen() {
     isLoadingMore,
     watchedStatus,
     genresList,
+    providersList,
     userAvatarUrl,
     searchQuery,
     setSearchQuery,
@@ -44,6 +53,8 @@ export function CatalogScreen() {
     setSearchYear,
     selectedGenres,
     setSelectedGenres,
+    selectedProviders,
+    setSelectedProviders,
     isAiModalVisible,
     setIsAiModalVisible,
     isAiLoading,
@@ -88,9 +99,9 @@ export function CatalogScreen() {
               />
               <TouchableOpacity style={styles.filterIconBtn} onPress={() => setIsFilterModalVisible(true)}>
                 <Ionicons name="options" size={24} color={colors.text} />
-                {selectedGenres.length > 0 && (
+                {(selectedGenres.length > 0 || selectedProviders.length > 0) && (
                   <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>{selectedGenres.length}</Text>
+                    <Text style={styles.filterBadgeText}>{selectedGenres.length + selectedProviders.length}</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -148,8 +159,8 @@ export function CatalogScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={styles.modalScrollContent}>
-               <Text style={{color: colors.textSecondary, marginBottom: 16}}>Selecione uma ou mais categorias (Busca "OU"):</Text>
-               <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
+               <Text style={{color: colors.textSecondary, marginBottom: 16}}>Gêneros (Busca "OU"):</Text>
+               <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24}}>
                  {genresList.map((g) => {
                    const isSelected = selectedGenres.includes(g.id);
                    return (
@@ -159,6 +170,22 @@ export function CatalogScreen() {
                        onPress={() => toggleGenre(g.id)}
                      >
                        <Text style={[styles.genreGridText, isSelected && {color: '#fff', fontWeight: 'bold'}]}>{g.name}</Text>
+                     </TouchableOpacity>
+                   );
+                 })}
+               </View>
+
+               <Text style={{color: colors.textSecondary, marginBottom: 16}}>Onde Assistir (Busca "OU"):</Text>
+               <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
+                 {providersList?.slice(0, 30).map((p: any) => {
+                   const isSelected = selectedProviders.includes(p.provider_id);
+                   return (
+                     <TouchableOpacity 
+                       key={p.provider_id} 
+                       style={[styles.genreGridPill, isSelected && {backgroundColor: '#E50914', borderColor: '#E50914'}]}
+                       onPress={() => toggleProvider(p.provider_id)}
+                     >
+                       <Text style={[styles.genreGridText, isSelected && {color: '#fff', fontWeight: 'bold'}]}>{p.provider_name}</Text>
                      </TouchableOpacity>
                    );
                  })}

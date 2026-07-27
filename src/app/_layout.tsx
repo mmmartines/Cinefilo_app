@@ -74,15 +74,20 @@ function AppContent({ isAuthenticated, fontsLoaded, segments }: { isAuthenticate
     if (!navigationState?.key) return;
 
     // Use a small timeout to let the router settle before checking segments
-    setTimeout(() => {
+    setTimeout(async () => {
       const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
+      const isSetup = segments[0] === 'setup-nickname';
+      
+      const currentUser = isAuthenticated ? await database.getCurrentUser() : null;
 
       if (!isAuthenticated && !inAuthGroup) {
         router.replace('/login');
         hasSynced.current = false;
-      } else if (isAuthenticated && inAuthGroup) {
+      } else if (isAuthenticated && currentUser && !currentUser.nickname && !isSetup) {
+        router.replace('/setup-nickname');
+      } else if (isAuthenticated && currentUser && currentUser.nickname && (inAuthGroup || isSetup)) {
         router.replace('/');
-      } else if (isAuthenticated && !inAuthGroup) {
+      } else if (isAuthenticated && !inAuthGroup && !isSetup) {
         if (!hasSynced.current) {
           hasSynced.current = true;
           forceSync();
@@ -169,23 +174,23 @@ export default function RootLayout() {
                 'Authorization': `Bearer ${session.access_token}`,
               }
             });
-            let tag = '';
+            let nickname = '';
             if (response.ok) {
               const apiData = await response.json();
-              tag = apiData.data?.tag || '';
+              nickname = apiData.data?.nickname || '';
             }
             await database.setCurrentUser({
               id: session.user.id,
               email: session.user.email,
               name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || '',
-              tag: tag
+              nickname: nickname
             });
           } catch (err) {
             await database.setCurrentUser({
               id: session.user.id,
               email: session.user.email,
               name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || '',
-              tag: ''
+              nickname: ''
             });
           }
         }

@@ -62,7 +62,7 @@ export function useRegisterForm() {
         showAlert('Sucesso', 'Conta criada! Confirme seu email antes de fazer login.');
       }
     } catch (e: any) {
-      if (e.message.includes('already registered')) {
+      if (e.message?.includes('already registered') || e.status === 422 || e.message?.toLowerCase().includes('already exists')) {
         showAlert('Atenção', 'Este email já está em uso.');
       } else {
         showAlert('Erro', e.message || 'Falha ao criar conta.');

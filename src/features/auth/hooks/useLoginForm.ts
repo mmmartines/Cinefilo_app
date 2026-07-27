@@ -61,6 +61,18 @@ export function useLoginForm() {
 
     } catch (e: any) {
       if (e.message === 'Invalid login credentials') {
+        // Verificar se esse email existe na collection users e se o provedor é google
+        try {
+          const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+          const res = await fetch(`${apiUrl}/api/users/check-provider?email=${encodeURIComponent(email)}`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.provider === 'google') {
+              showAlert('Atenção', 'Este e-mail está vinculado ao Google. Faça login pelo botão "Continuar com Google".');
+              return;
+            }
+          }
+        } catch(err) {}
         showAlert('Erro', 'Email ou senha inválidos.');
       } else {
         showAlert('Erro', e.message || 'Falha ao fazer login.');
@@ -178,6 +190,25 @@ export function useLoginForm() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      showAlert('Atenção', 'Preencha seu e-mail para recuperar a senha.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: Linking.createURL('/'),
+      });
+      if (error) throw error;
+      showAlert('Sucesso', 'Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.');
+    } catch (e: any) {
+      showAlert('Erro', e.message || 'Falha ao recuperar a senha.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     email,
     setEmail,
@@ -186,5 +217,6 @@ export function useLoginForm() {
     isLoading,
     handleLogin,
     handleSocialLogin,
+    handleResetPassword,
   };
 }

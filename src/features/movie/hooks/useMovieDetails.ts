@@ -39,6 +39,7 @@ export function useMovieDetails(movieId: string | undefined) {
   
   // Rating Modal states
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const [isListModalVisible, setIsListModalVisible] = useState(false);
   const [movieRating, setMovieRating] = useState(0);
   const [movieReview, setMovieReview] = useState('');
   const [hasMovieSpoiler, setHasMovieSpoiler] = useState(false);
@@ -129,10 +130,6 @@ export function useMovieDetails(movieId: string | undefined) {
       const badgesBefore = calculateBadges(moviesBefore, minsBefore);
 
       await database.saveWatchedMovie(currentUser.id, movieData, movieRating, movieReview, movieData.runtime, selectedMovieEmotions, 'watched', hasMovieSpoiler);
-      
-      for (const listId of selectedCustomLists) {
-         await database.addMovieToCustomList(currentUser.id, listId, movieData);
-      }
 
       setIsMovieWatched(true);
       setIsMovieInWatchlist(false);
@@ -166,6 +163,19 @@ export function useMovieDetails(movieId: string | undefined) {
       }
     } catch (error) {
       showAlert('Erro', 'Não foi possível salvar o filme.');
+    }
+  };
+
+  const handleSaveToLists = async () => {
+    try {
+      // Remover de listas não selecionadas seria ideal, mas para simplificar vamos apenas adicionar nas selecionadas
+      for (const listId of selectedCustomLists) {
+        await database.addMovieToCustomList(currentUser.id, listId, movieData);
+      }
+      setIsListModalVisible(false);
+      showAlert('Sucesso', 'Filme salvo nas listas selecionadas!');
+    } catch (error) {
+      showAlert('Erro', 'Não foi possível salvar nas listas.');
     }
   };
 
@@ -241,6 +251,8 @@ export function useMovieDetails(movieId: string | undefined) {
     isMovieInWatchlist,
     isRatingModalVisible,
     setIsRatingModalVisible,
+    isListModalVisible,
+    setIsListModalVisible,
     movieRating,
     setMovieRating,
     movieReview,
@@ -263,6 +275,7 @@ export function useMovieDetails(movieId: string | undefined) {
     trailerVideoKey,
     EMOTIONS,
     handleSaveMovieRating,
+    handleSaveToLists,
     handleAddMovieToWatchlist,
     handleRemoveMovieData,
     handleCreateMovieChatGroup,

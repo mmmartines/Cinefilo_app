@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { fetchFilteredMovies, getGenres } from '../../../services/api';
+import { fetchFilteredMovies, getGenres, getWatchProviders } from '../../../services/api';
 import { database } from '../../../services/database';
 import { supabase } from '../../../services/supabase';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -13,6 +13,7 @@ export function useCatalog() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [searchYear, setSearchYear] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<number[]>([]);
 
   const [isAiModalVisible, setIsAiModalVisible] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -30,6 +31,13 @@ export function useCatalog() {
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 
+  // Fetch Providers
+  const { data: providersList = [] } = useQuery({
+    queryKey: ['providers'],
+    queryFn: getWatchProviders,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+
   // Fetch Movies with Infinite Query
   const {
     data: moviesData,
@@ -39,8 +47,8 @@ export function useCatalog() {
     hasNextPage,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['movies', debouncedSearchQuery, selectedGenres, searchYear],
-    queryFn: ({ pageParam = 1 }) => fetchFilteredMovies(pageParam, debouncedSearchQuery, selectedGenres, searchYear),
+    queryKey: ['movies', debouncedSearchQuery, selectedGenres, searchYear, selectedProviders],
+    queryFn: ({ pageParam = 1 }) => fetchFilteredMovies(pageParam, debouncedSearchQuery, selectedGenres, searchYear, selectedProviders),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       // TMDB returns empty array if no more pages or if > 500
@@ -134,8 +142,11 @@ export function useCatalog() {
     isLoadingMore: isFetchingNextPage,
     watchedStatus,
     genresList,
+    providersList,
+    selectedProviders,
+    setSelectedProviders,
     userAvatarUrl,
-        searchQuery,
+    searchQuery,
     setSearchQuery,
     searchYear,
     setSearchYear,

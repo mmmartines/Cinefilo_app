@@ -18,8 +18,11 @@ export default function ListDetails() {
   const [user, setUser] = useState<any>(null);
   
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [friendTag, setFriendTag] = useState('');
+  const [newListName, setNewListName] = useState('');
   const [isSharing, setIsSharing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const formatData = (dataList: any[], numColumns: number) => {
     const numberOfFullRows = Math.floor(dataList.length / numColumns);
@@ -55,11 +58,32 @@ export default function ListDetails() {
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Excluir', style: 'destructive', onPress: async () => {
           if (user) {
-            await database.removeCustomList(user.id, String(id));
-            router.back();
+            try {
+              await database.removeCustomList(user.id, String(id));
+              router.back();
+            } catch (e: any) {
+              showAlert('Erro', 'Não foi possível excluir a lista.');
+            }
           }
       }}
     ]);
+  };
+
+  const handleRenameList = async () => {
+    if (!newListName.trim()) {
+      showAlert('Atenção', 'O nome da lista não pode ficar vazio.');
+      return;
+    }
+    setIsEditing(true);
+    try {
+      await database.renameCustomList(user.id, String(id), newListName.trim());
+      setEditModalVisible(false);
+      loadList();
+    } catch (e: any) {
+      showAlert('Erro', 'Não foi possível renomear a lista.');
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   const handleRemoveMovie = (movieId: number, movieTitle: string) => {
@@ -117,6 +141,14 @@ export default function ListDetails() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{list.name}</Text>
         <View style={styles.headerActions}>
+          {list.owner_id === user?.id && (
+            <TouchableOpacity style={styles.shareBtn} onPress={() => {
+              setNewListName(list.name);
+              setEditModalVisible(true);
+            }}>
+              <Ionicons name="pencil" size={24} color={colors.text} />
+            </TouchableOpacity>
+          )}
           {list.owner_id === user?.id && (
             <TouchableOpacity style={styles.shareBtn} onPress={() => setShareModalVisible(true)}>
               <Ionicons name="share-social-outline" size={24} color={colors.text} />
@@ -199,6 +231,42 @@ export default function ListDetails() {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.modalBtnText}>Compartilhar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Edição */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Renomear Lista</Text>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Novo nome da lista"
+              placeholderTextColor="#666"
+              value={newListName}
+              onChangeText={setNewListName}
+              maxLength={40}
+            />
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.modalBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalBtnSave} onPress={handleRenameList} disabled={isEditing}>
+                {isEditing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.modalBtnText}>Salvar</Text>
                 )}
               </TouchableOpacity>
             </View>

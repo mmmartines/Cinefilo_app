@@ -13,13 +13,6 @@ export function useFeed(initialTab: 'me' | 'social' = 'social') {
   const [isOffline, setIsOffline] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  // Focus effect to update offline state and current user
-  useFocusEffect(
-    useCallback(() => {
-      database.getCurrentUser().then(setCurrentUser);
-      NetInfo.fetch().then(state => setIsOffline(!state.isConnected));
-    }, [])
-  );
 
   const fetchFeedPage = async ({ pageParam = 1, queryKey }: any) => {
     const [, tab] = queryKey;
@@ -55,6 +48,15 @@ export function useFeed(initialTab: 'me' | 'social' = 'social') {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     refetchInterval: 10000, // Smart polling de 10s
   });
+
+  // Focus effect to update offline state, current user and refetch feed
+  useFocusEffect(
+    useCallback(() => {
+      database.getCurrentUser().then(setCurrentUser);
+      NetInfo.fetch().then(state => setIsOffline(!state.isConnected));
+      refetch();
+    }, [refetch])
+  );
 
   // Flatten infinite query pages into a single array
   const feedActivities = data ? data.pages.flatMap(page => page.data) : [];

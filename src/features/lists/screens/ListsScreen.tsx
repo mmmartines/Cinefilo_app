@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { useLists } from '../hooks/useLists';
@@ -23,7 +23,14 @@ export function ListsScreen() {
     isCreatingList,
     setIsCreatingList,
     handleCreateNewList,
+    fetchListsData
   } = useLists();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchListsData();
+    }, [fetchListsData])
+  );
 
   const renderListCard = ({ item }: { item: any }) => {
     return (

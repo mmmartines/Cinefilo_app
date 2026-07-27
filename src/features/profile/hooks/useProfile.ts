@@ -13,16 +13,16 @@ export function useProfile() {
   
   const [userProfile, setUserProfile] = useState<any>(null);
   const [userName, setUserName] = useState('');
-  const [userBirthdate, setUserBirthdate] = useState('');
   const [userPassword, setUserPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [userProvider, setUserProvider] = useState<string>('email');
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
-  const [birthdateDate, setBirthdateDate] = useState(new Date());
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -30,8 +30,6 @@ export function useProfile() {
       if (currentUser) {
         setUserProfile(currentUser);
         setUserName(currentUser.name || '');
-        setUserBirthdate(currentUser.birthdate || '');
-        setUserPassword(currentUser.password || '');
         setUserAvatarUrl(currentUser.avatar_url || null);
         setUserProvider(currentUser.provider || 'email');
         setIsNotificationsEnabled(currentUser.notifications_enabled ?? true);
@@ -40,14 +38,7 @@ export function useProfile() {
     fetchUserProfile();
   }, []);
 
-  const handleChangeDate = (event: any, selectedDate?: Date) => {
-    setIsDatePickerVisible(false);
-    if (selectedDate) {
-      setBirthdateDate(selectedDate);
-      const formatted = selectedDate.toLocaleDateString('pt-BR');
-      setUserBirthdate(formatted);
-    }
-  };
+
 
   const handlePickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -100,17 +91,58 @@ export function useProfile() {
   };
 
   const handleSaveProfile = async () => {
+    if (!userProfile) return;
     setIsProfileLoading(true);
+
     try {
-      await database.updateUser({
+      // Se tiver nova senha, precisamos validar tudo
+      if (newPassword) {
+        if (newPassword !== confirmPassword) {
+          showAlert('Atenção', 'A nova senha e a confirmação não coincidem.');
+          setIsProfileLoading(false);
+          return;
+        }
+        if (!userPassword) {
+          showAlert('Atenção', 'Digite sua senha atual para definir uma nova.');
+          setIsProfileLoading(false);
+          return;
+        }
+
+        // Tentar reautenticar para validar a senha atual (forma de validação no Supabase sem admin)
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userProfile.email,
+          password: userPassword
+        });
+
+        if (signInError) {
+          showAlert('Erro', 'A senha atual está incorreta.');
+          setIsProfileLoading(false);
+          return;
+        }
+
+        const { error: updateError } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+
+        if (updateError) throw updateError;
+        
+        setUserPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+
+      await database.setCurrentUser({
+        id: userProfile.id,
         email: userProfile.email,
         name: userName,
-        birthdate: userBirthdate,
-        password: userPassword
+        tag: userProfile.tag,
+        avatar_url: userAvatarUrl || '',
+        provider: userProvider
       });
-      showAlert('Sucesso', 'Perfil atualizado!');
+
+      showAlert('Sucesso', 'Perfil atualizado com sucesso!');
     } catch (e: any) {
-      showAlert('Erro', e.message || 'Erro ao atualizar.');
+      showAlert('Erro', e.message || 'Falha ao salvar perfil.');
     } finally {
       setIsProfileLoading(false);
     }
@@ -154,9 +186,12 @@ export function useProfile() {
     userProfile,
     userName,
     setUserName,
-    userBirthdate,
     userPassword,
     setUserPassword,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
     isProfileLoading,
     isDeleteModalVisible,
     setIsDeleteModalVisible,
@@ -164,10 +199,6 @@ export function useProfile() {
     setDeleteConfirmationText,
     userAvatarUrl,
     isNotificationsEnabled,
-    birthdateDate,
-    isDatePickerVisible,
-    setIsDatePickerVisible,
-    handleChangeDate,
     handlePickImage,
     handleToggleNotifications,
     handleSaveProfile,

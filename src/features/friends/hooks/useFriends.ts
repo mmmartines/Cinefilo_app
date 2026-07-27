@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 export function useFriends() {
   const { showAlert } = useAlert();
   const queryClient = useQueryClient();
-  const [friendTag, setFriendTag] = useState('');
+  const [friendNickname, setFriendNickname] = useState('');
   const [isAddingFriend, setIsAddingFriend] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -62,8 +62,8 @@ export function useFriends() {
   });
 
   const handleSendFriendRequest = async () => {
-    if (friendTag.trim().length !== 10) {
-      showAlert('Ops', 'A Tag deve conter exatamente 10 caracteres.');
+    if (friendNickname.trim().length < 3) {
+      showAlert('Ops', 'O apelido deve conter no mínimo 3 caracteres.');
       return;
     }
 
@@ -79,7 +79,7 @@ export function useFriends() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ tag: friendTag.trim() })
+        body: JSON.stringify({ nickname: friendNickname.trim() })
       });
       
       const result = await response.json();
@@ -89,7 +89,7 @@ export function useFriends() {
       }
 
       showAlert('Sucesso', result.message || `Solicitação enviada com sucesso!`);
-      setFriendTag('');
+      setFriendNickname('');
       queryClient.invalidateQueries({ queryKey: ['friendRequests'] });
     } catch (e: any) {
       showAlert('Erro', e.message);
@@ -142,8 +142,8 @@ export function useFriends() {
   };
 
   return {
-    friendTag,
-    setFriendTag,
+    friendNickname,
+    setFriendNickname,
     friendsList,
     isLoading,
     isAddingFriend,

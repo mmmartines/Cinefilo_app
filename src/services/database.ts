@@ -38,17 +38,55 @@ export const database = {
     authListeners.forEach(listener => listener(user));
   },
 
-  // --- DESAFIO SEMANAL ---
-  getWeeklyChallenge() {
+  async getWeeklyChallenge(userId: string) {
     const d = new Date();
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
-    const challengeIndex = weekNo % WEEKLY_CHALLENGES.length;
-    return {
-      weekId: `${d.getUTCFullYear()}_W${weekNo}`,
-      ...WEEKLY_CHALLENGES[challengeIndex]
+    const weekId = `${d.getUTCFullYear()}_W${weekNo}`;
+
+    // Tenta recuperar desafio salvo desta semana
+    const savedChallengeStr = await AsyncStorage.getItem(`@cinefilo_current_challenge_${userId}_${weekId}`);
+    if (savedChallengeStr) {
+      return JSON.parse(savedChallengeStr);
+    }
+
+    // Se não tem, gera um novo
+    const prefs = await this.getPreferences(userId);
+    let selectedChallenge = null;
+
+    if (prefs.genres.length > 0) {
+      // 1. Desafio de Zona de Conforto (Favorito)
+      // Escolhe um gênero favorito aleatório usando a semana como "semente"
+      const genreId = prefs.genres[weekNo % prefs.genres.length];
+      
+      // Busca os gêneros no AsyncStorage (cache) ou fallback pra nomes locais
+      const genresMap: Record<number, string> = {
+        28: 'Ação', 12: 'Aventura', 16: 'Animação', 35: 'Comédia', 80: 'Crime', 99: 'Documentário', 18: 'Drama', 10751: 'Família', 14: 'Fantasia', 36: 'História', 27: 'Terror', 10402: 'Música', 9648: 'Mistério', 10749: 'Romance', 878: 'Ficção científica', 10770: 'Cinema TV', 53: 'Thriller', 10752: 'Guerra', 37: 'Faroeste'
+      };
+      
+      const genreName = genresMap[genreId] || 'Favorito';
+
+      selectedChallenge = {
+        id: `dyn_${weekId}`,
+        title: 'Zona de Conforto',
+        desc: `Assista a 1 filme do seu gênero favorito: ${genreName}`,
+        xp: 600,
+        targetGenre: genreName
+      };
+    } else {
+      // Fallback global
+      const challengeIndex = weekNo % WEEKLY_CHALLENGES.length;
+      selectedChallenge = WEEKLY_CHALLENGES[challengeIndex];
+    }
+
+    const finalChallenge = {
+      weekId,
+      ...selectedChallenge
     };
+
+    await AsyncStorage.setItem(`@cinefilo_current_challenge_${userId}_${weekId}`, JSON.stringify(finalChallenge));
+    return finalChallenge;
   },
 
   async isWeeklyChallengeCompleted(userId: string, weekId: string) {
@@ -65,11 +103,12 @@ export const database = {
   },
 
   async checkAndCompleteChallenge(userId: string, movieGenres: any[]) {
-    const challenge = this.getWeeklyChallenge();
+    const challenge = await this.getWeeklyChallenge(userId);
     const isCompleted = await this.isWeeklyChallengeCompleted(userId, challenge.weekId);
     
     if (isCompleted) return;
 
+    // Checa se algum genero do filme bate com o targetGenre
     const hasTargetGenre = movieGenres.some((g: any) => g.name === challenge.targetGenre);
     
     if (hasTargetGenre) {
@@ -124,8 +163,7 @@ export const database = {
         throw new Error('E-mail já cadastrado.');
       }
 
-      const generatedTag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
-      const newUser = { id: Date.now().toString(), tag: generatedTag, ...userData };
+      const newUser = { id: Date.now().toString(), nickname: '', ...userData };
       users.push(newUser);
 
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
@@ -195,7 +233,7 @@ export const database = {
       name: `Usuário via ${provider}`,
       email: `user@${provider.toLowerCase()}.com`,
       provider,
-      tag: Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A')
+      nickname: ''
     };
     await this.setCurrentUser(mockUser);
     return mockUser;
@@ -219,8 +257,8 @@ export const database = {
       
       let user = JSON.parse(userJson);
       
-      if (!user.tag) {
-        user.tag = Math.random().toString(36).substring(2, 12).toUpperCase().padStart(10, 'A');
+      if (user.nickname === undefined) {
+        user.nickname = '';
         await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       }
       
@@ -279,6 +317,8 @@ export const database = {
       const bonusXpStr = await AsyncStorage.getItem(`@cinefilo_bonus_xp_${userId}`);
       const listsStr = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
       const userLists = listsStr ? JSON.parse(listsStr) : [];
+      const favGenresStr = await AsyncStorage.getItem(`@cinefilo_fav_genres_${userId}`);
+      const favProvidersStr = await AsyncStorage.getItem(`@cinefilo_fav_providers_${userId}`);
       
       let friendsCount = 0;
       try {
@@ -300,7 +340,9 @@ export const database = {
         completed_challenges: challengesStr ? JSON.parse(challengesStr) : [],
         bonus_xp: bonusXp,
         level: calculatedLevel,
-        xp: calculatedXp
+        xp: calculatedXp,
+        favorite_genres: favGenresStr ? JSON.parse(favGenresStr) : [],
+        favorite_providers: favProvidersStr ? JSON.parse(favProvidersStr) : []
       };
 
       if (avatarUrl && !avatarUrl.startsWith('file://')) payload.avatar_url = avatarUrl;
@@ -395,12 +437,12 @@ export const database = {
         if (cloudProfile.expo_push_token) await AsyncStorage.setItem('expo_push_token', cloudProfile.expo_push_token);
         if (cloudProfile.notifications_enabled !== undefined) await AsyncStorage.setItem('notifications_enabled', String(cloudProfile.notifications_enabled));
         
-        // Atualiza a tag local se vier da nuvem
-        if (cloudProfile.tag) {
+        // Atualiza a nickname local se vier da nuvem
+        if (cloudProfile.nickname !== undefined) {
            const currentUserJson = await AsyncStorage.getItem(CURRENT_USER_KEY);
            if (currentUserJson) {
              const user = JSON.parse(currentUserJson);
-             user.tag = cloudProfile.tag;
+             user.nickname = cloudProfile.nickname;
              await AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
            }
         }
@@ -420,14 +462,23 @@ export const database = {
            await AsyncStorage.setItem(`@cinefilo_bonus_xp_${userId}`, String(mergedXp));
         }
         
+        if (cloudProfile.favorite_genres) {
+          await AsyncStorage.setItem(`@cinefilo_fav_genres_${userId}`, JSON.stringify(cloudProfile.favorite_genres));
+        }
+        if (cloudProfile.favorite_providers) {
+          await AsyncStorage.setItem(`@cinefilo_fav_providers_${userId}`, JSON.stringify(cloudProfile.favorite_providers));
+        }
+        
         return {
           id: cloudProfile.id,
           name: cloudProfile.name,
-          tag: cloudProfile.tag,
+          nickname: cloudProfile.nickname,
           avatar_url: cloudProfile.avatar_url,
           notifications_enabled: cloudProfile.notifications_enabled,
           stats: cloudProfile.stats,
-          watched_movies: cloudProfile.watched_movies
+          watched_movies: cloudProfile.watched_movies,
+          favorite_genres: cloudProfile.favorite_genres || [],
+          favorite_providers: cloudProfile.favorite_providers || []
         };
       }
     } catch (e) {
@@ -691,18 +742,18 @@ export const database = {
     }
   },
 
-  async shareCustomList(userId: string, listId: string, friendTag: string) {
+  async shareCustomList(userId: string, listId: string, friendNickname: string) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Não autenticado');
+      if (!session) return;
 
       const response = await fetch(`${API_URL}/api/list_share`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ list_id: listId, friend_tag: friendTag })
+        body: JSON.stringify({ list_id: listId, friend_nickname: friendNickname })
       });
 
       const result = await response.json();
@@ -892,5 +943,99 @@ export const database = {
       console.error('Erro ao salvar match', e);
       return { isMatch: false };
     }
+  },
+
+  async removeCustomList(userId: string, listId: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !listId.startsWith('local_')) {
+        try {
+          await fetch(`${API_URL}/api/lists`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ id: listId })
+          });
+        } catch (err) {
+          console.warn('Erro ao deletar lista na nuvem');
+        }
+      }
+
+      // Remover do AsyncStorage
+      const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+      if (listsJson) {
+        let localLists = JSON.parse(listsJson);
+        localLists = localLists.filter((l: any) => String(l.id || l._id) !== String(listId));
+        await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
+      }
+      return true;
+    } catch (e) {
+      console.error('Erro ao deletar lista', e);
+      throw e;
+    }
+  },
+
+  async renameCustomList(userId: string, listId: string, newName: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !listId.startsWith('local_')) {
+        try {
+          await fetch(`${API_URL}/api/lists`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ id: listId, name: newName })
+          });
+        } catch (err) {
+          console.warn('Erro ao renomear lista na nuvem');
+        }
+      }
+
+      // Atualizar no AsyncStorage
+      const listsJson = await AsyncStorage.getItem(`@cinefilo_lists_${userId}`);
+      if (listsJson) {
+        const localLists = JSON.parse(listsJson);
+        const index = localLists.findIndex((l: any) => String(l.id || l._id) === String(listId));
+        if (index > -1) {
+          localLists[index].name = newName;
+          await AsyncStorage.setItem(`@cinefilo_lists_${userId}`, JSON.stringify(localLists));
+        }
+      }
+      return true;
+    } catch (e) {
+      console.error('Erro ao renomear lista', e);
+      throw e;
+    }
+  },
+
+  async updatePreferences(genres: number[], providers: number[]) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const userId = session.user.id;
+      await AsyncStorage.setItem(`@cinefilo_fav_genres_${userId}`, JSON.stringify(genres));
+      await AsyncStorage.setItem(`@cinefilo_fav_providers_${userId}`, JSON.stringify(providers));
+      this.syncStatsToCloud(userId);
+    } catch (e) {
+      console.error('Erro ao atualizar preferências:', e);
+    }
+  },
+
+  async getPreferences(userId: string) {
+    try {
+      const favGenresStr = await AsyncStorage.getItem(`@cinefilo_fav_genres_${userId}`);
+      const favProvidersStr = await AsyncStorage.getItem(`@cinefilo_fav_providers_${userId}`);
+      return {
+        genres: favGenresStr ? JSON.parse(favGenresStr) : [],
+        providers: favProvidersStr ? JSON.parse(favProvidersStr) : []
+      };
+    } catch (e) {
+      return { genres: [], providers: [] };
+    }
   }
+
 };

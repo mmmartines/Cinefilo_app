@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supabase } from '../../../services/supabase';
 import { useAlert } from '../../../contexts/AlertContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -47,6 +47,12 @@ export function ClubsScreen() {
       setLoading(false);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchClubs();
+    }, [])
+  );
 
   const handleCreateClub = async () => {
     if (!clubName.trim()) {

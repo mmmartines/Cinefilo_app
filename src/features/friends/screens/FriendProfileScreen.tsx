@@ -97,8 +97,8 @@ export function FriendProfileScreen({ id }: FriendProfileScreenProps) {
             <Text style={styles.statLabel}>Tempo de Tela</Text>
           </View>
           <View style={styles.tagCard}>
-            <Text style={styles.statLabel}>Tag do Amigo:</Text>
-            <Text style={styles.tagText}>{friend.tag}</Text>
+            <Text style={styles.statLabel}>@apelido:</Text>
+            <Text style={styles.tagText}>@{friend.nickname || friend.tag}</Text>
           </View>
 
           <AnimatedButton

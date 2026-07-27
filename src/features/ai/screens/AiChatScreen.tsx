@@ -93,7 +93,7 @@ export function AiChatScreen() {
 
       <KeyboardAvoidingView 
         style={styles.chatContainer} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
       >
         <FlatList
           ref={flatListRef}
