@@ -591,7 +591,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   modalSaveText: { color: colors.text, fontWeight: 'bold' },
   modalSubtitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginBottom: 12, alignSelf: 'flex-start' },
   emotionsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
-  emotionChip: { borderWidth: 1, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12 },
+  emotionChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12 },
   emotionChipText: { fontSize: 12, fontWeight: 'bold' },
   tagsContainerReview: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   tagBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12 },
