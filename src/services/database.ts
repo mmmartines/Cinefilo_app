@@ -883,7 +883,7 @@ export const database = {
       if (error) throw error;
 
       // Dispara notificações push via Vercel (fire-and-forget)
-      fetch(`${API_URL}/api/notify`, {
+      fetch(`${API_URL}/api/notifications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

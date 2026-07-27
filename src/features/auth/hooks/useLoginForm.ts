@@ -69,7 +69,7 @@ export function useLoginForm() {
         // Verificar se esse email existe na collection users e se o provedor é google
         try {
           const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-          const res = await fetch(`${apiUrl}/api/users/check-provider?email=${encodeURIComponent(email)}`);
+          const res = await fetch(`${apiUrl}/api/public?action=check-provider&email=${encodeURIComponent(email)}`);
           if (res.ok) {
             const json = await res.json();
             if (json.provider === 'google') {

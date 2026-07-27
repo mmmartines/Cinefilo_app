@@ -46,7 +46,7 @@ export function SetupNicknameScreen() {
   const fetchSuggestions = async (name: string) => {
     try {
       const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-      const res = await fetch(`${apiUrl}/api/users/suggest-nickname?name=${encodeURIComponent(name)}`);
+      const res = await fetch(`${apiUrl}/api/public?action=suggest-nickname&name=${encodeURIComponent(name)}`);
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
@@ -84,7 +84,7 @@ export function SetupNicknameScreen() {
       setErrorMsg('');
       try {
         const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
-        const res = await fetch(`${apiUrl}/api/users/check-nickname?nickname=${encodeURIComponent(cleanNick)}`);
+        const res = await fetch(`${apiUrl}/api/public?action=check-nickname&nickname=${encodeURIComponent(cleanNick)}`);
         if (res.ok) {
           const json = await res.json();
           setIsAvailable(json.available);
