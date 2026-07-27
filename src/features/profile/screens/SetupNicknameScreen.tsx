@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../../contexts/AuthContext';
 import { AnimatedButton } from '../../../components/AnimatedButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import database from '../../../services/database';
+import { database } from '../../../services/database';
+import { supabase } from '../../../services/supabase';
 
 const darkTheme = {
   background: '#09090b',
@@ -21,7 +21,7 @@ const darkTheme = {
 
 export function SetupNicknameScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const [user, setUser] = useState<any>(null);
   const [nickname, setNickname] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isValidating, setIsValidating] = useState(false);
@@ -31,10 +31,17 @@ export function SetupNicknameScreen() {
 
   // Busca sugestões ao iniciar
   useEffect(() => {
-    if (user?.name) {
-      fetchSuggestions(user.name);
-    }
-  }, [user]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Recupera nome dos metadados caso seja Google, ou da tabela users
+        const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || '';
+        setUser({ id: session.user.id, name });
+        if (name) {
+          fetchSuggestions(name);
+        }
+      }
+    });
+  }, []);
 
   const fetchSuggestions = async (name: string) => {
     try {

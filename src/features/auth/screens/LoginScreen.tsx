@@ -28,9 +28,16 @@ export function LoginScreen() {
     password,
     setPassword,
     isLoading,
+    isRecoveryMode,
+    setIsRecoveryMode,
+    recoveryCode,
+    setRecoveryCode,
+    newPassword,
+    setNewPassword,
     handleLogin,
     handleSocialLogin,
-    handleResetPassword,
+    handleSendRecoveryCode,
+    handleVerifyAndResetPassword,
   } = useLoginForm();
 
   return (
@@ -49,67 +56,122 @@ export function LoginScreen() {
         </View>
 
         <BlurView intensity={30} tint="dark" style={styles.glassCard}>
-          <Text style={styles.cardTitle}>Faça login para continuar</Text>
+          <Text style={styles.cardTitle}>{isRecoveryMode ? 'Recuperação de Senha' : 'Faça login para continuar'}</Text>
           
           <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" color={darkTheme.textSecondary} size={20} style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="E-mail"
-                placeholderTextColor={darkTheme.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-              />
-            </View>
+            {isRecoveryMode ? (
+              <>
+                <Text style={{ color: darkTheme.textSecondary, marginBottom: 16, textAlign: 'center' }}>
+                  Digite o código de 6 dígitos que enviamos para {email}
+                </Text>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed" color={darkTheme.textSecondary} size={20} style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Senha"
-                placeholderTextColor={darkTheme.textSecondary}
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
-            </View>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="key" color={darkTheme.textSecondary} size={20} style={styles.icon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Código de 6 dígitos"
+                    placeholderTextColor={darkTheme.textSecondary}
+                    keyboardType="numeric"
+                    maxLength={6}
+                    value={recoveryCode}
+                    onChangeText={setRecoveryCode}
+                  />
+                </View>
 
-            <TouchableOpacity style={styles.forgotPasswordWrap} onPress={handleResetPassword}>
-              <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
-            </TouchableOpacity>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed" color={darkTheme.textSecondary} size={20} style={styles.icon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nova Senha"
+                    placeholderTextColor={darkTheme.textSecondary}
+                    secureTextEntry
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                  />
+                </View>
 
-            <AnimatedButton 
-              style={styles.loginButton} 
-              onPress={handleLogin}
-              disabled={isLoading}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Entrando...' : 'Entrar'}
-              </Text>
-            </AnimatedButton>
+                <AnimatedButton 
+                  style={styles.loginButton} 
+                  onPress={handleVerifyAndResetPassword}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.loginButtonText}>
+                    {isLoading ? 'Aguarde...' : 'Redefinir e Entrar'}
+                  </Text>
+                </AnimatedButton>
 
-            <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerWrap}>
-              <Text style={styles.registerText}>
-                Não tem uma conta? <Text style={styles.registerLink}>Cadastre-se</Text>
-              </Text>
-            </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsRecoveryMode(false)} style={styles.registerWrap}>
+                  <Text style={styles.registerText}>
+                    Lembrou a senha? <Text style={styles.registerLink}>Voltar</Text>
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail" color={darkTheme.textSecondary} size={20} style={styles.icon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="E-mail"
+                    placeholderTextColor={darkTheme.textSecondary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed" color={darkTheme.textSecondary} size={20} style={styles.icon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    placeholderTextColor={darkTheme.textSecondary}
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                  />
+                </View>
+
+                <TouchableOpacity style={styles.forgotPasswordWrap} onPress={handleSendRecoveryCode}>
+                  <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
+                </TouchableOpacity>
+
+                <AnimatedButton 
+                  style={styles.loginButton} 
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.loginButtonText}>
+                    {isLoading ? 'Entrando...' : 'Entrar'}
+                  </Text>
+                </AnimatedButton>
+
+                <TouchableOpacity onPress={() => router.push('/register')} style={styles.registerWrap}>
+                  <Text style={styles.registerText}>
+                    Não tem uma conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>ou entre com</Text>
-            <View style={styles.divider} />
-          </View>
+          {!isRecoveryMode && (
+            <>
+              <View style={styles.dividerContainer}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>ou entre com</Text>
+                <View style={styles.divider} />
+              </View>
 
-          <View style={styles.socialContainer}>
-            <TouchableOpacity style={[styles.socialButton, { opacity: isLoading ? 0.7 : 1 }]} disabled={isLoading} onPress={() => handleSocialLogin('google')}>
-              {isLoading ? <ActivityIndicator color="#000" /> : <FontAwesome5 name="google" color="#DB4437" size={20} />}
-              <Text style={styles.socialButtonText}>{isLoading ? 'Entrando...' : 'Continuar com Google'}</Text>
-            </TouchableOpacity>
-          </View>
+              <View style={styles.socialContainer}>
+                <TouchableOpacity style={[styles.socialButton, { opacity: isLoading ? 0.7 : 1 }]} disabled={isLoading} onPress={() => handleSocialLogin('google')}>
+                  {isLoading ? <ActivityIndicator color="#000" /> : <FontAwesome5 name="google" color="#DB4437" size={20} />}
+                  <Text style={styles.socialButtonText}>{isLoading ? 'Entrando...' : 'Continuar com Google'}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
         </BlurView>
 
         <View style={styles.footerContainer}>

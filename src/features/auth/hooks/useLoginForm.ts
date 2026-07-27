@@ -15,6 +15,11 @@ export function useLoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
   const { showAlert } = useAlert();
   const router = useRouter();
 
@@ -190,20 +195,52 @@ export function useLoginForm() {
     }
   };
 
-  const handleResetPassword = async () => {
+  const handleSendRecoveryCode = async () => {
     if (!email) {
       showAlert('Atenção', 'Preencha seu e-mail para recuperar a senha.');
       return;
     }
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: Linking.createURL('/'),
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      
+      setIsRecoveryMode(true);
+      showAlert('Sucesso', 'Se o e-mail estiver cadastrado, você receberá um código de 6 dígitos.');
+    } catch (e: any) {
+      showAlert('Erro', e.message || 'Falha ao enviar o código de recuperação.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyAndResetPassword = async () => {
+    if (!recoveryCode || !newPassword) {
+      showAlert('Atenção', 'Preencha o código recebido e a nova senha.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showAlert('Atenção', 'A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: recoveryCode,
+        type: 'recovery'
       });
       if (error) throw error;
-      showAlert('Sucesso', 'Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.');
+      
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (updateError) throw updateError;
+      
+      showAlert('Sucesso', 'Senha redefinida com sucesso! Redirecionando...');
     } catch (e: any) {
-      showAlert('Erro', e.message || 'Falha ao recuperar a senha.');
+      showAlert('Erro', 'Código inválido ou expirado. Verifique novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -215,8 +252,15 @@ export function useLoginForm() {
     password,
     setPassword,
     isLoading,
+    isRecoveryMode,
+    setIsRecoveryMode,
+    recoveryCode,
+    setRecoveryCode,
+    newPassword,
+    setNewPassword,
     handleLogin,
     handleSocialLogin,
-    handleResetPassword,
+    handleSendRecoveryCode,
+    handleVerifyAndResetPassword,
   };
 }
