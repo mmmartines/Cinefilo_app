@@ -50,7 +50,7 @@ export function SetupNicknameScreen() {
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
-          setSuggestions(json.suggestions);
+          setSuggestions(json.suggestions || (json.nickname ? [json.nickname] : []));
         }
       }
     } catch (e) {
