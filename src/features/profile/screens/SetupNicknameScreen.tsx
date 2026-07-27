@@ -107,8 +107,28 @@ export function SetupNicknameScreen() {
 
     setIsSubmitting(true);
     try {
-      // Atualiza banco via db local (que também faz PUT no /api/users e atualiza o estado local)
-      await database.updateUser({ email: user?.email, nickname });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://cinefilo-server.vercel.app';
+        const res = await fetch(`${apiUrl}/api/users`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ nickname })
+        });
+        
+        if (!res.ok) {
+          throw new Error('Falha ao salvar apelido no servidor.');
+        }
+      }
+
+      // Atualiza o usuário logado localmente para liberar a navegação
+      const currentUser = await database.getCurrentUser();
+      if (currentUser) {
+        await database.setCurrentUser({ ...currentUser, nickname });
+      }
       
       router.replace('/'); // Vai para a tela inicial
     } catch (e: any) {
