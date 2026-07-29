@@ -93,17 +93,22 @@ export function ProfileScreen() {
             <View style={styles.statCard}>
               <Ionicons name="film-outline" size={32} color="#E50914" />
               <Text style={styles.statValue}>{totalMovies}</Text>
-              <Text style={styles.statLabel}>Filmes</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="time-outline" size={32} color="#E50914" />
-              <Text style={styles.statValue}>{totalMinutes}</Text>
-              <Text style={styles.statLabel}>Tempo de Tela</Text>
+              <Text style={styles.statLabel}>Filmes Assistidos</Text>
             </View>
             <View style={styles.statCard}>
               <Ionicons name="star-outline" size={32} color="#E50914" />
               <Text style={styles.statValue}>{estimatedXp}</Text>
-              <Text style={styles.statLabel}>XP Total</Text>
+              <Text style={styles.statLabel}>XP Total (Nível {estimatedLevel})</Text>
+            </View>
+          </View>
+
+          <View style={styles.watchTimeCard}>
+            <View style={styles.watchTimeIconContainer}>
+              <Ionicons name="time" size={36} color="#E50914" />
+            </View>
+            <View style={styles.watchTimeInfo}>
+              <Text style={styles.statLabel}>Tempo Total de Tela</Text>
+              <Text style={styles.watchTimeValue}>{totalMinutes}</Text>
             </View>
           </View>
 
@@ -153,7 +158,11 @@ const getStyles = (colors: any) => StyleSheet.create({
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   statCard: { flex: 1, backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   statValue: { color: colors.text, fontSize: 20, fontWeight: 'bold', marginTop: 8 },
-  statLabel: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  statLabel: { color: colors.textSecondary, fontSize: 12, marginTop: 4, textAlign: 'center' },
+  watchTimeCard: { flexDirection: 'row', backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border, marginBottom: 8 },
+  watchTimeIconContainer: { backgroundColor: 'rgba(229, 9, 20, 0.1)', padding: 12, borderRadius: 12, marginRight: 16 },
+  watchTimeInfo: { flex: 1 },
+  watchTimeValue: { color: colors.text, fontSize: 24, fontWeight: 'bold', marginTop: 2 },
   tagCard: { backgroundColor: colors.backgroundElement, padding: 16, borderRadius: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
   tagText: { color: '#E50914', fontSize: 24, fontWeight: 'bold', letterSpacing: 2 },
