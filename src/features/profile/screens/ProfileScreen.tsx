@@ -102,7 +102,7 @@ export function ProfileScreen() {
             </View>
           </View>
 
-          <View style={[styles.statCard, { marginBottom: 16 }]}>
+          <View style={[styles.statCard, { flex: 0, marginBottom: 16 }]}>
             <Ionicons name="time-outline" size={32} color="#E50914" />
             <Text style={styles.statValue}>{totalMinutes}</Text>
             <Text style={styles.statLabel}>Tempo Total de Tela</Text>
